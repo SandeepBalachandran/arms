@@ -55,6 +55,10 @@ function RootNavigator() {
         <Stack.Protected guard={signedIn}>
           <Stack.Protected guard={hasGym}>
             <Stack.Screen name="(gym)" />
+            <Stack.Screen
+              name="pay/[planId]"
+              options={{ headerShown: true, title: 'Pay with UPI', presentation: 'modal' }}
+            />
           </Stack.Protected>
           <Stack.Screen name="join/index" options={{ headerShown: hasGym, title: 'Join a gym' }} />
         </Stack.Protected>

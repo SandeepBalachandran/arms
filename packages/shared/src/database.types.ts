@@ -50,6 +50,8 @@ export type Database = {
           status: GymStatus;
           platform_plan: string;
           receipt_seq: number;
+          upi_id: string | null;
+          upi_payee_name: string | null;
           created_at: string;
         };
         Insert: {
@@ -63,6 +65,8 @@ export type Database = {
           phone?: string | null;
           status?: GymStatus;
           platform_plan?: string;
+          upi_id?: string | null;
+          upi_payee_name?: string | null;
           created_at?: string;
         };
         Update: {
@@ -75,6 +79,8 @@ export type Database = {
           phone?: string | null;
           status?: GymStatus;
           platform_plan?: string;
+          upi_id?: string | null;
+          upi_payee_name?: string | null;
         };
         Relationships: [];
       };
@@ -221,6 +227,9 @@ export type Database = {
           note: string | null;
           paid_at: string | null;
           recorded_by: string | null;
+          plan_id: string | null;
+          utr: string | null;
+          reviewed_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -228,6 +237,9 @@ export type Database = {
           gym_id: string;
           member_id: string;
           subscription_id?: string | null;
+          plan_id?: string | null;
+          utr?: string | null;
+          reviewed_at?: string | null;
           amount_paise: number;
           method: PaymentMethod;
           status?: PaymentStatus;
@@ -249,6 +261,7 @@ export type Database = {
           { foreignKeyName: "payments_member_id_fkey"; columns: ["member_id"]; isOneToOne: false; referencedRelation: "gym_members"; referencedColumns: ["id"] },
           { foreignKeyName: "payments_subscription_id_fkey"; columns: ["subscription_id"]; isOneToOne: false; referencedRelation: "subscriptions"; referencedColumns: ["id"] },
           { foreignKeyName: "payments_recorded_by_fkey"; columns: ["recorded_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+          { foreignKeyName: "payments_plan_id_fkey"; columns: ["plan_id"]; isOneToOne: false; referencedRelation: "plans"; referencedColumns: ["id"] },
         ];
       };
     };
@@ -274,6 +287,10 @@ export type Database = {
         Returns: string;
       };
       cancel_subscription: { Args: { p_subscription_id: string }; Returns: undefined };
+      claim_upi_payment: { Args: { p_gym_id: string; p_plan_id: string; p_utr?: string }; Returns: string };
+      withdraw_upi_payment: { Args: { p_payment_id: string }; Returns: undefined };
+      confirm_upi_payment: { Args: { p_payment_id: string; p_starts_on?: string }; Returns: string };
+      reject_upi_payment: { Args: { p_payment_id: string; p_reason?: string }; Returns: undefined };
     };
     Enums: {
       gym_role: GymRole;

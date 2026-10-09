@@ -64,3 +64,28 @@ export function useMyPayments() {
     },
   });
 }
+
+// UPI claims that need the member's attention: one waiting for the gym, and
+// any the gym rejected in the last 14 days.
+export function usePaymentClaims() {
+  const memberId = useActiveGym()?.memberId;
+  return useQuery({
+    queryKey: ['payment-claims', memberId],
+    enabled: !!memberId,
+    queryFn: async () => {
+      const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
+      const { data, error } = await supabase
+        .from('payments')
+        .select('id, status, amount_paise, utr, note, created_at, reviewed_at, plans(name)')
+        .eq('member_id', memberId!)
+        .eq('method', 'upi')
+        .or(`status.eq.created,and(status.eq.failed,reviewed_at.gte.${since})`)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return {
+        pending: data.find((p) => p.status === 'created') ?? null,
+        rejected: data.filter((p) => p.status === 'failed'),
+      };
+    },
+  });
+}

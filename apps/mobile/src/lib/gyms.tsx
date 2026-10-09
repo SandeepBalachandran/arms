@@ -10,7 +10,16 @@ import { supabase } from '@/lib/supabase';
 export type GymMembership = {
   memberId: string;
   role: GymRole;
-  gym: { id: string; slug: string; name: string; logo_url: string | null; timezone: string; currency: string };
+  gym: {
+    id: string;
+    slug: string;
+    name: string;
+    logo_url: string | null;
+    timezone: string;
+    currency: string;
+    upi_id: string | null;
+    upi_payee_name: string | null;
+  };
 };
 
 export const myGymsKey = (userId: string | undefined) => ['my-gyms', userId] as const;
@@ -25,7 +34,7 @@ export function useMyGyms() {
     queryFn: async (): Promise<GymMembership[]> => {
       const { data, error } = await supabase
         .from('gym_members')
-        .select('id, role, gyms!inner(id, slug, name, logo_url, timezone, currency, status)')
+        .select('id, role, gyms!inner(id, slug, name, logo_url, timezone, currency, upi_id, upi_payee_name, status)')
         .eq('user_id', userId!)
         .eq('status', 'active')
         .eq('gyms.status', 'active')

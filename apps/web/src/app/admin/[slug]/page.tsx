@@ -25,7 +25,7 @@ export default async function AdminDashboard({ params }: PageProps<"/admin/[slug
   const today = todayIn(gym.timezone);
   const month = today.slice(0, 7);
 
-  const [members, liveSubs, payments] = await Promise.all([
+  const [members, liveSubs, payments, pending] = await Promise.all([
     supabase.from("gym_members").select("id", { count: "exact", head: true })
       .eq("gym_id", gym.id).eq("role", "member").eq("status", "active"),
     supabase.from("subscriptions")
@@ -35,6 +35,9 @@ export default async function AdminDashboard({ params }: PageProps<"/admin/[slug
       ? supabase.from("payments").select("amount_paise, paid_at")
           .eq("gym_id", gym.id).eq("status", "paid").gte("paid_at", addDays(`${month}-01`, -1))
       : Promise.resolve({ data: [], error: null }),
+    isStaff
+      ? supabase.from("payments").select("id", { count: "exact", head: true }).eq("gym_id", gym.id).eq("status", "created")
+      : Promise.resolve({ count: 0 }),
   ]);
   if (liveSubs.error) throw liveSubs.error;
   if (payments.error) throw payments.error;
@@ -63,6 +66,14 @@ export default async function AdminDashboard({ params }: PageProps<"/admin/[slug
   return (
     <>
       <PageHeader title="Dashboard" />
+      {!!pending.count && (
+        <Link
+          href={`/admin/${slug}/payments`}
+          className="mb-6 block rounded-xl border border-amber-500/50 bg-amber-500/10 p-4 text-sm font-medium"
+        >
+          {pending.count === 1 ? "1 UPI payment is" : `${pending.count} UPI payments are`} waiting for you to confirm →
+        </Link>
+      )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
           <Card key={s.label}>

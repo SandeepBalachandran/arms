@@ -4,6 +4,7 @@ import { addDays, formatMoney, PAYMENT_METHOD_LABELS, todayIn, type PaymentMetho
 import { Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { PendingPayments } from "./pending-payments";
 
 export const metadata: Metadata = { title: "Payments" };
 
@@ -59,6 +60,8 @@ export default async function PaymentsPage({ params, searchParams }: PageProps<"
           </div>
         }
       />
+
+      <PendingPayments slug={slug} gymId={gym.id} currency={gym.currency} timezone={gym.timezone} />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
