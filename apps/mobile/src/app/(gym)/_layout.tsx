@@ -1,10 +1,12 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 
 import { useTheme } from '@/hooks/use-theme';
+import { useActiveGym } from '@/lib/gyms';
 
-// Later phases add Classes, Workouts and Progress tabs.
+// Later phases add Workouts and Progress tabs. Optional features hide their tab.
 export default function GymTabs() {
   const theme = useTheme();
+  const gym = useActiveGym()?.gym;
   return (
     <NativeTabs
       backgroundColor={theme.surface}
@@ -14,6 +16,10 @@ export default function GymTabs() {
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="classes" hidden={!gym?.classes_enabled}>
+        <NativeTabs.Trigger.Label>Classes</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="calendar" md="calendar_month" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="membership">
         <NativeTabs.Trigger.Label>Membership</NativeTabs.Trigger.Label>

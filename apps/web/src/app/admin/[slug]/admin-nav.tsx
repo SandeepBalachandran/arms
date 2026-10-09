@@ -3,20 +3,26 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { CreditCard, LayoutDashboard, ReceiptIndianRupee, ScanLine, Settings, Users } from "lucide-react";
+import { CalendarDays, CreditCard, LayoutDashboard, ReceiptIndianRupee, ScanLine, Settings, Users } from "lucide-react";
 import type { GymRole } from "@/lib/auth";
 
-// Later phases add Classes, Workouts and Reports here.
+// Later phases add Workouts and Reports here.
 const ITEMS = [
   { href: "", label: "Dashboard", icon: LayoutDashboard, roles: null },
   { href: "/checkin", label: "Check-in", icon: ScanLine, roles: ["owner", "admin", "staff"], needsCheckin: true },
   { href: "/members", label: "Members", icon: Users, roles: null },
+  { href: "/classes", label: "Classes", icon: CalendarDays, roles: null, needsClasses: true },
   { href: "/plans", label: "Plans", icon: CreditCard, roles: null },
   { href: "/payments", label: "Payments", icon: ReceiptIndianRupee, roles: ["owner", "admin", "staff"] },
   { href: "/settings", label: "Settings", icon: Settings, roles: ["owner", "admin"] },
 ] as const;
 
-export function AdminNav({ slug, role, checkinEnabled }: { slug: string; role: GymRole; checkinEnabled: boolean }) {
+export function AdminNav({ slug, role, checkinEnabled, classesEnabled }: {
+  slug: string;
+  role: GymRole;
+  checkinEnabled: boolean;
+  classesEnabled: boolean;
+}) {
   const pathname = usePathname();
   const base = `/admin/${slug}`;
 
@@ -25,7 +31,8 @@ export function AdminNav({ slug, role, checkinEnabled }: { slug: string; role: G
       {ITEMS.filter(
         (i) =>
           (!i.roles || (i.roles as readonly GymRole[]).includes(role)) &&
-          (!("needsCheckin" in i) || checkinEnabled),
+          (!("needsCheckin" in i) || checkinEnabled) &&
+          (!("needsClasses" in i) || classesEnabled),
       ).map(
         ({ href, label, icon: Icon }) => {
           const target = base + href;

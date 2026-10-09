@@ -20,6 +20,7 @@ export type GymMembership = {
     upi_id: string | null;
     upi_payee_name: string | null;
     checkin_enabled: boolean;
+    classes_enabled: boolean;
   };
 };
 
@@ -35,7 +36,7 @@ export function useMyGyms() {
     queryFn: async (): Promise<GymMembership[]> => {
       const { data, error } = await supabase
         .from('gym_members')
-        .select('id, role, gyms!inner(id, slug, name, logo_url, timezone, currency, upi_id, upi_payee_name, checkin_enabled, status)')
+        .select('id, role, gyms!inner(id, slug, name, logo_url, timezone, currency, upi_id, upi_payee_name, checkin_enabled, classes_enabled, status)')
         .eq('user_id', userId!)
         .eq('status', 'active')
         .eq('gyms.status', 'active')

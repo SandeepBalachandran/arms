@@ -3,3 +3,4 @@ export * from "./gyms";
 export * from "./memberships";
 export * from "./upi";
 export * from "./checkins";
+export * from "./classes";

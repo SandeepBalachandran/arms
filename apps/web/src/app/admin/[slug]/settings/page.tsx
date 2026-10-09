@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Card, PageHeader } from "@/components/ui";
 import { requireGym } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { updateCheckin } from "./actions";
+import { setFeature } from "./actions";
 import { SettingsForm, UpiForm } from "./settings-form";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -13,7 +13,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
   const supabase = await createClient();
   const { data } = await supabase
     .from("gyms")
-    .select("name, address, phone, timezone, upi_id, upi_payee_name, checkin_enabled")
+    .select("name, address, phone, timezone, upi_id, upi_payee_name, checkin_enabled, classes_enabled")
     .eq("id", gym.id)
     .single();
 
@@ -33,24 +33,45 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
           </p>
           <UpiForm slug={slug} upiId={data!.upi_id} payeeName={data!.upi_payee_name} />
         </Card>
-        <Card className="h-fit">
-          <h2 className="font-medium">Check-in</h2>
-          <p className="mt-1 text-sm text-muted">
-            Optional. When on, members can tap &ldquo;Check in&rdquo; in the app, and staff can scan a member&apos;s QR code
-            or check them in by hand. Nobody is ever turned away; expired memberships are only flagged.
-          </p>
-          <form action={updateCheckin} className="mt-4 flex items-center gap-3">
-            <input type="hidden" name="slug" value={slug} />
-            <input type="hidden" name="enabled" value={data!.checkin_enabled ? "false" : "true"} />
-            <span className="text-sm">
-              Currently <strong>{data!.checkin_enabled ? "on" : "off"}</strong>
-            </span>
-            <button className="rounded-lg border border-border px-3 py-1.5 text-sm">
-              Turn {data!.checkin_enabled ? "off" : "on"}
-            </button>
-          </form>
-        </Card>
+        <FeatureCard
+          slug={slug}
+          feature="checkin_enabled"
+          enabled={data!.checkin_enabled}
+          title="Check-in"
+          description="Members tap “Check in” in the app, or staff scan their QR code or check them in by hand. Nobody is turned away; expired memberships are only flagged."
+        />
+        <FeatureCard
+          slug={slug}
+          feature="classes_enabled"
+          enabled={data!.classes_enabled}
+          title="Classes"
+          description="Schedule group classes (Zumba, yoga, HIIT…). Members book in the app, with a waitlist when a class is full."
+        />
       </div>
     </>
+  );
+}
+
+function FeatureCard({ slug, feature, enabled, title, description }: {
+  slug: string;
+  feature: "checkin_enabled" | "classes_enabled";
+  enabled: boolean;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Card className="h-fit">
+      <h2 className="font-medium">{title}</h2>
+      <p className="mt-1 text-sm text-muted">Optional. {description}</p>
+      <form action={setFeature} className="mt-4 flex items-center gap-3">
+        <input type="hidden" name="slug" value={slug} />
+        <input type="hidden" name="feature" value={feature} />
+        <input type="hidden" name="enabled" value={enabled ? "false" : "true"} />
+        <span className="text-sm">
+          Currently <strong>{enabled ? "on" : "off"}</strong>
+        </span>
+        <button className="rounded-lg border border-border px-3 py-1.5 text-sm">Turn {enabled ? "off" : "on"}</button>
+      </form>
+    </Card>
   );
 }

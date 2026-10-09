@@ -10,6 +10,8 @@ type SubscriptionStatus = "active" | "cancelled" | "expired";
 type PaymentMethod = "online" | "cash" | "upi" | "card" | "bank_transfer";
 type PaymentStatus = "created" | "paid" | "failed" | "refunded";
 type CheckinMethod = "self" | "scan" | "manual";
+type SessionStatus = "scheduled" | "cancelled";
+type BookingStatus = "booked" | "waitlisted" | "cancelled" | "attended" | "no_show";
 
 export type Database = {
   public: {
@@ -54,6 +56,7 @@ export type Database = {
           upi_id: string | null;
           upi_payee_name: string | null;
           checkin_enabled: boolean;
+          classes_enabled: boolean;
           created_at: string;
         };
         Insert: {
@@ -70,6 +73,7 @@ export type Database = {
           upi_id?: string | null;
           upi_payee_name?: string | null;
           checkin_enabled?: boolean;
+          classes_enabled?: boolean;
           created_at?: string;
         };
         Update: {
@@ -85,6 +89,7 @@ export type Database = {
           upi_id?: string | null;
           upi_payee_name?: string | null;
           checkin_enabled?: boolean;
+          classes_enabled?: boolean;
         };
         Relationships: [];
       };
@@ -285,6 +290,97 @@ export type Database = {
           { foreignKeyName: "checkins_member_id_fkey"; columns: ["member_id"]; isOneToOne: false; referencedRelation: "gym_members"; referencedColumns: ["id"] },
         ];
       };
+      class_types: {
+        Row: {
+          id: string;
+          gym_id: string;
+          name: string;
+          description: string | null;
+          default_capacity: number;
+          default_duration_min: number;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          gym_id: string;
+          name: string;
+          description?: string | null;
+          default_capacity?: number;
+          default_duration_min?: number;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+          description?: string | null;
+          default_capacity?: number;
+          default_duration_min?: number;
+          is_active?: boolean;
+        };
+        Relationships: [
+          { foreignKeyName: "class_types_gym_id_fkey"; columns: ["gym_id"]; isOneToOne: false; referencedRelation: "gyms"; referencedColumns: ["id"] },
+        ];
+      };
+      class_sessions: {
+        Row: {
+          id: string;
+          gym_id: string;
+          class_type_id: string;
+          trainer_member_id: string | null;
+          starts_at: string;
+          duration_min: number;
+          capacity: number;
+          room: string | null;
+          status: SessionStatus;
+          cancel_reason: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          gym_id: string;
+          class_type_id: string;
+          trainer_member_id?: string | null;
+          starts_at: string;
+          duration_min: number;
+          capacity: number;
+          room?: string | null;
+          status?: SessionStatus;
+          cancel_reason?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          trainer_member_id?: string | null;
+          starts_at?: string;
+          duration_min?: number;
+          capacity?: number;
+          room?: string | null;
+        };
+        Relationships: [
+          { foreignKeyName: "class_sessions_gym_id_fkey"; columns: ["gym_id"]; isOneToOne: false; referencedRelation: "gyms"; referencedColumns: ["id"] },
+          { foreignKeyName: "class_sessions_class_type_id_fkey"; columns: ["class_type_id"]; isOneToOne: false; referencedRelation: "class_types"; referencedColumns: ["id"] },
+          { foreignKeyName: "class_sessions_trainer_member_id_fkey"; columns: ["trainer_member_id"]; isOneToOne: false; referencedRelation: "gym_members"; referencedColumns: ["id"] },
+        ];
+      };
+      class_bookings: {
+        Row: {
+          id: string;
+          gym_id: string;
+          session_id: string;
+          member_id: string;
+          status: BookingStatus;
+          waitlisted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [
+          { foreignKeyName: "class_bookings_gym_id_fkey"; columns: ["gym_id"]; isOneToOne: false; referencedRelation: "gyms"; referencedColumns: ["id"] },
+          { foreignKeyName: "class_bookings_session_id_fkey"; columns: ["session_id"]; isOneToOne: false; referencedRelation: "class_sessions"; referencedColumns: ["id"] },
+          { foreignKeyName: "class_bookings_member_id_fkey"; columns: ["member_id"]; isOneToOne: false; referencedRelation: "gym_members"; referencedColumns: ["id"] },
+        ];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -316,6 +412,44 @@ export type Database = {
       issue_checkin_token: { Args: { p_gym_id: string }; Returns: string };
       check_in_by_token: { Args: { p_token: string }; Returns: Json };
       staff_check_in: { Args: { p_member_id: string }; Returns: Json };
+      class_schedule: {
+        Args: { p_gym_id: string; p_from: string; p_to: string };
+        Returns: {
+          id: string;
+          class_type_id: string;
+          class_name: string;
+          description: string | null;
+          trainer_name: string | null;
+          starts_at: string;
+          duration_min: number;
+          capacity: number;
+          room: string | null;
+          status: SessionStatus;
+          cancel_reason: string | null;
+          booked_count: number;
+          waitlist_count: number;
+          my_booking_id: string | null;
+          my_status: BookingStatus | null;
+        }[];
+      };
+      create_class_series: {
+        Args: {
+          p_class_type_id: string;
+          p_weekdays: number[];
+          p_local_time: string;
+          p_start_date: string;
+          p_weeks: number;
+          p_trainer_member_id?: string;
+          p_capacity?: number;
+          p_duration_min?: number;
+          p_room?: string;
+        };
+        Returns: number;
+      };
+      book_class: { Args: { p_session_id: string }; Returns: BookingStatus };
+      cancel_booking: { Args: { p_booking_id: string }; Returns: undefined };
+      cancel_class_session: { Args: { p_session_id: string; p_reason?: string }; Returns: undefined };
+      mark_attendance: { Args: { p_booking_id: string; p_attended: boolean }; Returns: undefined };
     };
     Enums: {
       gym_role: GymRole;
@@ -325,6 +459,8 @@ export type Database = {
       payment_method: PaymentMethod;
       payment_status: PaymentStatus;
       checkin_method: CheckinMethod;
+      session_status: SessionStatus;
+      booking_status: BookingStatus;
     };
     CompositeTypes: { [_ in never]: never };
   };
