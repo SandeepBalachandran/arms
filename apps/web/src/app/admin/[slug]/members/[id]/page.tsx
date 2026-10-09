@@ -5,6 +5,7 @@ import {
   formatDate,
   formatMoney,
   membershipState,
+  num,
   PAYMENT_METHOD_LABELS,
   todayIn,
 } from "@gymos/shared";
@@ -49,6 +50,16 @@ export default async function MemberPage({ params }: PageProps<"/admin/[slug]/me
   ]);
   if (subs.error) throw subs.error;
   if (visits.error) throw visits.error;
+
+  const progress = gym.workouts_enabled
+    ? await Promise.all([
+        supabase.from("plan_assignments").select("id, workout_plans!inner(id, name)").eq("member_id", id),
+        supabase.from("workout_logs").select("id", { count: "exact", head: true })
+          .eq("member_id", id).gte("performed_at", hoursAgo(30 * 24)),
+        supabase.from("body_metrics").select("measured_on, weight_kg").eq("member_id", id)
+          .not("weight_kg", "is", null).order("measured_on", { ascending: false }).limit(1).maybeSingle(),
+      ])
+    : null;
   if (payments.error) throw payments.error;
   if (plans.error) throw plans.error;
 
@@ -71,6 +82,30 @@ export default async function MemberPage({ params }: PageProps<"/admin/[slug]/me
             <div><span className="text-muted">Role </span><span className="capitalize">{member.role}</span></div>
             <div><span className="text-muted">Joined </span>{new Date(member.joined_at).toLocaleDateString("en-IN", { timeZone: gym.timezone })}</div>
           </Card>
+
+          {progress && (
+            <Card className="text-sm">
+              <h2 className="font-medium">Workouts & progress</h2>
+              <p className="mt-1 text-muted">
+                {progress[1].count ?? 0} workouts logged in the last 30 days
+                {progress[2].data &&
+                  ` · weight ${num(progress[2].data.weight_kg)} kg on ${formatDate(progress[2].data.measured_on)}`}
+              </p>
+              <p className="mt-1">
+                <span className="text-muted">Plans: </span>
+                {progress[0].data?.length
+                  ? progress[0].data.map((a, i) => (
+                      <span key={a.id}>
+                        {i > 0 && ", "}
+                        <Link href={`/admin/${slug}/workouts/${a.workout_plans.id}`} className="hover:underline">
+                          {a.workout_plans.name}
+                        </Link>
+                      </span>
+                    ))
+                  : "none assigned (assign one from a plan's page)"}
+              </p>
+            </Card>
+          )}
 
           {gym.checkin_enabled && (
             <Card>

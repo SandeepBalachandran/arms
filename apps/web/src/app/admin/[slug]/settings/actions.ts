@@ -54,24 +54,27 @@ export async function updateUpi(_prev: SettingsState, formData: FormData): Promi
   return { saved: true };
 }
 
-// Turns an optional feature (check-in, classes) on or off for the gym.
+// Turns an optional feature (check-in, classes, workouts) on or off for the gym.
 export async function setFeature(formData: FormData) {
   const { slug, feature, enabled } = z
     .object({
       slug: z.string(),
-      feature: z.enum(["checkin_enabled", "classes_enabled"]),
+      feature: z.enum(["checkin_enabled", "classes_enabled", "workouts_enabled"]),
       enabled: z.enum(["true", "false"]),
     })
     .parse(Object.fromEntries(formData));
   const { gym } = await requireGym(slug, ["owner", "admin"]);
 
   const supabase = await createClient();
+  const on = enabled === "true";
   const { error } = await supabase
     .from("gyms")
     .update(
       feature === "checkin_enabled"
-        ? { checkin_enabled: enabled === "true" }
-        : { classes_enabled: enabled === "true" },
+        ? { checkin_enabled: on }
+        : feature === "classes_enabled"
+          ? { classes_enabled: on }
+          : { workouts_enabled: on },
     )
     .eq("id", gym.id);
   if (error) throw new Error(error.message);

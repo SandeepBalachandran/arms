@@ -1,4 +1,4 @@
-import { dayKey, formatDay, todayIn } from '@gymos/shared';
+import { dayKey, formatDay, groupBy, todayIn } from '@gymos/shared';
 import { useState } from 'react';
 import { RefreshControl, SectionList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,7 +19,7 @@ export default function ClassesScreen() {
   if (schedule.isPending) return <Loading />;
 
   const today = todayIn(gym.timezone);
-  const sections = [...Map.groupBy(schedule.data ?? [], (c) => dayKey(c.starts_at, gym.timezone))].map(
+  const sections = [...groupBy(schedule.data ?? [], (c) => dayKey(c.starts_at, gym.timezone))].map(
     ([day, data]) => ({ title: day === today ? `Today · ${formatDay(day)}` : formatDay(day), data }),
   );
 

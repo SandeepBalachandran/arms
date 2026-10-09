@@ -25,6 +25,7 @@ export type GymMembership = {
     currency: string;
     checkin_enabled: boolean;
     classes_enabled: boolean;
+    workouts_enabled: boolean;
   };
 };
 
@@ -63,7 +64,7 @@ export const getMyGyms = cache(async (): Promise<GymMembership[]> => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("gym_members")
-    .select("id, role, gyms!inner(id, slug, name, logo_url, timezone, currency, checkin_enabled, classes_enabled, status)")
+    .select("id, role, gyms!inner(id, slug, name, logo_url, timezone, currency, checkin_enabled, classes_enabled, workouts_enabled, status)")
     .eq("user_id", user.id)
     .eq("status", "active")
     .eq("gyms.status", "active")

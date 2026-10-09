@@ -3,7 +3,8 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { useTheme } from '@/hooks/use-theme';
 import { useActiveGym } from '@/lib/gyms';
 
-// Later phases add Workouts and Progress tabs. Optional features hide their tab.
+// Optional features hide their tab. Android allows at most 5 tabs, so
+// Progress is a screen inside Workouts rather than its own tab.
 export default function GymTabs() {
   const theme = useTheme();
   const gym = useActiveGym()?.gym;
@@ -20,6 +21,10 @@ export default function GymTabs() {
       <NativeTabs.Trigger name="classes" hidden={!gym?.classes_enabled}>
         <NativeTabs.Trigger.Label>Classes</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="calendar" md="calendar_month" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="workouts" hidden={!gym?.workouts_enabled}>
+        <NativeTabs.Trigger.Label>Workouts</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="dumbbell.fill" md="fitness_center" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="membership">
         <NativeTabs.Trigger.Label>Membership</NativeTabs.Trigger.Label>

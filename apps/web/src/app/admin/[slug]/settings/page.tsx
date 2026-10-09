@@ -13,7 +13,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
   const supabase = await createClient();
   const { data } = await supabase
     .from("gyms")
-    .select("name, address, phone, timezone, upi_id, upi_payee_name, checkin_enabled, classes_enabled")
+    .select("name, address, phone, timezone, upi_id, upi_payee_name, checkin_enabled, classes_enabled, workouts_enabled")
     .eq("id", gym.id)
     .single();
 
@@ -47,6 +47,13 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
           title="Classes"
           description="Schedule group classes (Zumba, yoga, HIIT…). Members book in the app, with a waitlist when a class is full."
         />
+        <FeatureCard
+          slug={slug}
+          feature="workouts_enabled"
+          enabled={data!.workouts_enabled}
+          title="Workouts & progress"
+          description="Trainers build workout plans and assign them. Members log workouts and body measurements and see their progress."
+        />
       </div>
     </>
   );
@@ -54,7 +61,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
 
 function FeatureCard({ slug, feature, enabled, title, description }: {
   slug: string;
-  feature: "checkin_enabled" | "classes_enabled";
+  feature: "checkin_enabled" | "classes_enabled" | "workouts_enabled";
   enabled: boolean;
   title: string;
   description: string;

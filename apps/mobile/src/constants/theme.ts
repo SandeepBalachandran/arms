@@ -10,6 +10,8 @@ export const Colors = {
     brand: '#65a30d',
     brandText: '#ffffff',
     danger: '#dc2626',
+    // Data marks. Validated (dataviz validator) against both surfaces.
+    chart: '#65a30d',
   },
   dark: {
     text: '#fafafa',
@@ -20,6 +22,7 @@ export const Colors = {
     brand: '#a3e635',
     brandText: '#1a2e05',
     danger: '#f87171',
+    chart: '#65a30d',
   },
 } as const;
 
