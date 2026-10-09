@@ -10,7 +10,8 @@ the app (or the Play Store) and joins their gym.
 | `apps/mobile` | Expo (React Native) member app |
 | `packages/shared` | `@gymos/shared`: database types, roles, gym-code rules |
 | `supabase` | Migrations, email templates (shared backend) |
-| `docs/PLAN.md` | Product and build plan |
+| `docs/HOW-IT-WORKS.md` | How everything works: product flows, architecture, data, security, running and releasing |
+| `docs/PLAN.md` | Milestones done and what’s next |
 
 ## Setup
 
