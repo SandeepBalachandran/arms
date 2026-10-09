@@ -1,4 +1,4 @@
-import 'expo-sqlite/localStorage/install';
+import './local-storage';
 
 import type { Database } from '@gymos/shared';
 import { createClient } from '@supabase/supabase-js';

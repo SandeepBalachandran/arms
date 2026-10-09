@@ -9,6 +9,7 @@
   "scripts": {
     "web": "npm run dev -w @gymos/web",
     "mobile": "npm run start -w @gymos/mobile",
+    "mobile:web": "npm run web -w @gymos/mobile",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "db:start": "supabase start",
