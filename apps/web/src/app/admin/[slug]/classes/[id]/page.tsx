@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { dayKey, formatDay, formatTime, hasStarted } from "@gymos/shared";
+import { ActionForm } from "@/components/action-form";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -76,7 +77,7 @@ export default async function SessionPage({ params }: PageProps<"/admin/[slug]/c
                       {session.status === "scheduled" && (
                         <>
                           {(["true", "false"] as const).map((attended) => (
-                            <form key={attended} action={markAttendance}>
+                            <ActionForm key={attended} action={markAttendance} success={attended === "true" ? "Marked as came" : "Marked as no-show"}>
                               <input type="hidden" name="slug" value={slug} />
                               <input type="hidden" name="session_id" value={id} />
                               <input type="hidden" name="booking_id" value={b.id} />
@@ -84,15 +85,15 @@ export default async function SessionPage({ params }: PageProps<"/admin/[slug]/c
                               <button className="rounded-lg border border-border px-2 py-1 text-xs">
                                 {attended === "true" ? "Came" : "No-show"}
                               </button>
-                            </form>
+                            </ActionForm>
                           ))}
                           {isStaff && !started && b.status === "booked" && (
-                            <form action={removeBooking}>
+                            <ActionForm action={removeBooking} success="Booking removed" confirm="Remove this person from the class?">
                               <input type="hidden" name="slug" value={slug} />
                               <input type="hidden" name="session_id" value={id} />
                               <input type="hidden" name="booking_id" value={b.id} />
                               <button className="px-1 text-xs text-danger hover:underline">Remove</button>
-                            </form>
+                            </ActionForm>
                           )}
                         </>
                       )}
@@ -125,7 +126,7 @@ export default async function SessionPage({ params }: PageProps<"/admin/[slug]/c
           <Card className="h-fit">
             <h2 className="mb-1 font-medium">Cancel this class</h2>
             <p className="mb-3 text-sm text-muted">Booked members see it as cancelled in the app.</p>
-            <form action={cancelSession} className="space-y-2">
+            <ActionForm action={cancelSession} success="Class cancelled" confirm="Cancel this class? Everyone booked will see it as cancelled." className="space-y-2">
               <input type="hidden" name="slug" value={slug} />
               <input type="hidden" name="id" value={id} />
               <input
@@ -135,7 +136,7 @@ export default async function SessionPage({ params }: PageProps<"/admin/[slug]/c
                 className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
               />
               <button className="w-full rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white">Cancel class</button>
-            </form>
+            </ActionForm>
           </Card>
         )}
       </div>

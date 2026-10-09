@@ -1,10 +1,13 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { MoreHorizontal, Pencil, UserMinus, UserPlus, Wallet } from "lucide-react";
 import type { PaymentMethod, Plan } from "@gymos/shared";
+import { ActionForm } from "@/components/action-form";
 import { Dropdown, menuItemClass } from "@/components/dropdown";
 import { Modal } from "@/components/modal";
+import { Tooltip } from "@/components/tooltip";
+import { useSavedToast } from "@/lib/use-saved-toast";
 import { Button, Field, FormError, Input } from "@/components/ui";
 import { setMemberActive, updateMemberDetails } from "../actions";
 import { RecordPaymentForm } from "./record-payment-form";
@@ -60,6 +63,7 @@ export function MemberMenu({
     <>
       <Dropdown
         label="More actions"
+        tooltip="More actions"
         trigger={
           <span className="flex size-9 items-center justify-center rounded-lg border border-border hover:bg-border/40">
             <MoreHorizontal className="size-4" />
@@ -70,7 +74,7 @@ export function MemberMenu({
           <Pencil className="size-4 text-muted" /> Edit details
         </button>
         {canRemove && (
-          <form action={setMemberActive}>
+          <ActionForm action={setMemberActive} success={active ? "Removed from the gym" : "Restored to the gym"} confirm={active ? "Remove this person from the gym? They lose access until restored." : undefined}>
             <input type="hidden" name="slug" value={slug} />
             <input type="hidden" name="member_id" value={memberId} />
             <input type="hidden" name="active" value={active ? "false" : "true"} />
@@ -78,7 +82,7 @@ export function MemberMenu({
               {active ? <UserMinus className="size-4" /> : <UserPlus className="size-4" />}
               {active ? "Remove from gym" : "Restore to gym"}
             </button>
-          </form>
+          </ActionForm>
         )}
       </Dropdown>
       <Modal open={editing} onClose={() => setEditing(false)} title="Edit member details">
@@ -96,9 +100,7 @@ function EditDetailsForm({ slug, memberId, fullName, phone, onSaved }: {
   onSaved: () => void;
 }) {
   const [state, action, pending] = useActionState(updateMemberDetails, undefined);
-  useEffect(() => {
-    if (state?.saved) onSaved();
-  }, [state, onSaved]);
+  useSavedToast(state, "Member details saved", onSaved);
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="slug" value={slug} />
@@ -126,14 +128,16 @@ export function EditMemberButton({ slug, memberId, fullName, phone }: {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label={`Edit ${fullName || "member"}`}
-        className="rounded-lg p-2 text-muted hover:bg-border/40 hover:text-foreground"
-      >
-        <Pencil className="size-4" />
-      </button>
+      <Tooltip content="Edit details">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={`Edit ${fullName || "member"}`}
+          className="rounded-lg p-2 text-muted hover:bg-border/40 hover:text-foreground"
+        >
+          <Pencil className="size-4" />
+        </button>
+      </Tooltip>
       <Modal open={open} onClose={() => setOpen(false)} title="Edit member details">
         <EditDetailsForm slug={slug} memberId={memberId} fullName={fullName} phone={phone} onSaved={() => setOpen(false)} />
       </Modal>

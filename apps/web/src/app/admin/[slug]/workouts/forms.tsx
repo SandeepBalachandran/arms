@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useSavedToast } from "@/lib/use-saved-toast";
 import { Button, Field, FormError, Input, Select } from "@/components/ui";
 import { addPlanItem, createExercise, createPlan } from "./actions";
 
@@ -23,6 +24,7 @@ export function NewPlanForm({ slug }: { slug: string }) {
 
 export function NewExerciseForm({ slug }: { slug: string }) {
   const [state, action, pending] = useActionState(createExercise, undefined);
+  useSavedToast(state, "Exercise added");
   return (
     <form action={action} className="space-y-3">
       <input type="hidden" name="slug" value={slug} />
@@ -42,7 +44,6 @@ export function NewExerciseForm({ slug }: { slug: string }) {
         </Field>
       </div>
       <FormError message={state?.error} />
-      {state?.message && <p className="text-sm text-muted">{state.message}</p>}
       <Button variant="secondary" disabled={pending}>{pending ? "Adding…" : "Add exercise"}</Button>
     </form>
   );
@@ -60,6 +61,7 @@ export function AddItemForm({
   exercises: { id: string; name: string; muscle_group: string }[];
 }) {
   const [state, action, pending] = useActionState(addPlanItem, undefined);
+  useSavedToast(state, "Added to plan");
   const groups = Map.groupBy(exercises, (e) => e.muscle_group);
   return (
     <form action={action} className="space-y-3">

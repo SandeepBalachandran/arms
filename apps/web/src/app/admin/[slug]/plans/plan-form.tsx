@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { formatMoney, type Plan } from "@gymos/shared";
 import { Pencil, Plus } from "lucide-react";
 import { Modal } from "@/components/modal";
+import { useSavedToast } from "@/lib/use-saved-toast";
 import { Button, Field, FormError, Input, Select } from "@/components/ui";
 import { savePlan } from "./actions";
 
@@ -15,7 +16,14 @@ const DURATIONS = [
 ];
 
 // "New plan" / "Edit" button that opens the plan form in a modal.
-export function PlanDialog({ slug, currency, plan }: { slug: string; currency: string; plan?: Plan }) {
+// Class limits only matter when the gym runs group classes (Settings → Classes);
+// otherwise a plan is simply gym access for its duration.
+export function PlanDialog({ slug, currency, classesEnabled, plan }: {
+  slug: string;
+  currency: string;
+  classesEnabled: boolean;
+  plan?: Plan;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -33,13 +41,19 @@ export function PlanDialog({ slug, currency, plan }: { slug: string; currency: s
         </Button>
       )}
       <Modal open={open} onClose={() => setOpen(false)} title={plan ? `Edit ${plan.name}` : "New plan"}>
-        <PlanForm slug={slug} currency={currency} plan={plan} onSaved={() => setOpen(false)} />
+        <PlanForm slug={slug} currency={currency} classesEnabled={classesEnabled} plan={plan} onSaved={() => setOpen(false)} />
       </Modal>
     </>
   );
 }
 
-function PlanForm({ slug, currency, plan, onSaved }: { slug: string; currency: string; plan?: Plan; onSaved: () => void }) {
+function PlanForm({ slug, currency, classesEnabled, plan, onSaved }: {
+  slug: string;
+  currency: string;
+  classesEnabled: boolean;
+  plan?: Plan;
+  onSaved: () => void;
+}) {
   const [state, action, pending] = useActionState(savePlan, undefined);
   const initialPreset = DURATIONS.find((d) => d.days === plan?.duration_days)?.days ?? (plan ? "custom" : 30);
   const [preset, setPreset] = useState<number | "custom">(initialPreset);
@@ -47,9 +61,7 @@ function PlanForm({ slug, currency, plan, onSaved }: { slug: string; currency: s
   const [unlimited, setUnlimited] = useState(plan?.class_credits == null);
   const [price, setPrice] = useState(plan ? String(plan.price_paise / 100) : "");
 
-  useEffect(() => {
-    if (state?.saved) onSaved();
-  }, [state, onSaved]);
+  useSavedToast(state, plan ? "Plan saved" : "Plan created", onSaved);
 
   const days = preset === "custom" ? Number(customDays) || 0 : preset;
   const paise = Math.round(Number(price.replace(/,/g, "")) * 100) || 0;
@@ -60,7 +72,9 @@ function PlanForm({ slug, currency, plan, onSaved }: { slug: string; currency: s
       <input type="hidden" name="slug" value={slug} />
       {plan && <input type="hidden" name="id" value={plan.id} />}
       <input type="hidden" name="duration_days" value={days} />
-      {unlimited && <input type="hidden" name="class_credits" value="" />}
+      {classesEnabled
+        ? unlimited && <input type="hidden" name="class_credits" value="" />
+        : <input type="hidden" name="class_credits" value={plan?.class_credits ?? ""} />}
 
       <Field label="Plan name">
         <Input name="name" defaultValue={plan?.name} placeholder="Monthly" required autoFocus />
@@ -81,6 +95,7 @@ function PlanForm({ slug, currency, plan, onSaved }: { slug: string; currency: s
           <Input type="number" min={1} max={3660} value={customDays} onChange={(e) => setCustomDays(e.target.value)} required />
         </Field>
       )}
+      {classesEnabled && (
       <div className="space-y-2">
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={unlimited} onChange={(e) => setUnlimited(e.target.checked)} className="size-4 accent-brand" />
@@ -92,6 +107,7 @@ function PlanForm({ slug, currency, plan, onSaved }: { slug: string; currency: s
           </Field>
         )}
       </div>
+      )}
       <Field label="Description" hint="Shown to members in the app.">
         <Input name="description" defaultValue={plan?.description ?? ""} placeholder="Gym floor access, all day" />
       </Field>

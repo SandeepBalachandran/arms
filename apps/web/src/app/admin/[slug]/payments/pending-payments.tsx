@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatMoney } from "@gymos/shared";
+import { ActionForm } from "@/components/action-form";
 import { Card } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { reviewUpiPayment } from "./actions";
@@ -43,13 +44,13 @@ export async function PendingPayments({ slug, gymId, currency, timezone }: {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <form action={reviewUpiPayment}>
+              <ActionForm action={reviewUpiPayment} success="Payment confirmed: membership started">
                 <input type="hidden" name="slug" value={slug} />
                 <input type="hidden" name="id" value={p.id} />
                 <input type="hidden" name="decision" value="confirm" />
                 <button className="rounded-lg bg-brand px-3 py-1.5 font-medium text-brand-fg">Confirm</button>
-              </form>
-              <form action={reviewUpiPayment} className="flex gap-1">
+              </ActionForm>
+              <ActionForm action={reviewUpiPayment} success="Payment rejected" confirm="Reject this payment? The member will be told it wasn't received." className="flex gap-1">
                 <input type="hidden" name="slug" value={slug} />
                 <input type="hidden" name="id" value={p.id} />
                 <input type="hidden" name="decision" value="reject" />
@@ -60,7 +61,7 @@ export async function PendingPayments({ slug, gymId, currency, timezone }: {
                   className="w-40 rounded-lg border border-border bg-surface px-2 py-1.5"
                 />
                 <button className="rounded-lg border border-border px-3 py-1.5 text-danger">Reject</button>
-              </form>
+              </ActionForm>
             </div>
           </li>
         ))}

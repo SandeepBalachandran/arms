@@ -64,6 +64,7 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
       <div className="flex items-center gap-1">
         <Dropdown
           label={notifications.length ? `Notifications, ${notifications.length} new` : "Notifications"}
+          tooltip="Notifications"
           trigger={
             <span className="relative flex size-9 items-center justify-center rounded-full text-muted hover:bg-border/40">
               <Bell className="size-5" />
@@ -91,6 +92,7 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
 
         <Dropdown
           label="Account menu"
+          tooltip="Account"
           trigger={
             <span className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-border/40">
               <Avatar text={displayName} />

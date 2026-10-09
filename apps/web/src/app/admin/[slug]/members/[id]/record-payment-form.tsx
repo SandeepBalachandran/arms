@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import {
   formatDuration,
   formatMoney,
@@ -8,6 +8,7 @@ import {
   type PaymentMethod,
   type Plan,
 } from "@gymos/shared";
+import { useSavedToast } from "@/lib/use-saved-toast";
 import { Button, Field, FormError, Input, Select } from "@/components/ui";
 import { recordPayment } from "../actions";
 
@@ -31,9 +32,7 @@ export function RecordPaymentForm({
   const [planId, setPlanId] = useState(plans[0].id);
   const plan = plans.find((p) => p.id === planId)!;
 
-  useEffect(() => {
-    if (state?.saved) onSaved?.();
-  }, [state, onSaved]);
+  useSavedToast(state, "Payment recorded", onSaved);
 
   return (
     <form action={action} className="space-y-4">
@@ -71,7 +70,6 @@ export function RecordPaymentForm({
         <Input name="note" placeholder="UPI ref, discount reason…" maxLength={300} />
       </Field>
       <FormError message={state?.error} />
-      {state?.saved && <p className="text-sm text-muted">Payment recorded.</p>}
       <Button className="w-full" disabled={pending}>
         {pending ? "Saving…" : "Record payment"}
       </Button>

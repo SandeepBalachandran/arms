@@ -2,11 +2,13 @@
 
 import { useActionState } from "react";
 import { WEEKDAYS } from "@gymos/shared";
+import { useSavedToast } from "@/lib/use-saved-toast";
 import { Button, Field, FormError, Input, Select } from "@/components/ui";
 import { createClassType, createSeries } from "./actions";
 
 export function ClassTypeForm({ slug }: { slug: string }) {
   const [state, action, pending] = useActionState(createClassType, undefined);
+  useSavedToast(state, "Class type added");
   return (
     <form action={action} className="space-y-3">
       <input type="hidden" name="slug" value={slug} />
@@ -25,7 +27,6 @@ export function ClassTypeForm({ slug }: { slug: string }) {
         <Input name="description" placeholder="High-energy dance workout" />
       </Field>
       <FormError message={state?.error} />
-      {state?.message && <p className="text-sm text-muted">{state.message}</p>}
       <Button variant="secondary" disabled={pending}>{pending ? "Adding…" : "Add class type"}</Button>
     </form>
   );
@@ -43,6 +44,7 @@ export function SeriesForm({
   defaultStart: string;
 }) {
   const [state, action, pending] = useActionState(createSeries, undefined);
+  useSavedToast(state, "Classes scheduled");
   return (
     <form action={action} className="space-y-3">
       <input type="hidden" name="slug" value={slug} />
@@ -91,7 +93,6 @@ export function SeriesForm({
         </Field>
       </div>
       <FormError message={state?.error} />
-      {state?.message && <p className="text-sm text-muted">{state.message}</p>}
       <Button className="w-full" disabled={pending}>{pending ? "Scheduling…" : "Schedule classes"}</Button>
     </form>
   );

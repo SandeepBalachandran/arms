@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import type { ActionResult } from "@/lib/action-result";
 import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -73,7 +74,7 @@ export async function createSeries(_prev: FormState, formData: FormData): Promis
   return { message: data === 1 ? "Added 1 class." : `Added ${data} classes.` };
 }
 
-export async function cancelSession(formData: FormData) {
+export async function cancelSession(formData: FormData): Promise<ActionResult> {
   const { slug, id, reason } = z
     .object({ slug: z.string(), id: z.uuid(), reason: z.string().trim().max(300) })
     .parse(Object.fromEntries(formData));
@@ -83,11 +84,11 @@ export async function cancelSession(formData: FormData) {
     p_session_id: id,
     ...(reason ? { p_reason: reason } : {}),
   });
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}/classes`, "layout");
 }
 
-export async function markAttendance(formData: FormData) {
+export async function markAttendance(formData: FormData): Promise<ActionResult> {
   const { slug, session_id, booking_id, attended } = z
     .object({ slug: z.string(), session_id: z.uuid(), booking_id: z.uuid(), attended: z.enum(["true", "false"]) })
     .parse(Object.fromEntries(formData));
@@ -98,17 +99,17 @@ export async function markAttendance(formData: FormData) {
     p_booking_id: booking_id,
     p_attended: attended === "true",
   });
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}/classes/${session_id}`);
 }
 
-export async function removeBooking(formData: FormData) {
+export async function removeBooking(formData: FormData): Promise<ActionResult> {
   const { slug, session_id, booking_id } = z
     .object({ slug: z.string(), session_id: z.uuid(), booking_id: z.uuid() })
     .parse(Object.fromEntries(formData));
   await requireGym(slug, STAFF_ROLES);
   const supabase = await createClient();
   const { error } = await supabase.rpc("cancel_booking", { p_booking_id: booking_id });
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}/classes/${session_id}`);
 }

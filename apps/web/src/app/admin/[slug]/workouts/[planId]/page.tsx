@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { groupPlanDays } from "@gymos/shared";
+import { ActionForm } from "@/components/action-form";
 import { Card, PageHeader, Select } from "@/components/ui";
 import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -67,11 +68,11 @@ export default async function PlanPage({ params }: PageProps<"/admin/[slug]/work
       <PageHeader
         title={plan.name}
         actions={
-          <form action={archivePlan}>
+          <ActionForm action={archivePlan} confirm="Archive this plan? Members assigned to it will no longer see it.">
             <input type="hidden" name="slug" value={slug} />
             <input type="hidden" name="id" value={planId} />
             <button className="text-sm text-muted hover:text-danger">Archive plan</button>
-          </form>
+          </ActionForm>
         }
       />
       {plan.description && <p className="-mt-4 mb-6 text-sm text-muted">{plan.description}</p>}
@@ -93,12 +94,12 @@ export default async function PlanPage({ params }: PageProps<"/admin/[slug]/work
                         {item.notes && ` · ${item.notes}`}
                       </p>
                     </div>
-                    <form action={removePlanItem}>
+                    <ActionForm action={removePlanItem} success="Exercise removed">
                       <input type="hidden" name="slug" value={slug} />
                       <input type="hidden" name="plan_id" value={planId} />
                       <input type="hidden" name="id" value={item.id} />
                       <button className="text-xs text-muted hover:text-danger">Remove</button>
-                    </form>
+                    </ActionForm>
                   </li>
                 ))}
               </ol>
@@ -119,17 +120,17 @@ export default async function PlanPage({ params }: PageProps<"/admin/[slug]/work
                   <Link href={`/admin/${slug}/members/${a.member_id}`} className="hover:underline">
                     {a.gym_members.profiles.full_name || "Unnamed member"}
                   </Link>
-                  <form action={unassignPlan}>
+                  <ActionForm action={unassignPlan} success="Plan unassigned">
                     <input type="hidden" name="slug" value={slug} />
                     <input type="hidden" name="id" value={a.id} />
                     <button className="text-xs text-muted hover:text-danger">Remove</button>
-                  </form>
+                  </ActionForm>
                 </li>
               ))}
               {assignments.data.length === 0 && <li className="py-2 text-muted">No one yet.</li>}
             </ul>
             {assignable.length > 0 && (
-              <form action={assignPlan} className="flex gap-2">
+              <ActionForm action={assignPlan} success="Plan assigned" className="flex gap-2">
                 <input type="hidden" name="slug" value={slug} />
                 <input type="hidden" name="plan_id" value={planId} />
                 <Select name="member_id" required>
@@ -138,7 +139,7 @@ export default async function PlanPage({ params }: PageProps<"/admin/[slug]/work
                   ))}
                 </Select>
                 <button className="shrink-0 rounded-lg bg-brand px-3 py-2 text-sm font-medium text-brand-fg">Assign</button>
-              </form>
+              </ActionForm>
             )}
           </Card>
         </div>

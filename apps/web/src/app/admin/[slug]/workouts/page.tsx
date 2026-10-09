@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ActionForm } from "@/components/action-form";
 import { Card, PageHeader } from "@/components/ui";
 import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -81,12 +82,12 @@ export default async function WorkoutsPage({ params }: PageProps<"/admin/[slug]/
                             {e.name}
                             {e.gym_id && <span className="ml-1 text-xs text-brand">yours</span>}
                           </span>
-                          <form action={setExerciseHidden}>
+                          <ActionForm action={setExerciseHidden} success={isHidden ? "Exercise shown again" : "Exercise hidden"}>
                             <input type="hidden" name="slug" value={slug} />
                             <input type="hidden" name="exercise_id" value={e.id} />
                             <input type="hidden" name="hidden" value={isHidden ? "false" : "true"} />
                             <button className="text-xs text-muted hover:text-foreground">{isHidden ? "Show" : "Hide"}</button>
-                          </form>
+                          </ActionForm>
                         </li>
                       );
                     })}

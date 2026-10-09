@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import type { ActionResult } from "@/lib/action-result";
 import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -84,18 +85,18 @@ export async function addPlanItem(_prev: FormState, formData: FormData): Promise
   return { message: "Added." };
 }
 
-export async function removePlanItem(formData: FormData) {
+export async function removePlanItem(formData: FormData): Promise<ActionResult> {
   const { slug, plan_id, id } = z
     .object({ slug: z.string(), plan_id: z.uuid(), id: z.uuid() })
     .parse(Object.fromEntries(formData));
   await requireGym(slug, TEAM_ROLES);
   const supabase = await createClient();
   const { error } = await supabase.from("workout_plan_items").delete().eq("id", id).eq("plan_id", plan_id);
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}/workouts/${plan_id}`);
 }
 
-export async function assignPlan(formData: FormData) {
+export async function assignPlan(formData: FormData): Promise<ActionResult> {
   const { slug, plan_id, member_id } = z
     .object({ slug: z.string(), plan_id: z.uuid(), member_id: z.uuid() })
     .parse(Object.fromEntries(formData));
@@ -104,30 +105,30 @@ export async function assignPlan(formData: FormData) {
   const { error } = await supabase
     .from("plan_assignments")
     .upsert({ gym_id: gym.id, plan_id, member_id, assigned_by: memberId }, { onConflict: "plan_id,member_id" });
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}`, "layout");
 }
 
-export async function unassignPlan(formData: FormData) {
+export async function unassignPlan(formData: FormData): Promise<ActionResult> {
   const { slug, id } = z.object({ slug: z.string(), id: z.uuid() }).parse(Object.fromEntries(formData));
   const { gym } = await requireGym(slug, TEAM_ROLES);
   const supabase = await createClient();
   const { error } = await supabase.from("plan_assignments").delete().eq("id", id).eq("gym_id", gym.id);
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}`, "layout");
 }
 
-export async function archivePlan(formData: FormData) {
+export async function archivePlan(formData: FormData): Promise<ActionResult> {
   const { slug, id } = z.object({ slug: z.string(), id: z.uuid() }).parse(Object.fromEntries(formData));
   const { gym } = await requireGym(slug, TEAM_ROLES);
   const supabase = await createClient();
   const { error } = await supabase.from("workout_plans").update({ is_archived: true }).eq("id", id).eq("gym_id", gym.id);
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   redirect(`/admin/${slug}/workouts`);
 }
 
 // Show or hide a built-in exercise for this gym (Workouts → Exercise library).
-export async function setExerciseHidden(formData: FormData) {
+export async function setExerciseHidden(formData: FormData): Promise<ActionResult> {
   const { slug, exercise_id, hidden } = z
     .object({ slug: z.string(), exercise_id: z.uuid(), hidden: z.enum(["true", "false"]) })
     .parse(Object.fromEntries(formData));
@@ -137,6 +138,6 @@ export async function setExerciseHidden(formData: FormData) {
     hidden === "true"
       ? await supabase.from("gym_hidden_exercises").upsert({ gym_id: gym.id, exercise_id })
       : await supabase.from("gym_hidden_exercises").delete().eq("gym_id", gym.id).eq("exercise_id", exercise_id);
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}/workouts`, "layout");
 }

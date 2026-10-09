@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import clsx from "clsx";
+import { Tooltip } from "@/components/tooltip";
 
 const ITEM_SELECTOR = '[role="menuitem"], [role="menuitemradio"]';
 
@@ -11,11 +12,13 @@ const ITEM_SELECTOR = '[role="menuitem"], [role="menuitemradio"]';
 export function Dropdown({
   trigger,
   label,
+  tooltip,
   children,
   className,
 }: {
   trigger: ReactNode;
   label: string;
+  tooltip?: string;
   children: ReactNode;
   className?: string;
 }) {
@@ -57,6 +60,7 @@ export function Dropdown({
 
   return (
     <div ref={ref} className="relative" onKeyDown={open ? onKeyDown : undefined}>
+      <MaybeTooltip content={open ? undefined : tooltip}>
       <button
         ref={triggerRef}
         type="button"
@@ -68,6 +72,7 @@ export function Dropdown({
       >
         {trigger}
       </button>
+      </MaybeTooltip>
       {open && (
         <div
           ref={menuRef}
@@ -98,4 +103,8 @@ export function MenuSection({ title, children }: { title?: string; children: Rea
       {children}
     </div>
   );
+}
+
+function MaybeTooltip({ content, children }: { content?: string; children: React.ReactElement }) {
+  return content ? <Tooltip content={content} side="bottom">{children}</Tooltip> : children;
 }

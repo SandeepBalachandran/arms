@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { membershipState, todayIn, type Subscription } from "@gymos/shared";
+import { ActionForm } from "@/components/action-form";
 import { MembershipBadge } from "@/components/membership-badge";
 import { Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES, TEAM_ROLES, type GymRole } from "@/lib/auth";
@@ -102,7 +103,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
                 </span>
                 <span className="flex gap-2">
                   {(["true", "false"] as const).map((approve) => (
-                    <form key={approve} action={reviewJoinRequest}>
+                    <ActionForm key={approve} action={reviewJoinRequest} success={approve === "true" ? "Member approved" : "Request declined"}>
                       <input type="hidden" name="slug" value={slug} />
                       <input type="hidden" name="member_id" value={p.id} />
                       <input type="hidden" name="approve" value={approve} />
@@ -115,7 +116,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
                       >
                         {approve === "true" ? "Approve" : "Decline"}
                       </button>
-                    </form>
+                    </ActionForm>
                   ))}
                 </span>
               </li>
@@ -174,14 +175,14 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
                   </td>
                   <td className="hidden p-3 md:table-cell">
                     {editable ? (
-                      <form action={updateMember} className="flex gap-1">
+                      <ActionForm action={updateMember} success="Role updated" className="flex gap-1">
                         <input type="hidden" name="slug" value={slug} />
                         <input type="hidden" name="id" value={m.id} />
                         <select name="role" defaultValue={m.role} className="rounded border border-border bg-surface px-2 py-1 capitalize">
                           {assignable.map((r) => <option key={r} value={r}>{r}</option>)}
                         </select>
                         <button className="rounded px-2 text-xs text-muted hover:bg-border/40">Save</button>
-                      </form>
+                      </ActionForm>
                     ) : (
                       <span className="capitalize">{m.role}</span>
                     )}

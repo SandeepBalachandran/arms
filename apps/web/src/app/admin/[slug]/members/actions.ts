@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { internationalPhone, MANUAL_PAYMENT_METHODS, rupeesSchema } from "@gymos/shared";
 import { z } from "zod";
+import type { ActionResult } from "@/lib/action-result";
 import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -16,10 +17,10 @@ const roleSchema = z.object({
 
 // RLS enforces the same rules (no owner edits, only owners grant admin);
 // the checks here give a clear error instead of a silent no-op.
-export async function updateMember(formData: FormData) {
+export async function updateMember(formData: FormData): Promise<ActionResult> {
   const { slug, id, role } = roleSchema.parse(Object.fromEntries(formData));
   const { gym, role: myRole } = await requireGym(slug, STAFF_ROLES);
-  if (role === "admin" && myRole !== "owner") throw new Error("Only the owner can make admins");
+  if (role === "admin" && myRole !== "owner") return { error: "Only the owner can make admins" };
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -28,7 +29,7 @@ export async function updateMember(formData: FormData) {
     .eq("id", id)
     .eq("gym_id", gym.id)
     .neq("role", "owner");
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
 
   revalidatePath(`/admin/${slug}/members`);
 }
@@ -70,7 +71,7 @@ export async function recordPayment(
   return { saved: true };
 }
 
-export async function cancelSubscription(formData: FormData) {
+export async function cancelSubscription(formData: FormData): Promise<ActionResult> {
   const { slug, member_id, id } = z
     .object({ slug: z.string(), member_id: z.uuid(), id: z.uuid() })
     .parse(Object.fromEntries(formData));
@@ -78,12 +79,12 @@ export async function cancelSubscription(formData: FormData) {
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("cancel_subscription", { p_subscription_id: id });
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}/members/${member_id}`);
 }
 
 // Approve or turn down someone who joined while "Approve new members" is on.
-export async function reviewJoinRequest(formData: FormData) {
+export async function reviewJoinRequest(formData: FormData): Promise<ActionResult> {
   const { slug, member_id, approve } = z
     .object({ slug: z.string(), member_id: z.uuid(), approve: z.enum(["true", "false"]) })
     .parse(Object.fromEntries(formData));
@@ -93,7 +94,7 @@ export async function reviewJoinRequest(formData: FormData) {
     p_member_id: member_id,
     p_approve: approve === "true",
   });
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}`, "layout");
 }
 
@@ -185,7 +186,7 @@ export async function updateMemberDetails(_prev: DetailsState, formData: FormDat
 }
 
 // Remove someone from the gym (they lose access; history is kept) or restore them.
-export async function setMemberActive(formData: FormData) {
+export async function setMemberActive(formData: FormData): Promise<ActionResult> {
   const { slug, member_id, active } = z
     .object({ slug: z.string(), member_id: z.uuid(), active: z.enum(["true", "false"]) })
     .parse(Object.fromEntries(formData));
@@ -199,28 +200,28 @@ export async function setMemberActive(formData: FormData) {
     .eq("gym_id", gym.id)
     .neq("role", "owner")
     .neq("user_id", user.id);
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}`, "layout");
 }
 
-export async function addNote(formData: FormData) {
+export async function addNote(formData: FormData): Promise<ActionResult> {
   const { slug, member_id, body } = z
     .object({ slug: z.string(), member_id: z.uuid(), body: z.string().trim().min(1).max(1000) })
     .parse(Object.fromEntries(formData));
   const { gym } = await requireGym(slug, TEAM_ROLES);
   const supabase = await createClient();
   const { error } = await supabase.from("member_notes").insert({ gym_id: gym.id, member_id, body });
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}/members/${member_id}`);
 }
 
-export async function deleteNote(formData: FormData) {
+export async function deleteNote(formData: FormData): Promise<ActionResult> {
   const { slug, member_id, id } = z
     .object({ slug: z.string(), member_id: z.uuid(), id: z.uuid() })
     .parse(Object.fromEntries(formData));
   const { gym } = await requireGym(slug, TEAM_ROLES);
   const supabase = await createClient();
   const { error } = await supabase.from("member_notes").delete().eq("id", id).eq("gym_id", gym.id);
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}/members/${member_id}`);
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, type ReactNode } from "react";
+import { useSavedToast } from "@/lib/use-saved-toast";
 import { Button, Card, FormError } from "@/components/ui";
 import { saveSettings, type SettingsSection } from "./actions";
 
@@ -20,6 +21,7 @@ export function SettingsCard({
   children: ReactNode;
 }) {
   const [state, action, pending] = useActionState(saveSettings, undefined);
+  useSavedToast(state, `${title} saved`);
 
   return (
     <Card className="h-fit">
@@ -30,7 +32,6 @@ export function SettingsCard({
         <input type="hidden" name="section" value={section} />
         {children}
         <FormError message={state?.error} />
-        {state?.saved && <p className="text-sm text-muted">Saved.</p>}
         <Button disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
       </form>
     </Card>

@@ -1,11 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
+import { useSavedToast } from "@/lib/use-saved-toast";
 import { Button, Field, FormError, Input } from "@/components/ui";
 import { changePassword } from "./actions";
 
 export function PasswordForm() {
   const [state, action, pending] = useActionState(changePassword, undefined);
+  useSavedToast(state, "Password updated");
   return (
     <form action={action} className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
@@ -17,7 +19,6 @@ export function PasswordForm() {
         </Field>
       </div>
       <FormError message={state?.error} />
-      {state?.saved && <p className="text-sm text-muted">Password updated.</p>}
       <Button variant="secondary" disabled={pending}>{pending ? "Saving…" : "Update password"}</Button>
     </form>
   );

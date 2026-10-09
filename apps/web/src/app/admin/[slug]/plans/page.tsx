@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { formatDuration, formatMoney, todayIn, type Plan } from "@gymos/shared";
 import { CreditCard, EyeOff, Users } from "lucide-react";
+import { ActionForm } from "@/components/action-form";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -36,11 +37,12 @@ export default async function PlansPage({ params }: PageProps<"/admin/[slug]/pla
 
   const visible = plans.data.filter((p) => p.is_active);
   const hidden = plans.data.filter((p) => !p.is_active);
-  const cardProps = { slug, currency: gym.currency, canEdit };
+  const classesEnabled = gym.classes_enabled;
+  const cardProps = { slug, currency: gym.currency, canEdit, classesEnabled };
 
   return (
     <>
-      <PageHeader title="Plans" actions={canEdit && <PlanDialog slug={slug} currency={gym.currency} />} />
+      <PageHeader title="Plans" actions={canEdit && <PlanDialog slug={slug} currency={gym.currency} classesEnabled={classesEnabled} />} />
 
       {plans.data.length === 0 ? (
         <Card className="flex flex-col items-center gap-3 py-12 text-center">
@@ -50,7 +52,7 @@ export default async function PlansPage({ params }: PageProps<"/admin/[slug]/pla
             Plans are what members buy: a price and how long it lasts, e.g. Monthly {formatMoney(149900, gym.currency)} or
             Quarterly {formatMoney(399900, gym.currency)}.
           </p>
-          {canEdit && <PlanDialog slug={slug} currency={gym.currency} />}
+          {canEdit && <PlanDialog slug={slug} currency={gym.currency} classesEnabled={classesEnabled} />}
         </Card>
       ) : (
         <>
@@ -77,12 +79,13 @@ export default async function PlansPage({ params }: PageProps<"/admin/[slug]/pla
   );
 }
 
-function PlanCard({ plan, stats, slug, currency, canEdit }: {
+function PlanCard({ plan, stats, slug, currency, canEdit, classesEnabled }: {
   plan: Plan;
   stats?: Stats;
   slug: string;
   currency: string;
   canEdit: boolean;
+  classesEnabled: boolean;
 }) {
   const perMonth = plan.duration_days >= 60 ? Math.round((plan.price_paise * 30) / plan.duration_days) : null;
   const sold = stats?.sold ?? 0;
@@ -101,7 +104,9 @@ function PlanCard({ plan, stats, slug, currency, canEdit }: {
         </p>
       </div>
       <ul className="space-y-1 text-sm">
-        <li>{plan.class_credits == null ? "Unlimited classes" : `${plan.class_credits} classes included`}</li>
+        {classesEnabled && (
+          <li>{plan.class_credits == null ? "Unlimited classes" : `${plan.class_credits} classes included`}</li>
+        )}
         {plan.description && <li className="text-muted">{plan.description}</li>}
       </ul>
       <p className="flex items-center gap-1.5 text-sm text-muted">
@@ -110,21 +115,21 @@ function PlanCard({ plan, stats, slug, currency, canEdit }: {
       </p>
       {canEdit && (
         <div className="mt-auto flex flex-wrap gap-2 border-t border-border pt-3">
-          <PlanDialog slug={slug} currency={currency} plan={plan} />
-          <form action={togglePlan}>
+          <PlanDialog slug={slug} currency={currency} classesEnabled={classesEnabled} plan={plan} />
+          <ActionForm action={togglePlan} success={plan.is_active ? "Plan hidden" : "Plan is visible again"}>
             <input type="hidden" name="slug" value={slug} />
             <input type="hidden" name="id" value={plan.id} />
             <input type="hidden" name="is_active" value={plan.is_active ? "false" : "true"} />
             <button className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-border/40">
               {plan.is_active ? "Hide" : "Show"}
             </button>
-          </form>
+          </ActionForm>
           {sold === 0 && (
-            <form action={deletePlan} className="ml-auto">
+            <ActionForm action={deletePlan} success="Plan deleted" confirm={`Delete ${plan.name}?`} className="ml-auto">
               <input type="hidden" name="slug" value={slug} />
               <input type="hidden" name="id" value={plan.id} />
               <button className="rounded-lg px-3 py-1.5 text-sm text-danger hover:bg-danger/10">Delete</button>
-            </form>
+            </ActionForm>
           )}
         </div>
       )}

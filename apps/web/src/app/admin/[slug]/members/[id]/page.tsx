@@ -15,6 +15,7 @@ import {
   whatsappNumber,
 } from "@gymos/shared";
 import { Mail, MessageCircle, Phone } from "lucide-react";
+import { ActionForm } from "@/components/action-form";
 import { MembershipBadge } from "@/components/membership-badge";
 import { Badge, Card } from "@/components/ui";
 import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
@@ -312,12 +313,12 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
                               </td>
                               <td className="w-16 py-2 text-right">
                                 {isStaff && s.status === "active" && !expired && (
-                                  <form action={cancelSubscription}>
+                                  <ActionForm action={cancelSubscription} success="Subscription cancelled" confirm="Cancel this subscription? This can't be undone.">
                                     <input type="hidden" name="slug" value={slug} />
                                     <input type="hidden" name="member_id" value={id} />
                                     <input type="hidden" name="id" value={s.id} />
                                     <button className="text-xs text-danger hover:underline">Cancel</button>
-                                  </form>
+                                  </ActionForm>
                                 )}
                               </td>
                             </tr>
@@ -411,7 +412,7 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
           <Card>
             <h2 className="font-medium">Notes</h2>
             <p className="mb-3 text-xs text-muted">Only your team sees these.</p>
-            <form action={addNote} className="space-y-2">
+            <ActionForm action={addNote} success="Note added" className="space-y-2">
               <input type="hidden" name="slug" value={slug} />
               <input type="hidden" name="member_id" value={id} />
               <textarea
@@ -423,7 +424,7 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
                 className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-brand"
               />
               <button className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-border/40">Add note</button>
-            </form>
+            </ActionForm>
             <ul className="mt-3 space-y-3">
               {notes.data.map((n) => (
                 <li key={n.id} className="rounded-lg bg-border/30 p-3 text-sm">
@@ -431,12 +432,12 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
                   <div className="mt-1 flex items-center justify-between text-xs text-muted">
                     <span>{n.profiles?.full_name || "Team"} · {dateTime(n.created_at)}</span>
                     {(n.author_id === user.id || isStaff) && (
-                      <form action={deleteNote}>
+                      <ActionForm action={deleteNote} success="Note deleted" confirm="Delete this note?">
                         <input type="hidden" name="slug" value={slug} />
                         <input type="hidden" name="member_id" value={id} />
                         <input type="hidden" name="id" value={n.id} />
                         <button className="hover:text-danger">Delete</button>
-                      </form>
+                      </ActionForm>
                     )}
                   </div>
                 </li>
