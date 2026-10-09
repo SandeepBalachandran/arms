@@ -111,7 +111,7 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
           </div>
 
           <MenuSection>
-            <Link href={`/account?back=/admin/${gym.slug}`} role="menuitem" className={menuItemClass}>
+            <Link href={`/admin/${gym.slug}/profile`} role="menuitem" className={menuItemClass}>
               <UserRound className="size-4 text-muted" /> My profile
             </Link>
             {canConfigure && (

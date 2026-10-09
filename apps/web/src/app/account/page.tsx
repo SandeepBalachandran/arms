@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@/components/ui";
-import { requireUser, safeNextPath } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { getMyGyms, requireUser, safeNextPath, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "./profile-form";
 
@@ -11,6 +12,9 @@ export default async function AccountPage({ searchParams }: PageProps<"/account"
   const { back } = await searchParams;
   const backHref = safeNextPath(typeof back === "string" ? back : null, "/admin");
   const user = await requireUser("/account");
+  // Gym staff have the full profile page inside the admin.
+  const teamGym = (await getMyGyms()).find((m) => TEAM_ROLES.includes(m.role));
+  if (teamGym) redirect(`/admin/${teamGym.gym.slug}/profile`);
   const supabase = await createClient();
   const { data: profile } = await supabase.from("profiles").select("full_name, phone").eq("id", user.id).single();
 

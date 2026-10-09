@@ -115,3 +115,28 @@ function EditDetailsForm({ slug, memberId, fullName, phone, onSaved }: {
     </form>
   );
 }
+
+// Pencil button that opens "Edit member details" (members table rows).
+export function EditMemberButton({ slug, memberId, fullName, phone }: {
+  slug: string;
+  memberId: string;
+  fullName: string;
+  phone: string;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={`Edit ${fullName || "member"}`}
+        className="rounded-lg p-2 text-muted hover:bg-border/40 hover:text-foreground"
+      >
+        <Pencil className="size-4" />
+      </button>
+      <Modal open={open} onClose={() => setOpen(false)} title="Edit member details">
+        <EditDetailsForm slug={slug} memberId={memberId} fullName={fullName} phone={phone} onSaved={() => setOpen(false)} />
+      </Modal>
+    </>
+  );
+}

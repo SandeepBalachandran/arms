@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { joinUrl } from "@/lib/site";
 import { reviewJoinRequest, updateMember } from "./actions";
 import { AddMember } from "./add-member";
+import { EditMemberButton } from "./[id]/member-actions";
 
 export const metadata: Metadata = { title: "Members" };
 
@@ -127,7 +128,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
           name="q"
           defaultValue={query}
           placeholder="Search by name"
-          className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm sm:w-64"
         />
         <select name="show" defaultValue={filter} className="rounded-lg border border-border bg-surface px-3 py-2 text-sm">
           {Object.entries({
@@ -149,10 +150,11 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
           <thead className="border-b border-border text-left text-muted">
             <tr>
               <th className="p-3 font-medium">Name</th>
-              <th className="p-3 font-medium">Phone</th>
+              <th className="hidden p-3 font-medium sm:table-cell">Phone</th>
               <th className="p-3 font-medium">Membership</th>
-              <th className="p-3 font-medium">Role</th>
-              <th className="p-3 font-medium">Joined</th>
+              <th className="hidden p-3 font-medium md:table-cell">Role</th>
+              <th className="hidden p-3 font-medium lg:table-cell">Joined</th>
+              {canManage && <th className="w-12 p-3"><span className="sr-only">Actions</span></th>}
             </tr>
           </thead>
           <tbody>
@@ -166,11 +168,11 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
                       {m.profiles.full_name || "Unnamed member"}
                     </Link>
                   </td>
-                  <td className="p-3 text-muted">{m.profiles.phone ?? "—"}</td>
+                  <td className="hidden p-3 text-muted sm:table-cell">{m.profiles.phone ?? "—"}</td>
                   <td className="p-3">
                     {m.role === "member" ? <MembershipBadge state={m.membership} warnDays={gym.expiry_warning_days} /> : <span className="text-muted">—</span>}
                   </td>
-                  <td className="p-3">
+                  <td className="hidden p-3 md:table-cell">
                     {editable ? (
                       <form action={updateMember} className="flex gap-1">
                         <input type="hidden" name="slug" value={slug} />
@@ -184,12 +186,22 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
                       <span className="capitalize">{m.role}</span>
                     )}
                   </td>
-                  <td className="p-3 text-muted">{new Date(m.joined_at).toLocaleDateString("en-IN", { timeZone: gym.timezone })}</td>
+                  <td className="hidden p-3 text-muted lg:table-cell">{new Date(m.joined_at).toLocaleDateString("en-IN", { timeZone: gym.timezone })}</td>
+                  {canManage && (
+                    <td className="p-1 text-right">
+                      <EditMemberButton
+                        slug={slug}
+                        memberId={m.id}
+                        fullName={m.profiles.full_name}
+                        phone={m.profiles.phone ?? ""}
+                      />
+                    </td>
+                  )}
                 </tr>
               );
             })}
             {rows.length === 0 && (
-              <tr><td colSpan={5} className="p-6 text-center text-muted">No one matches.</td></tr>
+              <tr><td colSpan={6} className="p-6 text-center text-muted">No one matches.</td></tr>
             )}
           </tbody>
         </table>

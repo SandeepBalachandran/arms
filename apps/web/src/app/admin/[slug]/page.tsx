@@ -97,11 +97,11 @@ export default async function AdminDashboard({ params }: PageProps<"/admin/[slug
           {pending.count === 1 ? "1 UPI payment is" : `${pending.count} UPI payments are`} waiting for you to confirm →
         </Link>
       )}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
         {stats.map((s) => (
-          <Card key={s.label}>
-            <p className="text-sm text-muted">{s.label}</p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums">{s.value}</p>
+          <Card key={s.label} className="p-3 md:p-4">
+            <p className="text-xs text-muted md:text-sm">{s.label}</p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums md:text-3xl">{s.value}</p>
           </Card>
         ))}
       </div>

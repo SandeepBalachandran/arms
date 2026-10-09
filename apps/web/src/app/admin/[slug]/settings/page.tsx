@@ -5,6 +5,7 @@ import {
   MANUAL_PAYMENT_METHODS,
   PAYMENT_METHOD_LABELS,
   RENEWAL_MESSAGE_PLACEHOLDERS,
+  timezoneOptions,
 } from "@gymos/shared";
 import { Field, Input, PageHeader, Select } from "@/components/ui";
 import { requireGym } from "@/lib/auth";
@@ -33,7 +34,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
   const supabase = await createClient();
   const { data: g, error } = await supabase.from("gyms").select("*").eq("id", gym.id).single();
   if (error) throw error;
-  const timezones = Intl.supportedValuesOf("timeZone");
+  const timezones = timezoneOptions(g.timezone);
 
   return (
     <>

@@ -81,18 +81,18 @@ export default async function PaymentsPage({ params, searchParams }: PageProps<"
         <table className="w-full text-sm">
           <thead className="border-b border-border text-left text-muted">
             <tr>
-              <th className="p-3 font-medium">Receipt</th>
+              <th className="hidden p-3 font-medium sm:table-cell">Receipt</th>
               <th className="p-3 font-medium">Date</th>
               <th className="p-3 font-medium">Member</th>
               <th className="p-3 font-medium">Amount</th>
-              <th className="p-3 font-medium">Method</th>
-              <th className="p-3 font-medium">Note</th>
+              <th className="hidden p-3 font-medium md:table-cell">Method</th>
+              <th className="hidden p-3 font-medium lg:table-cell">Note</th>
             </tr>
           </thead>
           <tbody>
             {payments.map((p) => (
               <tr key={p.id} className="border-b border-border last:border-0">
-                <td className="p-3 font-mono">{formatReceipt(gym.receipt_prefix, p.receipt_no)}</td>
+                <td className="hidden p-3 font-mono sm:table-cell">{formatReceipt(gym.receipt_prefix, p.receipt_no)}</td>
                 <td className="p-3 text-muted">
                   {new Date(p.paid_at!).toLocaleString("en-IN", { timeZone: gym.timezone, dateStyle: "medium", timeStyle: "short" })}
                 </td>
@@ -102,8 +102,8 @@ export default async function PaymentsPage({ params, searchParams }: PageProps<"
                   </Link>
                 </td>
                 <td className="p-3 tabular-nums">{formatMoney(p.amount_paise, gym.currency)}</td>
-                <td className="p-3">{PAYMENT_METHOD_LABELS[p.method]}</td>
-                <td className="p-3 text-muted">{p.note ?? ""}</td>
+                <td className="hidden p-3 md:table-cell">{PAYMENT_METHOD_LABELS[p.method]}</td>
+                <td className="hidden p-3 text-muted lg:table-cell">{p.note ?? ""}</td>
               </tr>
             ))}
             {payments.length === 0 && (

@@ -28,6 +28,23 @@ export function formatReceipt(prefix: string, receiptNo: number | null) {
   return receiptNo === null ? "—" : `${prefix || "#"}${receiptNo}`;
 }
 
+// Any IANA zone the runtime can format, including aliases such as
+// Asia/Kolkata that Intl.supportedValuesOf may list under an older name.
+export function isValidTimezone(tz: string) {
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Options for a timezone picker: the runtime's list plus the current value and
+// the default, so a saved zone is never missing from the dropdown.
+export function timezoneOptions(current: string) {
+  return [...new Set([...Intl.supportedValuesOf("timeZone"), current, "Asia/Kolkata"])].sort();
+}
+
 // Validation for the settings forms (also mirrors the DB check constraints).
 const int = (min: number, max: number) => z.coerce.number().int().min(min).max(max);
 const bool = z.enum(["true", "false"]).transform((v) => v === "true");
@@ -36,7 +53,7 @@ export const generalSettingsSchema = z.object({
   name: z.string().trim().min(2).max(80),
   address: z.string().trim().max(200).transform((v) => v || null),
   phone: z.string().trim().max(20).transform((v) => v || null),
-  timezone: z.string().refine((tz) => Intl.supportedValuesOf("timeZone").includes(tz), "Unknown timezone"),
+  timezone: z.string().refine(isValidTimezone, "Unknown timezone"),
   currency: z.enum(CURRENCIES),
   phone_country_code: z.string().trim().regex(/^[0-9]{1,4}$/, "Country code is 1–4 digits, e.g. 91"),
 });

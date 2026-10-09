@@ -20,6 +20,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#fafafa",
+  // Lets fixed bars use env(safe-area-inset-*) on phones with a home indicator.
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
