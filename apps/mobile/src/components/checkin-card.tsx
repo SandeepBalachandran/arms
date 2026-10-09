@@ -1,7 +1,9 @@
 import { useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { CircleCheck, QrCode } from 'lucide-react-native';
+import { Pressable, View } from 'react-native';
 
-import { Button, Card, Text } from '@/components/ui';
+import { IconButton, Text } from '@/components/ui';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useMyVisits, useSelfCheckIn } from '@/lib/checkins';
 import { useActiveGym } from '@/lib/gyms';
@@ -19,24 +21,35 @@ export function CheckinCard() {
     new Date(iso).toLocaleTimeString('en-IN', { timeZone: gym.timezone, hour: 'numeric', minute: '2-digit' });
 
   return (
-    <Card>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Text variant="small">Check-in</Text>
-        <Text variant="small">
-          {visits.thisMonth} {visits.thisMonth === 1 ? 'day' : 'days'} this month
-        </Text>
+    <View style={{ borderRadius: 20, borderWidth: 1, borderColor: theme.border, padding: Spacing.three, gap: Spacing.two }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.three }}>
+        <View style={{ flex: 1, gap: 2 }}>
+          {visits.todayVisit ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <CircleCheck size={18} color={theme.brand} />
+              <Text style={{ fontWeight: '700' }}>Checked in at {time(visits.todayVisit.checked_in_at)}</Text>
+            </View>
+          ) : (
+            <Text style={{ fontWeight: '700' }}>{gym.checkin_self_allowed ? 'At the gym?' : 'Check in at the desk'}</Text>
+          )}
+          <Text variant="small">
+            {visits.thisMonth} {visits.thisMonth === 1 ? 'visit' : 'visits'} this month
+          </Text>
+        </View>
+        {!visits.todayVisit && gym.checkin_self_allowed && (
+          <Pressable
+            onPress={() => checkIn.mutate()}
+            disabled={checkIn.isPending}
+            accessibilityRole="button"
+            style={({ pressed }) => ({ backgroundColor: theme.accent, borderRadius: 999, paddingHorizontal: 18, paddingVertical: 12, opacity: pressed || checkIn.isPending ? 0.7 : 1 })}>
+            <Text style={{ color: theme.accentText, fontWeight: '700' }}>{checkIn.isPending ? 'Checking in…' : 'Check in'}</Text>
+          </Pressable>
+        )}
+        <IconButton label="Show my QR code" onPress={() => router.push('/checkin-qr')}>
+          <QrCode size={22} color={theme.text} />
+        </IconButton>
       </View>
-      {visits.todayVisit ? (
-        <Text variant="heading" style={{ color: theme.brand }}>
-          Checked in today at {time(visits.todayVisit.checked_in_at)} ✓
-        </Text>
-      ) : gym.checkin_self_allowed ? (
-        <Button title="I’m at the gym — check in" onPress={() => checkIn.mutate()} loading={checkIn.isPending} />
-      ) : (
-        <Text variant="muted">Show your QR code at the front desk to check in.</Text>
-      )}
       {checkIn.error && <Text variant="error">{checkIn.error.message}</Text>}
-      <Button title="Show my QR code" variant="secondary" onPress={() => router.push('/checkin-qr')} />
-    </Card>
+    </View>
   );
 }

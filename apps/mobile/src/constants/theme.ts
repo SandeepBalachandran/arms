@@ -1,32 +1,64 @@
-// Same palette as apps/web (globals.css): neutral zinc with a lime brand.
+// Member app palette: white and soft neutrals, a bright lime accent for
+// primary actions, a dark olive for hero cards and the tab bar, and pastel
+// tints for feature tiles. `brand` stays a darker lime so it reads as text.
 
 export const Colors = {
   light: {
-    text: '#18181b',
-    textSecondary: '#71717a',
-    background: '#fafafa',
+    text: '#111111',
+    textSecondary: '#6b6b6b',
+    background: '#ffffff',
     surface: '#ffffff',
-    border: '#e4e4e7',
-    brand: '#65a30d',
+    surfaceMuted: '#f4f5f1',
+    border: '#ececea',
+    brand: '#4d7c0f',
     brandText: '#ffffff',
+    // Lime fill for primary buttons and highlights, with dark text on it.
+    accent: '#c8f04b',
+    accentText: '#141a04',
+    // Dark hero cards, progress ring and the floating tab bar.
+    hero: '#1f2a10',
+    heroText: '#ffffff',
+    heroMuted: '#c3cdb2',
     danger: '#dc2626',
+    // Feature tiles: background tint and icon colour.
+    tints: {
+      blue: { bg: '#e2f3fb', fg: '#3d84a8' },
+      green: { bg: '#e7f7e3', fg: '#4f9a57' },
+      pink: { bg: '#f9e4f1', fg: '#b85d98' },
+      yellow: { bg: '#fbf5d8', fg: '#a08a1c' },
+    },
+    progress: '#ecf9e2',
     // Data marks. Validated (dataviz validator) against both surfaces.
     chart: '#65a30d',
   },
   dark: {
     text: '#fafafa',
     textSecondary: '#a1a1aa',
-    background: '#09090b',
-    surface: '#18181b',
-    border: '#27272a',
+    background: '#0b0d08',
+    surface: '#15180f',
+    surfaceMuted: '#1c2015',
+    border: '#2a2f22',
     brand: '#a3e635',
     brandText: '#1a2e05',
+    accent: '#c8f04b',
+    accentText: '#141a04',
+    hero: '#1f2b0d',
+    heroText: '#ffffff',
+    heroMuted: '#b5c19f',
     danger: '#f87171',
+    tints: {
+      blue: { bg: '#12262f', fg: '#8cc9e6' },
+      green: { bg: '#15281a', fg: '#8fd197' },
+      pink: { bg: '#2c1626', fg: '#e3a2cc' },
+      yellow: { bg: '#2a2510', fg: '#e0cb6a' },
+    },
+    progress: '#18240f',
     chart: '#65a30d',
   },
 } as const;
 
 export type ThemeColors = (typeof Colors)['light' | 'dark'];
+export type Tint = keyof ThemeColors['tints'];
 
 export const Spacing = {
   one: 4,
@@ -36,4 +68,4 @@ export const Spacing = {
   five: 32,
 } as const;
 
-export const Radius = 12;
+export const Radius = 20;

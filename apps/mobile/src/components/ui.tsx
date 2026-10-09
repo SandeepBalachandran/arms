@@ -61,16 +61,16 @@ export function Button({
       style={({ pressed }) => [
         styles.button,
         primary
-          ? { backgroundColor: theme.brand }
-          : { backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 },
+          ? { backgroundColor: theme.accent }
+          : { backgroundColor: theme.surface, borderColor: theme.text, borderWidth: 1 },
         (pressed || disabled || loading) && { opacity: 0.7 },
         style,
       ]}
       {...props}>
       {loading ? (
-        <ActivityIndicator color={primary ? theme.brandText : theme.text} />
+        <ActivityIndicator color={primary ? theme.accentText : theme.text} />
       ) : (
-        <RNText style={[styles.buttonText, { color: primary ? theme.brandText : theme.text }]}>{title}</RNText>
+        <RNText style={[styles.buttonText, { color: primary ? theme.accentText : theme.text }]}>{title}</RNText>
       )}
     </Pressable>
   );
@@ -107,26 +107,88 @@ export function Loading() {
 const styles = StyleSheet.create({
   screenContent: { flex: 1, padding: Spacing.three, gap: Spacing.three },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 28, fontWeight: '700' },
-  heading: { fontSize: 18, fontWeight: '600' },
+  title: { fontSize: 30, fontWeight: '800', letterSpacing: -0.5 },
+  heading: { fontSize: 18, fontWeight: '700' },
   body: { fontSize: 16 },
   muted: { fontSize: 15 },
   small: { fontSize: 13 },
   error: { fontSize: 14 },
   button: {
-    minHeight: 48,
-    borderRadius: Radius,
+    minHeight: 52,
+    borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.three,
   },
-  buttonText: { fontSize: 16, fontWeight: '600' },
+  buttonText: { fontSize: 16, fontWeight: '700' },
   input: {
-    minHeight: 48,
+    minHeight: 52,
     borderWidth: 1,
-    borderRadius: Radius,
+    borderRadius: 16,
     paddingHorizontal: Spacing.three,
     fontSize: 16,
   },
   card: { borderWidth: 1, borderRadius: Radius, padding: Spacing.three, gap: Spacing.two },
 });
+
+// Round icon button (back, notifications) on a soft background.
+export function IconButton({
+  children,
+  label,
+  dot,
+  style,
+  ...props
+}: PressableProps & { label: string; dot?: boolean; children: ReactNode; style?: ViewProps['style'] }) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={6}
+      style={({ pressed }) => [
+        { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.surfaceMuted },
+        pressed && { opacity: 0.7 },
+        style,
+      ]}
+      {...props}>
+      {children}
+      {dot && (
+        <View
+          style={{ position: 'absolute', top: 11, right: 12, width: 9, height: 9, borderRadius: 5, backgroundColor: theme.accent, borderWidth: 1.5, borderColor: theme.surfaceMuted }}
+        />
+      )}
+    </Pressable>
+  );
+}
+
+// "Today Workouts (3)"-style section title with an optional link on the right.
+export function SectionHeader({ title, count, action, onAction }: { title: string; count?: number; action?: string; onAction?: () => void }) {
+  const theme = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: Spacing.one }}>
+      <Text variant="heading">
+        {title}
+        {count !== undefined && <Text variant="muted"> ({count})</Text>}
+      </Text>
+      {action && (
+        <Pressable onPress={onAction} accessibilityRole="link" hitSlop={8}>
+          <Text style={{ color: theme.textSecondary, fontWeight: '600', fontSize: 14 }}>{action}</Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+// Small rounded label, e.g. "16 Workout".
+export function Chip({ children, tone = 'outline' }: { children: ReactNode; tone?: 'outline' | 'accent' | 'hero' }) {
+  const theme = useTheme();
+  const look =
+    tone === 'accent' ? { backgroundColor: theme.accent, borderColor: theme.accent, color: theme.accentText }
+    : tone === 'hero' ? { backgroundColor: 'rgba(255,255,255,0.12)', borderColor: 'transparent', color: theme.heroText }
+    : { backgroundColor: 'transparent', borderColor: theme.border, color: theme.text };
+  return (
+    <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: look.backgroundColor, borderColor: look.borderColor }}>
+      {typeof children === 'string' ? <RNText style={{ color: look.color, fontSize: 13, fontWeight: '600' }}>{children}</RNText> : children}
+    </View>
+  );
+}

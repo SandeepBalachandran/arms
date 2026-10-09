@@ -1,22 +1,17 @@
 import { Link } from 'expo-router';
 
 import { CheckinCard } from '@/components/checkin-card';
+import { ExploreTiles, HomeHeader, MembershipProgress, TodayHero } from '@/components/home-cards';
 import { HoursCard } from '@/components/hours-card';
-import { MembershipCard } from '@/components/membership-card';
-import { NextClassCard } from '@/components/next-class-card';
-import { Screen, Text } from '@/components/ui';
-import { useActiveGym } from '@/lib/gyms';
+import { Screen, SectionHeader, Text } from '@/components/ui';
 import { useProfile } from '@/lib/profile';
 
 export default function HomeScreen() {
-  const membership = useActiveGym();
   const profile = useProfile();
-  const firstName = profile.data?.full_name.split(' ')[0];
 
   return (
     <Screen>
-      <Text variant="muted">{membership?.gym.name}</Text>
-      <Text variant="title">Hi {firstName || 'there'} 👋</Text>
+      <HomeHeader />
 
       {profile.data && !profile.data.full_name && (
         <Link href="/profile">
@@ -24,9 +19,15 @@ export default function HomeScreen() {
         </Link>
       )}
 
+      <MembershipProgress />
       <CheckinCard />
-      <MembershipCard />
-      <NextClassCard />
+
+      <SectionHeader title="Today" />
+      <TodayHero />
+
+      <SectionHeader title="Explore" />
+      <ExploreTiles />
+
       <HoursCard />
     </Screen>
   );

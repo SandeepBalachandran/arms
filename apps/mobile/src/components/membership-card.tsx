@@ -6,7 +6,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useActiveGym } from '@/lib/gyms';
 import { useMembership } from '@/lib/memberships';
 
-// Membership status at a glance (Home and Membership tabs).
+// Membership status at the top of the Membership tab.
 export function MembershipCard() {
   const theme = useTheme();
   const { state, isPending } = useMembership();
@@ -64,7 +64,7 @@ export function MembershipCard() {
         <Card>
           <Text variant="small">Membership</Text>
           <Text variant="heading">No active plan</Text>
-          <Text variant="muted">Pick a plan in the Membership tab and pay at the front desk.</Text>
+          <Text variant="muted">Pick a plan below and pay at the front desk to start.</Text>
         </Card>
       );
   }

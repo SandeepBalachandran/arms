@@ -2,12 +2,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { SplashView } from '@/components/splash-view';
 import { useScheme } from '@/lib/appearance';
 import { ActiveGymProvider, checkInstallReferrer, takePendingJoin, useMyGyms } from '@/lib/gyms';
 import { SessionProvider, useSession } from '@/lib/session';
+import { hasSeenWelcome } from '@/lib/welcome';
 
 SplashScreen.preventAutoHideAsync();
 SplashScreen.setOptions({ fade: true, duration: 300 });
@@ -30,13 +31,15 @@ export default function RootLayout() {
   );
 }
 
-// Signed out → sign-in. Signed in without a gym → join. Otherwise → gym tabs.
+// Signed out → intro slides (first launch only) → sign-in. Signed in without a gym → join. Otherwise → gym tabs.
 // join/[slug] is reachable in every state so join links always resolve.
 function RootNavigator() {
   const { session, isLoading } = useSession();
   const gyms = useMyGyms();
   const signedIn = !!session;
   const hasGym = !!gyms.data?.length;
+  // Read once: after the intro, welcome.tsx replaces itself with sign-in.
+  const [welcomed] = useState(hasSeenWelcome);
   const ready = !isLoading && (!signedIn || !gyms.isPending);
 
   useEffect(() => {
@@ -54,6 +57,9 @@ function RootNavigator() {
       <PendingJoinHandler enabled={signedIn} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Protected guard={!signedIn}>
+          <Stack.Protected guard={!welcomed}>
+            <Stack.Screen name="welcome" />
+          </Stack.Protected>
           <Stack.Screen name="sign-in" />
         </Stack.Protected>
         <Stack.Protected guard={signedIn}>
