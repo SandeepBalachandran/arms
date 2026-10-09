@@ -4,12 +4,14 @@ import { z } from 'zod';
 import { Button, Input, Screen, Text } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 
-// Passwordless sign-in: email → 6-digit code. New emails create an account.
-// The Supabase "Magic Link" email template must include {{ .Token }}.
+// Default is passwordless: email → 6-digit code (new emails create an account;
+// the Supabase "Magic Link" template must include {{ .Token }}). Accounts with a
+// password (e.g. ones created from the web or the demo seed) can use it instead.
 export default function SignInScreen() {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [step, setStep] = useState<'email' | 'code'>('email');
+  const [step, setStep] = useState<'email' | 'code' | 'password'>('email');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -23,6 +25,16 @@ export default function SignInScreen() {
     if (error) return setError(error.message);
     setEmail(parsed.data);
     setStep('code');
+  }
+
+  async function signInWithPassword() {
+    const parsed = z.email().safeParse(email.trim().toLowerCase());
+    if (!parsed.success) return setError('Enter a valid email');
+    setError(null);
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: parsed.data, password });
+    setLoading(false);
+    if (error) setError(error.message);
   }
 
   async function verify() {
@@ -55,6 +67,44 @@ export default function SignInScreen() {
           />
           {error && <Text variant="error">{error}</Text>}
           <Button title="Send code" onPress={sendCode} loading={loading} />
+          <Button
+            title="Sign in with password"
+            variant="secondary"
+            onPress={() => {
+              setError(null);
+              setStep('password');
+            }}
+          />
+        </>
+      ) : step === 'password' ? (
+        <>
+          <Input
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+          />
+          <Input
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            autoComplete="current-password"
+            returnKeyType="go"
+            onSubmitEditing={signInWithPassword}
+          />
+          {error && <Text variant="error">{error}</Text>}
+          <Button title="Sign in" onPress={signInWithPassword} loading={loading} disabled={!password} />
+          <Button
+            title="Email me a code instead"
+            variant="secondary"
+            onPress={() => {
+              setError(null);
+              setStep('email');
+            }}
+          />
         </>
       ) : (
         <>
