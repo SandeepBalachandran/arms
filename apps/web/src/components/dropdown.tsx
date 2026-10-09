@@ -93,9 +93,6 @@ export function Dropdown({
   );
 }
 
-export const menuItemClass =
-  "flex w-full items-center gap-3 px-4 py-2 text-left text-sm outline-none hover:bg-border/40 focus-visible:bg-border/40";
-
 export function MenuSection({ title, children }: { title?: string; children: ReactNode }) {
   return (
     <div role="group" aria-label={title} className="border-t border-border py-1 first:border-t-0">
