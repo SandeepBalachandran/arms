@@ -2,12 +2,9 @@ import "server-only";
 import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/database.types";
+import type { GymRole } from "@gymos/shared";
 
-export type GymRole = Database["public"]["Enums"]["gym_role"];
-
-export const TEAM_ROLES: GymRole[] = ["owner", "admin", "staff", "trainer"];
-export const STAFF_ROLES: GymRole[] = ["owner", "admin", "staff"];
+export { STAFF_ROLES, TEAM_ROLES, type GymRole } from "@gymos/shared";
 
 export type CurrentUser = {
   id: string;

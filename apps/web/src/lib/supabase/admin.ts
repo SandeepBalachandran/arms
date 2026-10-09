@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/database.types";
+import type { Database } from "@gymos/shared";
 
 // Service-role client that bypasses RLS. Server-only: use it for webhooks and
 // for tables with no policies (gym_secrets), and always scope queries by gym.

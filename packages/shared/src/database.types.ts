@@ -1,5 +1,5 @@
 // Hand-written to match supabase/migrations until a database is available.
-// Replace with generated types: `npm run db:types`.
+// Replace with generated types: `npm run db:types` (repo root).
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 

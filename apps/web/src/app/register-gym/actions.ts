@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { gymSlugSchema } from "@gymos/shared";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -9,13 +10,7 @@ export type RegisterState = { error?: string } | undefined;
 
 const schema = z.object({
   name: z.string().trim().min(2, "Gym name is too short").max(80),
-  slug: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .regex(/^[a-z0-9](-?[a-z0-9])*$/, "Use lowercase letters, numbers and single dashes")
-    .min(3, "Link must be at least 3 characters")
-    .max(40),
+  slug: gymSlugSchema,
   timezone: z.string().min(1),
 });
 

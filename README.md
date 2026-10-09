@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GymOS
 
-## Getting Started
+Multi-tenant gym platform: a web admin panel for gym owners and staff, and an
+Android/iOS app for members. Gym owners share a join link on WhatsApp; it opens
+the app (or the Play Store) and joins their gym.
 
-First, run the development server:
+| Path | What |
+| --- | --- |
+| `apps/web` | Next.js admin panel, marketing site, `/join/<slug>` install page |
+| `apps/mobile` | Expo (React Native) member app |
+| `packages/shared` | `@gymos/shared`: database types, roles, gym-code rules |
+| `supabase` | Migrations, email templates (shared backend) |
+| `docs/PLAN.md` | Product and build plan |
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install                      # installs every workspace
+cp apps/web/.env.example apps/web/.env.local
+cp apps/mobile/.env.example apps/mobile/.env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Fill both env files with the same Supabase project. For a local stack
+(needs Docker): `npm run db:start`, then `npx supabase status` prints the keys.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run web       # http://localhost:3000
+npm run mobile    # Expo dev server; scan the QR with Expo Go
+npm run typecheck
+npm run lint
+```
 
-## Learn More
+After changing the schema: `npm run db:types` regenerates
+`packages/shared/src/database.types.ts`.
 
-To learn more about Next.js, take a look at the following resources:
+## Join links
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Web: `https://<domain>/join/<slug>` shows the gym and a Play Store button
+  carrying `referrer=gym=<slug>`; the app reads it on first launch.
+- Android App Links: set `EXPO_PUBLIC_APP_LINK_HOST` (mobile) and
+  `ANDROID_SHA256_CERT_FINGERPRINTS` (web, from `eas credentials -p android`).
+- In development: `npx uri-scheme open gymos://join/<slug> --android`.
