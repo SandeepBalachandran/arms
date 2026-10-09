@@ -1,6 +1,8 @@
 import { TabList, Tabs, TabSlot, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
 import { CalendarDays, CreditCard, Dumbbell, House, User, type LucideIcon } from 'lucide-react-native';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/use-theme';
@@ -47,6 +49,13 @@ export default function GymTabs() {
 
 function TabButton({ label, icon: Icon, isFocused, style, ...props }: TabTriggerSlotProps & { label: string; icon: LucideIcon }) {
   const theme = useTheme();
+  const reduced = useReducedMotion();
+  // The lime circle springs in on the newly selected tab.
+  const scale = useSharedValue(isFocused ? 1 : 0);
+  useEffect(() => {
+    scale.set(reduced ? (isFocused ? 1 : 0) : withSpring(isFocused ? 1 : 0, { damping: 14, stiffness: 180 }));
+  }, [isFocused, reduced, scale]);
+  const blob = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }], opacity: scale.value }));
   return (
     <Pressable
       {...props}
@@ -54,8 +63,12 @@ function TabButton({ label, icon: Icon, isFocused, style, ...props }: TabTrigger
       accessibilityLabel={label}
       accessibilityState={{ selected: isFocused }}
       style={(state) => [styles.tab, typeof style === 'function' ? style(state) : style]}>
-      <View style={[styles.circle, isFocused && { backgroundColor: theme.accent }]}>
-        <Icon size={22} color={isFocused ? theme.accentText : theme.heroMuted} strokeWidth={isFocused ? 2.4 : 2} />
+      <View style={styles.circle}>
+        <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: 24, backgroundColor: theme.accent }, blob]} />
+        {/* zIndex keeps the icon above the (positioned) animated circle. */}
+        <View style={{ zIndex: 1 }}>
+          <Icon size={22} color={isFocused ? theme.accentText : theme.heroMuted} strokeWidth={isFocused ? 2.4 : 2} />
+        </View>
       </View>
     </Pressable>
   );

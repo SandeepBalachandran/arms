@@ -1,5 +1,6 @@
 import { formatDate, formatDuration, formatMoney, formatSessions, formatSessionsLeft } from '@gymos/shared';
 import { View } from 'react-native';
+import Animated, { useReducedMotion, ZoomIn } from 'react-native-reanimated';
 
 import { Card, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
@@ -34,10 +35,14 @@ export function PtSection() {
               {s.trainer_name ? ` · with ${s.trainer_name}` : ''}
             </Text>
             <Text variant="heading">{formatSessionsLeft(s, used)}</Text>
-            {pct !== null && (
-              <View style={{ height: 8, borderRadius: 4, backgroundColor: theme.border, overflow: 'hidden' }}>
-                <View style={{ width: `${pct}%`, height: '100%', borderRadius: 4, backgroundColor: theme.brand }} />
-              </View>
+            {s.sessions_total !== null && s.sessions_total <= 40 ? (
+              <SessionDots total={s.sessions_total} used={used} />
+            ) : (
+              pct !== null && (
+                <View style={{ height: 8, borderRadius: 4, backgroundColor: theme.border, overflow: 'hidden' }}>
+                  <View style={{ width: `${pct}%`, height: '100%', borderRadius: 4, backgroundColor: theme.chart }} />
+                </View>
+              )
             )}
             <Text variant="muted">
               {s.state.kind === 'upcoming' ? `Starts ${formatDate(s.starts_on)}` : `Use by ${formatDate(s.ends_on)}`}
@@ -78,5 +83,32 @@ export function PtSection() {
         </>
       )}
     </>
+  );
+}
+
+// One dot per session in the pack: filled = used. Pops in one by one.
+function SessionDots({ total, used }: { total: number; used: number }) {
+  const theme = useTheme();
+  const reduced = useReducedMotion();
+  return (
+    <View
+      accessible
+      accessibilityLabel={`${used} of ${total} sessions used`}
+      style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: Spacing.one }}>
+      {Array.from({ length: total }, (_, i) => (
+        <Animated.View
+          key={i}
+          entering={reduced ? undefined : ZoomIn.delay(100 + i * 35).springify()}
+          style={{
+            width: 16,
+            height: 16,
+            borderRadius: 8,
+            backgroundColor: i < used ? theme.chart : 'transparent',
+            borderWidth: 2,
+            borderColor: i < used ? theme.chart : theme.border,
+          }}
+        />
+      ))}
+    </View>
   );
 }

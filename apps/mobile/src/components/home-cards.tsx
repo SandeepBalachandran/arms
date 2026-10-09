@@ -28,6 +28,7 @@ import {
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
+import { Appear, Float, PressableScale } from '@/components/motion';
 import { ProgressRing } from '@/components/progress-ring';
 import { IconButton, Text } from '@/components/ui';
 import { Spacing, type Tint } from '@/constants/theme';
@@ -118,10 +119,10 @@ export function MembershipProgress() {
   }
 
   return (
-    <Pressable
+    <PressableScale
       onPress={() => router.push('/membership')}
       accessibilityRole="button"
-      style={({ pressed }) => ({
+      style={{
         flexDirection: 'row',
         alignItems: 'center',
         gap: Spacing.three,
@@ -129,8 +130,7 @@ export function MembershipProgress() {
         borderRadius: 20,
         padding: Spacing.three,
         paddingVertical: 14,
-        opacity: pressed ? 0.8 : 1,
-      })}>
+      }}>
       <View style={{ flex: 1, gap: 2 }}>
         <Text style={{ fontSize: 18, fontWeight: '700' }}>{title}</Text>
         <Text variant="muted" style={{ fontSize: 14 }}>
@@ -138,7 +138,7 @@ export function MembershipProgress() {
         </Text>
       </View>
       {ring}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -205,24 +205,23 @@ function Hero({ icon: Icon, chips, kicker, title, sub, onPress }: {
 }) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole={onPress ? 'button' : undefined}
-      style={({ pressed }) => ({
+      style={{
         backgroundColor: theme.hero,
         borderRadius: 24,
         padding: 20,
         minHeight: 180,
         overflow: 'hidden',
         justifyContent: 'space-between',
-        opacity: pressed ? 0.9 : 1,
-      })}>
+      }}>
       {/* Decoration: a lime glow and a big faint icon. */}
       <View style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: 90, backgroundColor: theme.accent, opacity: 0.16 }} />
-      <View style={{ position: 'absolute', right: 12, bottom: -18, opacity: 0.18 }}>
+      <Float distance={8} style={{ position: 'absolute', right: 12, bottom: -18, opacity: 0.18 }}>
         <Icon size={150} color={theme.accent} strokeWidth={1.4} />
-      </View>
+      </Float>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two }}>
         {chips.map((c, i) => (
           <View key={c} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 }}>
@@ -242,7 +241,7 @@ function Hero({ icon: Icon, chips, kicker, title, sub, onPress }: {
           </Text>
         )}
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -276,7 +275,11 @@ export function ExploreTiles() {
 
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: Spacing.three }} style={{ marginHorizontal: -Spacing.three, paddingLeft: Spacing.three }}>
-      {tiles.map((t) => <TileCard key={t.key} tile={t} />)}
+      {tiles.map((t, i) => (
+        <Appear key={t.key} index={i + 2}>
+          <TileCard tile={t} />
+        </Appear>
+      ))}
     </ScrollView>
   );
 }
@@ -287,16 +290,16 @@ function TileCard({ tile }: { tile: Tile }) {
   const tint = theme.tints[tile.tint];
   const Icon = tile.icon;
   return (
-    <Pressable
+    <PressableScale
       onPress={() => router.push(tile.href)}
       accessibilityRole="button"
-      style={({ pressed }) => ({ width: 150, minHeight: 168, borderRadius: 22, padding: 14, backgroundColor: tint.bg, justifyContent: 'space-between', opacity: pressed ? 0.85 : 1 })}>
+      style={{ width: 150, minHeight: 168, borderRadius: 22, padding: 14, backgroundColor: tint.bg, justifyContent: 'space-between' }}>
       <Icon size={34} color={tint.fg} strokeWidth={2.2} />
       <View style={{ gap: 2, marginTop: Spacing.three }}>
         <Text style={{ fontSize: 15, fontWeight: '700' }}>{tile.title}</Text>
         <Text variant="small">{tile.sub}</Text>
       </View>
       <Text style={{ fontSize: 12, fontWeight: '700', marginTop: Spacing.two }}>{tile.meta} →</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
