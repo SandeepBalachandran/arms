@@ -48,7 +48,22 @@ export function Select({ className, ...props }: ComponentProps<"select">) {
   );
 }
 
-export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+// `inline` puts the label to the left of the input instead of above it.
+export function Field({ label, hint, inline, children }: {
+  label: string;
+  hint?: string;
+  inline?: boolean;
+  children: ReactNode;
+}) {
+  if (inline) {
+    return (
+      <label className="grid grid-cols-[6.5rem_1fr] items-center gap-x-3 gap-y-1">
+        <span className="text-sm font-medium">{label}</span>
+        {children}
+        {hint && <span className="col-start-2 text-xs text-muted">{hint}</span>}
+      </label>
+    );
+  }
   return (
     <label className="block space-y-1">
       <span className="text-sm font-medium">{label}</span>

@@ -105,10 +105,10 @@ function EditDetailsForm({ slug, memberId, fullName, phone, onSaved }: {
     <form action={action} className="space-y-4">
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="member_id" value={memberId} />
-      <Field label="Full name">
+      <Field label="Full name" inline>
         <Input name="full_name" defaultValue={fullName} required autoFocus />
       </Field>
-      <Field label="Phone">
+      <Field label="Phone" inline>
         <Input name="phone" type="tel" defaultValue={phone} />
       </Field>
       <p className="text-xs text-muted">This updates the member&apos;s profile, which they also see in the app.</p>

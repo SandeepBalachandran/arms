@@ -30,7 +30,7 @@ export function Modal({
     <dialog
       ref={ref}
       onClose={onClose}
-      className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-2xl border border-border bg-surface p-0 text-foreground shadow-xl backdrop:bg-black/50"
+      className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-2xl border border-border bg-surface p-0 text-left text-foreground shadow-xl backdrop:bg-black/50"
     >
       <div className="flex items-center justify-between border-b border-border px-5 py-3">
         <h2 className="font-semibold">{title}</h2>
