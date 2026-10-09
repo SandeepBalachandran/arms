@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { CalendarDays, CreditCard, Dumbbell, QrCode } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { getCurrentUser } from "@/lib/auth";
+import { getTheme } from "@/lib/theme";
 import { playStoreUrl } from "@/lib/site";
 
 const FEATURES = [
@@ -19,7 +21,8 @@ export default async function Home() {
         <span className="text-xl font-bold">
           Gym<span className="text-brand">OS</span>
         </span>
-        <nav className="flex gap-4 text-sm">
+        <nav className="flex items-center gap-4 text-sm">
+          <ThemeToggle initial={await getTheme()} />
           {user ? (
             <Link href="/admin" className="hover:underline">Admin</Link>
           ) : (

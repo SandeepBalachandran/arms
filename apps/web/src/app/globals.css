@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Theme is chosen by the user (light by default), not the OS:
+   <html data-theme="dark"> switches tokens and Tailwind's dark: variant. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   --background: #fafafa;
   --surface: #ffffff;
@@ -9,19 +13,19 @@
   --brand: #65a30d;
   --brand-fg: #ffffff;
   --danger: #dc2626;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #09090b;
-    --surface: #18181b;
-    --foreground: #fafafa;
-    --muted: #a1a1aa;
-    --border: #27272a;
-    --brand: #a3e635;
-    --brand-fg: #1a2e05;
-    --danger: #f87171;
-  }
+[data-theme="dark"] {
+  --background: #09090b;
+  --surface: #18181b;
+  --foreground: #fafafa;
+  --muted: #a1a1aa;
+  --border: #27272a;
+  --brand: #a3e635;
+  --brand-fg: #1a2e05;
+  --danger: #f87171;
+  color-scheme: dark;
 }
 
 @theme inline {

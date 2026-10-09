@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 import { Button, Card, Input, Screen, Text } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
+import { setScheme, useScheme, type Scheme } from '@/lib/appearance';
 import { useActiveGym, useMyGyms, useSetActiveGym } from '@/lib/gyms';
 import { profileKey, useProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
@@ -34,6 +35,7 @@ export default function ProfileScreen() {
       )}
 
       {canScan && <Button title="Front desk: scan check-ins" onPress={() => router.push('/staff/scan')} />}
+      <AppearancePicker />
       <GymSwitcher />
       <Button title="Join another gym" variant="secondary" onPress={() => router.push('/join')} />
       <Button title="Sign out" variant="secondary" onPress={() => supabase.auth.signOut()} />
@@ -102,6 +104,44 @@ function GymSwitcher() {
           </Pressable>
         );
       })}
+    </Card>
+  );
+}
+
+function AppearancePicker() {
+  const theme = useTheme();
+  const scheme = useScheme();
+  const options: { value: Scheme; label: string }[] = [
+    { value: 'light', label: 'Light' },
+    { value: 'dark', label: 'Dark' },
+  ];
+  return (
+    <Card>
+      <Text variant="heading">Appearance</Text>
+      <View style={{ flexDirection: 'row', gap: 8 }} accessibilityRole="radiogroup">
+        {options.map((o) => {
+          const selected = scheme === o.value;
+          return (
+            <Pressable
+              key={o.value}
+              onPress={() => setScheme(o.value)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected }}
+              style={{
+                flex: 1,
+                minHeight: 44,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: selected ? theme.brand : theme.border,
+                backgroundColor: selected ? theme.brand : theme.surface,
+              }}>
+              <Text style={{ color: selected ? theme.brandText : theme.text, fontWeight: '600' }}>{o.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </Card>
   );
 }

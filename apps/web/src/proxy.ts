@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED = ["/admin", "/platform", "/register-gym"];
+const PROTECTED = ["/admin", "/account", "/platform", "/register-gym"];
 
 // Refreshes the Supabase auth session on every request and sends signed-out
 // visitors of protected areas to the login page. Role checks happen in pages

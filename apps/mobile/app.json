@@ -8,7 +8,6 @@
     "scheme": "gymos",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.gymos.app"
     },
     "android": {
@@ -30,9 +29,10 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#09090B",
+          "backgroundColor": "#fafafa",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 240,
+          "resizeMode": "contain"
         }
       ],
       "expo-sqlite",
