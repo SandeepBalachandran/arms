@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { internationalPhone, MANUAL_PAYMENT_METHODS, rupeesSchema } from "@gymos/shared";
 import { z } from "zod";
-import { requireGym, STAFF_ROLES } from "@/lib/auth";
+import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -150,4 +150,77 @@ export async function addMember(_prev: AddMemberState, formData: FormData): Prom
 
   revalidatePath(`/admin/${slug}`, "layout");
   redirect(`/admin/${slug}/members/${member.id}?added=1`);
+}
+
+// Staff fix a member's name or phone. Uses the service role because profiles
+// are only self-editable under RLS; the member must belong to this gym.
+export type DetailsState = { error?: string; saved?: boolean } | undefined;
+
+export async function updateMemberDetails(_prev: DetailsState, formData: FormData): Promise<DetailsState> {
+  const parsed = z
+    .object({
+      slug: z.string(),
+      member_id: z.uuid(),
+      full_name: z.string().trim().min(2, "Enter a name").max(80),
+      phone: z.string().trim().max(20).transform((v) => v || null),
+    })
+    .safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const { slug, member_id, full_name, phone } = parsed.data;
+  const { gym } = await requireGym(slug, STAFF_ROLES);
+
+  const admin = createAdminClient();
+  const { data: member } = await admin
+    .from("gym_members")
+    .select("user_id")
+    .eq("id", member_id)
+    .eq("gym_id", gym.id)
+    .maybeSingle();
+  if (!member) return { error: "Member not found" };
+
+  const { error } = await admin.from("profiles").update({ full_name, phone }).eq("id", member.user_id);
+  if (error) return { error: error.message };
+  revalidatePath(`/admin/${slug}`, "layout");
+  return { saved: true };
+}
+
+// Remove someone from the gym (they lose access; history is kept) or restore them.
+export async function setMemberActive(formData: FormData) {
+  const { slug, member_id, active } = z
+    .object({ slug: z.string(), member_id: z.uuid(), active: z.enum(["true", "false"]) })
+    .parse(Object.fromEntries(formData));
+  const { gym, user } = await requireGym(slug, STAFF_ROLES);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("gym_members")
+    .update({ status: active === "true" ? "active" : "inactive" })
+    .eq("id", member_id)
+    .eq("gym_id", gym.id)
+    .neq("role", "owner")
+    .neq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/${slug}`, "layout");
+}
+
+export async function addNote(formData: FormData) {
+  const { slug, member_id, body } = z
+    .object({ slug: z.string(), member_id: z.uuid(), body: z.string().trim().min(1).max(1000) })
+    .parse(Object.fromEntries(formData));
+  const { gym } = await requireGym(slug, TEAM_ROLES);
+  const supabase = await createClient();
+  const { error } = await supabase.from("member_notes").insert({ gym_id: gym.id, member_id, body });
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/${slug}/members/${member_id}`);
+}
+
+export async function deleteNote(formData: FormData) {
+  const { slug, member_id, id } = z
+    .object({ slug: z.string(), member_id: z.uuid(), id: z.uuid() })
+    .parse(Object.fromEntries(formData));
+  const { gym } = await requireGym(slug, TEAM_ROLES);
+  const supabase = await createClient();
+  const { error } = await supabase.from("member_notes").delete().eq("id", id).eq("gym_id", gym.id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/${slug}/members/${member_id}`);
 }

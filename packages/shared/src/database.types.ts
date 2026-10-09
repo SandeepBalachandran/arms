@@ -267,6 +267,38 @@ isOneToOne: true
                   Relationships: [
                     
                   ]
+                },"member_notes": {
+                  Row: {
+                    "author_id": string | null,"body": string,"created_at": string,"gym_id": string,"id": string,"member_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id"?: string | null,"body": string,"created_at"?: string,"gym_id": string,"id"?: string,"member_id": string
+                  }
+                  Update: {
+                    "author_id"?: string | null,"body"?: string,"created_at"?: string,"gym_id"?: string,"id"?: string,"member_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "member_notes_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "member_notes_gym_id_fkey"
+      columns: ["gym_id"]
+isOneToOne: false
+      referencedRelation: "gyms"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "member_notes_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "gym_members"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"payments": {
                   Row: {
                     "amount_paise": number,"created_at": string,"gym_id": string,"id": string,"member_id": string,"method": Database["public"]['Enums']["payment_method"],"note": string | null,"paid_at": string | null,"plan_id": string | null,"razorpay_order_id": string | null,"razorpay_payment_id": string | null,"receipt_no": number | null,"recorded_by": string | null,"reviewed_at": string | null,"status": Database["public"]['Enums']["payment_status"],"subscription_id": string | null,"utr": string | null

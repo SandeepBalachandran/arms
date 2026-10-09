@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   formatDuration,
   formatMoney,
@@ -17,6 +17,7 @@ export function RecordPaymentForm({
   plans,
   currency,
   methods,
+  onSaved,
 }: {
   slug: string;
   memberId: string;
@@ -24,10 +25,15 @@ export function RecordPaymentForm({
   currency: string;
   // Front-desk methods this gym accepts (Settings).
   methods: PaymentMethod[];
+  onSaved?: () => void;
 }) {
   const [state, action, pending] = useActionState(recordPayment, undefined);
   const [planId, setPlanId] = useState(plans[0].id);
   const plan = plans.find((p) => p.id === planId)!;
+
+  useEffect(() => {
+    if (state?.saved) onSaved?.();
+  }, [state, onSaved]);
 
   return (
     <form action={action} className="space-y-4">

@@ -3,7 +3,8 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 
-// Native <dialog> modal: focus is trapped, Escape and the backdrop close it.
+// Native <dialog> modal: focus is trapped; the ✕ button or Escape closes it.
+// Clicking the backdrop does not, so half-filled forms aren't lost by accident.
 export function Modal({
   open,
   onClose,
@@ -28,7 +29,6 @@ export function Modal({
     <dialog
       ref={ref}
       onClose={onClose}
-      onClick={(e) => e.target === ref.current && onClose()}
       className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-2xl border border-border bg-surface p-0 text-foreground shadow-xl backdrop:bg-black/50"
     >
       <div className="flex items-center justify-between border-b border-border px-5 py-3">
