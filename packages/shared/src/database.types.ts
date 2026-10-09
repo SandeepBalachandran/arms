@@ -6,6 +6,9 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 type GymRole = "owner" | "admin" | "staff" | "trainer" | "member";
 type GymStatus = "pending" | "active" | "suspended";
 type MemberStatus = "invited" | "active" | "inactive";
+type SubscriptionStatus = "active" | "cancelled" | "expired";
+type PaymentMethod = "online" | "cash" | "upi" | "card" | "bank_transfer";
+type PaymentStatus = "created" | "paid" | "failed" | "refunded";
 
 export type Database = {
   public: {
@@ -46,6 +49,7 @@ export type Database = {
           phone: string | null;
           status: GymStatus;
           platform_plan: string;
+          receipt_seq: number;
           created_at: string;
         };
         Insert: {
@@ -125,6 +129,128 @@ export type Database = {
           { foreignKeyName: "gym_members_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         ];
       };
+      plans: {
+        Row: {
+          id: string;
+          gym_id: string;
+          name: string;
+          description: string | null;
+          price_paise: number;
+          duration_days: number;
+          class_credits: number | null;
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          gym_id: string;
+          name: string;
+          description?: string | null;
+          price_paise: number;
+          duration_days: number;
+          class_credits?: number | null;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+          description?: string | null;
+          price_paise?: number;
+          duration_days?: number;
+          class_credits?: number | null;
+          is_active?: boolean;
+          sort_order?: number;
+        };
+        Relationships: [
+          { foreignKeyName: "plans_gym_id_fkey"; columns: ["gym_id"]; isOneToOne: false; referencedRelation: "gyms"; referencedColumns: ["id"] },
+        ];
+      };
+      subscriptions: {
+        Row: {
+          id: string;
+          gym_id: string;
+          member_id: string;
+          plan_id: string | null;
+          plan_name: string;
+          price_paise: number;
+          starts_on: string;
+          ends_on: string;
+          status: SubscriptionStatus;
+          cancelled_at: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          gym_id: string;
+          member_id: string;
+          plan_id?: string | null;
+          plan_name: string;
+          price_paise: number;
+          starts_on: string;
+          ends_on: string;
+          status?: SubscriptionStatus;
+          cancelled_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          status?: SubscriptionStatus;
+          cancelled_at?: string | null;
+        };
+        Relationships: [
+          { foreignKeyName: "subscriptions_gym_id_fkey"; columns: ["gym_id"]; isOneToOne: false; referencedRelation: "gyms"; referencedColumns: ["id"] },
+          { foreignKeyName: "subscriptions_member_id_fkey"; columns: ["member_id"]; isOneToOne: false; referencedRelation: "gym_members"; referencedColumns: ["id"] },
+          { foreignKeyName: "subscriptions_plan_id_fkey"; columns: ["plan_id"]; isOneToOne: false; referencedRelation: "plans"; referencedColumns: ["id"] },
+        ];
+      };
+      payments: {
+        Row: {
+          id: string;
+          gym_id: string;
+          member_id: string;
+          subscription_id: string | null;
+          amount_paise: number;
+          method: PaymentMethod;
+          status: PaymentStatus;
+          receipt_no: number | null;
+          razorpay_order_id: string | null;
+          razorpay_payment_id: string | null;
+          note: string | null;
+          paid_at: string | null;
+          recorded_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          gym_id: string;
+          member_id: string;
+          subscription_id?: string | null;
+          amount_paise: number;
+          method: PaymentMethod;
+          status?: PaymentStatus;
+          receipt_no?: number | null;
+          razorpay_order_id?: string | null;
+          razorpay_payment_id?: string | null;
+          note?: string | null;
+          paid_at?: string | null;
+          recorded_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          status?: PaymentStatus;
+          razorpay_payment_id?: string | null;
+          paid_at?: string | null;
+        };
+        Relationships: [
+          { foreignKeyName: "payments_gym_id_fkey"; columns: ["gym_id"]; isOneToOne: false; referencedRelation: "gyms"; referencedColumns: ["id"] },
+          { foreignKeyName: "payments_member_id_fkey"; columns: ["member_id"]; isOneToOne: false; referencedRelation: "gym_members"; referencedColumns: ["id"] },
+          { foreignKeyName: "payments_subscription_id_fkey"; columns: ["subscription_id"]; isOneToOne: false; referencedRelation: "subscriptions"; referencedColumns: ["id"] },
+          { foreignKeyName: "payments_recorded_by_fkey"; columns: ["recorded_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        ];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -134,11 +260,28 @@ export type Database = {
       is_platform_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       register_gym: { Args: { p_name: string; p_slug: string; p_timezone?: string }; Returns: string };
       join_gym: { Args: { p_slug: string }; Returns: string };
+      is_my_membership: { Args: { p_member_id: string }; Returns: boolean };
+      gym_today: { Args: { p_gym_id: string }; Returns: string };
+      record_manual_payment: {
+        Args: {
+          p_member_id: string;
+          p_plan_id: string;
+          p_method: PaymentMethod;
+          p_starts_on?: string;
+          p_amount_paise?: number;
+          p_note?: string;
+        };
+        Returns: string;
+      };
+      cancel_subscription: { Args: { p_subscription_id: string }; Returns: undefined };
     };
     Enums: {
       gym_role: GymRole;
       gym_status: GymStatus;
       member_status: MemberStatus;
+      subscription_status: SubscriptionStatus;
+      payment_method: PaymentMethod;
+      payment_status: PaymentStatus;
     };
     CompositeTypes: { [_ in never]: never };
   };

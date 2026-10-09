@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
-import { LayoutDashboard, Settings, Users } from "lucide-react";
+import { CreditCard, LayoutDashboard, ReceiptIndianRupee, Settings, Users } from "lucide-react";
 import type { GymRole } from "@/lib/auth";
 
-// Later phases add Plans, Check-in, Classes, Workouts and Reports here.
+// Later phases add Check-in, Classes, Workouts and Reports here.
 const ITEMS = [
   { href: "", label: "Dashboard", icon: LayoutDashboard, roles: null },
   { href: "/members", label: "Members", icon: Users, roles: null },
+  { href: "/plans", label: "Plans", icon: CreditCard, roles: null },
+  { href: "/payments", label: "Payments", icon: ReceiptIndianRupee, roles: ["owner", "admin", "staff"] },
   { href: "/settings", label: "Settings", icon: Settings, roles: ["owner", "admin"] },
 ] as const;
 

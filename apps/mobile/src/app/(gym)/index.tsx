@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 
-import { Card, Screen, Text } from '@/components/ui';
+import { MembershipCard } from '@/components/membership-card';
+import { Screen, Text } from '@/components/ui';
 import { useActiveGym } from '@/lib/gyms';
 import { useProfile } from '@/lib/profile';
 
@@ -20,11 +21,7 @@ export default function HomeScreen() {
         </Link>
       )}
 
-      <Card>
-        <Text variant="small">Membership</Text>
-        <Text variant="heading">No active plan yet</Text>
-        <Text variant="muted">Plans and online payment are coming soon. Ask the front desk for now.</Text>
-      </Card>
+      <MembershipCard />
     </Screen>
   );
 }

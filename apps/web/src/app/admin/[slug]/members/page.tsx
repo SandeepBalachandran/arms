@@ -1,17 +1,28 @@
 import type { Metadata } from "next";
-import { Badge, Card, PageHeader } from "@/components/ui";
+import Link from "next/link";
+import { membershipState, todayIn, type Subscription } from "@gymos/shared";
+import { MembershipBadge } from "@/components/membership-badge";
+import { Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES, TEAM_ROLES, type GymRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { updateMember } from "./actions";
 
 export const metadata: Metadata = { title: "Members" };
 
-const ROLE_FILTERS = ["all", "member", "team"] as const;
+const FILTERS = {
+  all: "Everyone",
+  member: "Members",
+  active: "Active membership",
+  expiring: "Expiring in 7 days",
+  expired: "Expired / no plan",
+  team: "Team",
+} as const;
+type Filter = keyof typeof FILTERS;
 
 export default async function MembersPage({ params, searchParams }: PageProps<"/admin/[slug]/members">) {
   const { slug } = await params;
   const { show, q } = await searchParams;
-  const filter = ROLE_FILTERS.includes(show as never) ? (show as (typeof ROLE_FILTERS)[number]) : "all";
+  const filter: Filter = typeof show === "string" && show in FILTERS ? (show as Filter) : "all";
   const query = typeof q === "string" ? q.trim() : "";
 
   const { gym, role: myRole, user } = await requireGym(slug, TEAM_ROLES);
@@ -26,11 +37,37 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
     .eq("gym_id", gym.id)
     .order("joined_at", { ascending: false })
     .limit(200);
-  if (filter === "member") request = request.eq("role", "member");
   if (filter === "team") request = request.neq("role", "member");
+  else if (filter !== "all") request = request.eq("role", "member");
   if (query) request = request.ilike("profiles.full_name", `%${query}%`);
-  const { data: rows, error } = await request;
+  const { data: members, error } = await request;
   if (error) throw error;
+
+  const { data: subs, error: subsError } = members.length
+    ? await supabase
+        .from("subscriptions")
+        .select("member_id, status, starts_on, ends_on")
+        .in("member_id", members.map((m) => m.id))
+        .neq("status", "cancelled")
+    : { data: [], error: null };
+  if (subsError) throw subsError;
+
+  const subsByMember = Map.groupBy(subs, (s) => s.member_id);
+  const today = todayIn(gym.timezone);
+  const rows = members
+    .map((m) => ({
+      ...m,
+      membership: membershipState<Pick<Subscription, "status" | "starts_on" | "ends_on">>(
+        subsByMember.get(m.id) ?? [],
+        today,
+      ),
+    }))
+    .filter(({ membership: s }) => {
+      if (filter === "active") return s.kind === "active" || s.kind === "upcoming";
+      if (filter === "expiring") return s.kind === "active" && s.daysLeft <= 7;
+      if (filter === "expired") return s.kind === "expired" || s.kind === "none";
+      return true;
+    });
 
   return (
     <>
@@ -43,9 +80,9 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
           className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
         />
         <select name="show" defaultValue={filter} className="rounded-lg border border-border bg-surface px-3 py-2 text-sm">
-          <option value="all">Everyone</option>
-          <option value="member">Members</option>
-          <option value="team">Team</option>
+          {Object.entries(FILTERS).map(([value, label]) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
         </select>
         <button className="rounded-lg border border-border px-3 py-2 text-sm">Filter</button>
       </form>
@@ -56,8 +93,8 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
             <tr>
               <th className="p-3 font-medium">Name</th>
               <th className="p-3 font-medium">Phone</th>
+              <th className="p-3 font-medium">Membership</th>
               <th className="p-3 font-medium">Role</th>
-              <th className="p-3 font-medium">Status</th>
               <th className="p-3 font-medium">Joined</th>
             </tr>
           </thead>
@@ -67,8 +104,15 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
                 (myRole === "owner" || m.role !== "admin");
               return (
                 <tr key={m.id} className="border-b border-border last:border-0">
-                  <td className="p-3 font-medium">{m.profiles.full_name || "—"}</td>
+                  <td className="p-3 font-medium">
+                    <Link href={`/admin/${slug}/members/${m.id}`} className="hover:underline">
+                      {m.profiles.full_name || "Unnamed member"}
+                    </Link>
+                  </td>
                   <td className="p-3 text-muted">{m.profiles.phone ?? "—"}</td>
+                  <td className="p-3">
+                    {m.role === "member" ? <MembershipBadge state={m.membership} /> : <span className="text-muted">—</span>}
+                  </td>
                   <td className="p-3">
                     {editable ? (
                       <form action={updateMember} className="flex gap-1">
@@ -83,15 +127,12 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
                       <span className="capitalize">{m.role}</span>
                     )}
                   </td>
-                  <td className="p-3">
-                    <Badge tone={m.status === "active" ? "good" : "neutral"}>{m.status}</Badge>
-                  </td>
                   <td className="p-3 text-muted">{new Date(m.joined_at).toLocaleDateString("en-IN", { timeZone: gym.timezone })}</td>
                 </tr>
               );
             })}
             {rows.length === 0 && (
-              <tr><td colSpan={5} className="p-6 text-center text-muted">No one here yet.</td></tr>
+              <tr><td colSpan={5} className="p-6 text-center text-muted">No one matches.</td></tr>
             )}
           </tbody>
         </table>

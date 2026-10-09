@@ -15,6 +15,10 @@ export default function GymTabs() {
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="membership">
+        <NativeTabs.Trigger.Label>Membership</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="creditcard.fill" md="card_membership" />
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="person.fill" md="person" />
