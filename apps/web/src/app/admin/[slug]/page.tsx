@@ -5,6 +5,7 @@ import { Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
 import { joinUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
+import { hoursAgo } from "@/lib/time";
 import { CopyJoinLink } from "./copy-join-link";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -25,7 +26,7 @@ export default async function AdminDashboard({ params }: PageProps<"/admin/[slug
   const today = todayIn(gym.timezone);
   const month = today.slice(0, 7);
 
-  const [members, liveSubs, payments, pending] = await Promise.all([
+  const [members, liveSubs, payments, pending, checkins] = await Promise.all([
     supabase.from("gym_members").select("id", { count: "exact", head: true })
       .eq("gym_id", gym.id).eq("role", "member").eq("status", "active"),
     supabase.from("subscriptions")
@@ -38,7 +39,12 @@ export default async function AdminDashboard({ params }: PageProps<"/admin/[slug
     isStaff
       ? supabase.from("payments").select("id", { count: "exact", head: true }).eq("gym_id", gym.id).eq("status", "created")
       : Promise.resolve({ count: 0 }),
+    gym.checkin_enabled
+      ? supabase.from("checkins").select("checked_in_at").eq("gym_id", gym.id)
+          .gte("checked_in_at", hoursAgo(36))
+      : Promise.resolve({ data: [], error: null }),
   ]);
+  if (checkins.error) throw checkins.error;
   if (liveSubs.error) throw liveSubs.error;
   if (payments.error) throw payments.error;
 
@@ -61,6 +67,12 @@ export default async function AdminDashboard({ params }: PageProps<"/admin/[slug
     { label: "Active memberships", value: String(active.length) },
     { label: "Expiring in 7 days", value: String(expiring.length) },
     ...(isStaff ? [{ label: "Collected this month", value: formatMoney(revenue, gym.currency) }] : []),
+    ...(gym.checkin_enabled
+      ? [{
+          label: "Checked in today",
+          value: String(checkins.data.filter((c) => todayIn(gym.timezone, new Date(c.checked_in_at)) === today).length),
+        }]
+      : []),
   ];
 
   return (

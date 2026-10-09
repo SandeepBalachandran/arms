@@ -12,6 +12,8 @@ import { MembershipBadge } from "@/components/membership-badge";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { hoursAgo } from "@/lib/time";
+import { CheckInButton } from "../../checkin/check-in-button";
 import { cancelSubscription } from "../actions";
 import { RecordPaymentForm } from "./record-payment-form";
 
@@ -31,7 +33,7 @@ export default async function MemberPage({ params }: PageProps<"/admin/[slug]/me
     .maybeSingle();
   if (!member) notFound();
 
-  const [subs, payments, plans] = await Promise.all([
+  const [subs, payments, plans, visits] = await Promise.all([
     supabase.from("subscriptions").select("*").eq("member_id", id).order("starts_on", { ascending: false }),
     isStaff
       ? supabase.from("payments").select("*").eq("member_id", id).order("created_at", { ascending: false })
@@ -39,13 +41,22 @@ export default async function MemberPage({ params }: PageProps<"/admin/[slug]/me
     isStaff
       ? supabase.from("plans").select("*").eq("gym_id", gym.id).eq("is_active", true).order("sort_order").order("price_paise")
       : Promise.resolve({ data: [], error: null }),
+    gym.checkin_enabled
+      ? supabase.from("checkins").select("id, checked_in_at, method").eq("member_id", id)
+          .gte("checked_in_at", hoursAgo(62 * 24))
+          .order("checked_in_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
   ]);
   if (subs.error) throw subs.error;
+  if (visits.error) throw visits.error;
   if (payments.error) throw payments.error;
   if (plans.error) throw plans.error;
 
   const today = todayIn(gym.timezone);
   const state = membershipState(subs.data, today);
+  const visitsThisMonth = visits.data.filter((v) =>
+    todayIn(gym.timezone, new Date(v.checked_in_at)).startsWith(today.slice(0, 7)),
+  ).length;
 
   return (
     <>
@@ -60,6 +71,22 @@ export default async function MemberPage({ params }: PageProps<"/admin/[slug]/me
             <div><span className="text-muted">Role </span><span className="capitalize">{member.role}</span></div>
             <div><span className="text-muted">Joined </span>{new Date(member.joined_at).toLocaleDateString("en-IN", { timeZone: gym.timezone })}</div>
           </Card>
+
+          {gym.checkin_enabled && (
+            <Card>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="font-medium">Visits</h2>
+                  <p className="text-sm text-muted">
+                    {visitsThisMonth} this month
+                    {visits.data[0] &&
+                      ` · last ${new Date(visits.data[0].checked_in_at).toLocaleString("en-IN", { timeZone: gym.timezone, dateStyle: "medium", timeStyle: "short" })}`}
+                  </p>
+                </div>
+                {isStaff && <CheckInButton slug={slug} memberId={id} showResult />}
+              </div>
+            </Card>
+          )}
 
           <section>
             <h2 className="mb-2 font-medium">Subscriptions</h2>

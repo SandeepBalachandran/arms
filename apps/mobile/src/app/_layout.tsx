@@ -59,6 +59,11 @@ function RootNavigator() {
               name="pay/[planId]"
               options={{ headerShown: true, title: 'Pay with UPI', presentation: 'modal' }}
             />
+            <Stack.Screen
+              name="checkin-qr"
+              options={{ headerShown: true, title: 'Check-in code', presentation: 'modal' }}
+            />
+            <Stack.Screen name="staff/scan" options={{ headerShown: true, title: 'Front desk scan' }} />
           </Stack.Protected>
           <Stack.Screen name="join/index" options={{ headerShown: hasGym, title: 'Join a gym' }} />
         </Stack.Protected>

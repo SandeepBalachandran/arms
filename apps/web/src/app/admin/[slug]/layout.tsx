@@ -15,7 +15,7 @@ export default async function AdminLayout({ children, params }: LayoutProps<"/ad
           <Link href={`/admin/${slug}`} className="block font-semibold">{gym.name}</Link>
           <p className="text-xs capitalize text-muted">{role} · {user.fullName || user.email}</p>
         </div>
-        <AdminNav slug={slug} role={role} />
+        <AdminNav slug={slug} role={role} checkinEnabled={gym.checkin_enabled} />
         <form action={signOut} className="hidden p-2 md:block">
           <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted hover:bg-border/40">
             <LogOut className="size-4" /> Sign out

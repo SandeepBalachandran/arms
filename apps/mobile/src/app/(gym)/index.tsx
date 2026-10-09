@@ -1,5 +1,6 @@
 import { Link } from 'expo-router';
 
+import { CheckinCard } from '@/components/checkin-card';
 import { MembershipCard } from '@/components/membership-card';
 import { Screen, Text } from '@/components/ui';
 import { useActiveGym } from '@/lib/gyms';
@@ -21,6 +22,7 @@ export default function HomeScreen() {
         </Link>
       )}
 
+      <CheckinCard />
       <MembershipCard />
     </Screen>
   );

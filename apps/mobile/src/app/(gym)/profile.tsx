@@ -1,3 +1,4 @@
+import { STAFF_ROLES } from '@gymos/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -20,6 +21,8 @@ export default function ProfileScreen() {
   const { session } = useSession();
   const profile = useProfile();
   const router = useRouter();
+  const active = useActiveGym();
+  const canScan = !!active?.gym.checkin_enabled && STAFF_ROLES.includes(active.role);
 
   return (
     <Screen>
@@ -30,6 +33,7 @@ export default function ProfileScreen() {
         <ProfileForm key={session?.user.id} fullName={profile.data.full_name} phone={profile.data.phone ?? ''} />
       )}
 
+      {canScan && <Button title="Front desk: scan check-ins" onPress={() => router.push('/staff/scan')} />}
       <GymSwitcher />
       <Button title="Join another gym" variant="secondary" onPress={() => router.push('/join')} />
       <Button title="Sign out" variant="secondary" onPress={() => supabase.auth.signOut()} />

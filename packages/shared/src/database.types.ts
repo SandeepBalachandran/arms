@@ -9,6 +9,7 @@ type MemberStatus = "invited" | "active" | "inactive";
 type SubscriptionStatus = "active" | "cancelled" | "expired";
 type PaymentMethod = "online" | "cash" | "upi" | "card" | "bank_transfer";
 type PaymentStatus = "created" | "paid" | "failed" | "refunded";
+type CheckinMethod = "self" | "scan" | "manual";
 
 export type Database = {
   public: {
@@ -52,6 +53,7 @@ export type Database = {
           receipt_seq: number;
           upi_id: string | null;
           upi_payee_name: string | null;
+          checkin_enabled: boolean;
           created_at: string;
         };
         Insert: {
@@ -67,6 +69,7 @@ export type Database = {
           platform_plan?: string;
           upi_id?: string | null;
           upi_payee_name?: string | null;
+          checkin_enabled?: boolean;
           created_at?: string;
         };
         Update: {
@@ -81,6 +84,7 @@ export type Database = {
           platform_plan?: string;
           upi_id?: string | null;
           upi_payee_name?: string | null;
+          checkin_enabled?: boolean;
         };
         Relationships: [];
       };
@@ -264,6 +268,23 @@ export type Database = {
           { foreignKeyName: "payments_plan_id_fkey"; columns: ["plan_id"]; isOneToOne: false; referencedRelation: "plans"; referencedColumns: ["id"] },
         ];
       };
+      checkins: {
+        Row: {
+          id: string;
+          gym_id: string;
+          member_id: string;
+          checked_in_at: string;
+          method: CheckinMethod;
+          membership_ok: boolean;
+          recorded_by: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [
+          { foreignKeyName: "checkins_gym_id_fkey"; columns: ["gym_id"]; isOneToOne: false; referencedRelation: "gyms"; referencedColumns: ["id"] },
+          { foreignKeyName: "checkins_member_id_fkey"; columns: ["member_id"]; isOneToOne: false; referencedRelation: "gym_members"; referencedColumns: ["id"] },
+        ];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -291,6 +312,10 @@ export type Database = {
       withdraw_upi_payment: { Args: { p_payment_id: string }; Returns: undefined };
       confirm_upi_payment: { Args: { p_payment_id: string; p_starts_on?: string }; Returns: string };
       reject_upi_payment: { Args: { p_payment_id: string; p_reason?: string }; Returns: undefined };
+      self_check_in: { Args: { p_gym_id: string }; Returns: Json };
+      issue_checkin_token: { Args: { p_gym_id: string }; Returns: string };
+      check_in_by_token: { Args: { p_token: string }; Returns: Json };
+      staff_check_in: { Args: { p_member_id: string }; Returns: Json };
     };
     Enums: {
       gym_role: GymRole;
@@ -299,6 +324,7 @@ export type Database = {
       subscription_status: SubscriptionStatus;
       payment_method: PaymentMethod;
       payment_status: PaymentStatus;
+      checkin_method: CheckinMethod;
     };
     CompositeTypes: { [_ in never]: never };
   };

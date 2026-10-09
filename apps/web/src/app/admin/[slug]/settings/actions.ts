@@ -53,3 +53,18 @@ export async function updateUpi(_prev: SettingsState, formData: FormData): Promi
   revalidatePath(`/admin/${slug}`, "layout");
   return { saved: true };
 }
+
+export async function updateCheckin(formData: FormData) {
+  const { slug, enabled } = z
+    .object({ slug: z.string(), enabled: z.enum(["true", "false"]) })
+    .parse(Object.fromEntries(formData));
+  const { gym } = await requireGym(slug, ["owner", "admin"]);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("gyms")
+    .update({ checkin_enabled: enabled === "true" })
+    .eq("id", gym.id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/${slug}`, "layout");
+}
