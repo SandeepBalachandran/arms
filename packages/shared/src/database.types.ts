@@ -575,6 +575,9 @@ isOneToOne: false
 "expire_subscriptions":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"find_user_id":
+{ Args: { "p_email"?: string,"p_phone"?: string }; Returns: string
+                           },
 "gym_today":
 { Args: { "p_gym_id": string }; Returns: string
                            },

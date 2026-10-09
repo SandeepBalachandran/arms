@@ -80,3 +80,12 @@ export const GYM_DEFAULTS = {
   classes_booking_window_days: 7,
   classes_cancel_cutoff_hours: 0,
 } as const;
+
+// Phone in international digits without "+" (how Supabase Auth stores it),
+// using the gym's country code for local numbers. Null if it isn't a number.
+export function internationalPhone(phone: string, countryCode: string) {
+  const trimmed = phone.trim();
+  const digits = trimmed.replace(/\D/g, "").replace(/^0+/, "");
+  if (digits.length < 6 || digits.length > 15) return null;
+  return trimmed.startsWith("+") || digits.length >= 11 ? digits : `${countryCode}${digits}`;
+}

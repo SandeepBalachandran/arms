@@ -1,13 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { rupeesSchema } from "@gymos/shared";
 import { z } from "zod";
 import { requireGym } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
-export type PlanState = { error?: string } | undefined;
+export type PlanState = { error?: string; saved?: boolean } | undefined;
 
 const optionalInt = (max: number) =>
   z
@@ -41,7 +40,7 @@ export async function savePlan(_prev: PlanState, formData: FormData): Promise<Pl
   if (error) return { error: error.message };
 
   revalidatePath(`/admin/${slug}/plans`);
-  redirect(`/admin/${slug}/plans`);
+  return { saved: true };
 }
 
 export async function togglePlan(formData: FormData) {
@@ -56,6 +55,17 @@ export async function togglePlan(formData: FormData) {
     .update({ is_active: is_active === "true" })
     .eq("id", id)
     .eq("gym_id", gym.id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/${slug}/plans`);
+}
+
+// Only plans that were never sold can be deleted (RLS enforces this too).
+export async function deletePlan(formData: FormData) {
+  const { slug, id } = z.object({ slug: z.string(), id: z.uuid() }).parse(Object.fromEntries(formData));
+  const { gym } = await requireGym(slug, ["owner", "admin"]);
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("plans").delete().eq("id", id).eq("gym_id", gym.id);
   if (error) throw new Error(error.message);
   revalidatePath(`/admin/${slug}/plans`);
 }

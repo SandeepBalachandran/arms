@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { MANUAL_PAYMENT_METHODS, rupeesSchema } from "@gymos/shared";
+import { redirect } from "next/navigation";
+import { internationalPhone, MANUAL_PAYMENT_METHODS, rupeesSchema } from "@gymos/shared";
 import { z } from "zod";
 import { requireGym, STAFF_ROLES } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const roleSchema = z.object({
@@ -93,4 +95,59 @@ export async function reviewJoinRequest(formData: FormData) {
   });
   if (error) throw new Error(error.message);
   revalidatePath(`/admin/${slug}`, "layout");
+}
+
+export type AddMemberState = { error?: string } | undefined;
+
+const addMemberSchema = z
+  .object({
+    slug: z.string(),
+    full_name: z.string().trim().min(2, "Enter the member's name").max(80),
+    email: z.union([z.literal(""), z.email("Enter a valid email")]),
+    phone: z.string().trim().max(20),
+  })
+  .refine((v) => v.email || v.phone, "Enter a phone number or an email");
+
+// Front desk adds a member directly (walk-ins, people without the app). Creates
+// the person's login if they don't have one; with an email they can later sign
+// in to the app with a code and see their membership.
+export async function addMember(_prev: AddMemberState, formData: FormData): Promise<AddMemberState> {
+  const parsed = addMemberSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const { slug, full_name, email, phone } = parsed.data;
+  const { gym } = await requireGym(slug, STAFF_ROLES);
+
+  const intlPhone = phone ? internationalPhone(phone, gym.phone_country_code) : null;
+  if (phone && !intlPhone) return { error: "Check the phone number" };
+
+  const admin = createAdminClient();
+  const { data: existingId, error: findError } = await admin.rpc("find_user_id", {
+    ...(email ? { p_email: email } : {}),
+    ...(intlPhone ? { p_phone: intlPhone } : {}),
+  });
+  if (findError) return { error: findError.message };
+
+  let userId = existingId;
+  if (!userId) {
+    const { data, error } = await admin.auth.admin.createUser({
+      ...(email ? { email, email_confirm: true } : {}),
+      ...(intlPhone ? { phone: `+${intlPhone}`, phone_confirm: true } : {}),
+      user_metadata: { full_name },
+    });
+    if (error) return { error: error.message };
+    userId = data.user.id;
+    await admin.from("profiles").update({ full_name, phone: phone || null }).eq("id", userId);
+  }
+
+  const { data: member, error } = await admin
+    .from("gym_members")
+    .insert({ gym_id: gym.id, user_id: userId, role: "member", status: "active" })
+    .select("id")
+    .single();
+  if (error) {
+    return { error: error.code === "23505" ? "This person is already in your gym." : error.message };
+  }
+
+  revalidatePath(`/admin/${slug}`, "layout");
+  redirect(`/admin/${slug}/members/${member.id}?added=1`);
 }

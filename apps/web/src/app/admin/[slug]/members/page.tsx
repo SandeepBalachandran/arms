@@ -5,7 +5,9 @@ import { MembershipBadge } from "@/components/membership-badge";
 import { Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES, TEAM_ROLES, type GymRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { joinUrl } from "@/lib/site";
 import { reviewJoinRequest, updateMember } from "./actions";
+import { AddMember } from "./add-member";
 
 export const metadata: Metadata = { title: "Members" };
 
@@ -74,7 +76,19 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
 
   return (
     <>
-      <PageHeader title="Members" />
+      <PageHeader
+        title="Members"
+        actions={
+          canManage && (
+            <AddMember
+              slug={slug}
+              gymName={gym.name}
+              countryCode={gym.phone_country_code}
+              whatsappHref={`https://wa.me/?text=${encodeURIComponent(`Join ${gym.name} on GymOS: ${joinUrl(slug)}`)}`}
+            />
+          )
+        }
+      />
       {!!pending?.length && (
         <Card className="mb-6 border-amber-500/50">
           <h2 className="font-medium">Waiting for approval ({pending.length})</h2>

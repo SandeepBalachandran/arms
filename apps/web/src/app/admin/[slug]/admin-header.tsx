@@ -1,23 +1,42 @@
 import Link from "next/link";
-import { Bell, Building2, Check, LogOut, Plus, UserRound } from "lucide-react";
+import clsx from "clsx";
+import { Bell, Check, ChevronDown, LogOut, Plus, Settings, UserRound } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
-import { Dropdown, menuItemClass } from "@/components/dropdown";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Dropdown, menuItemClass, MenuSection } from "@/components/dropdown";
+import { ThemeSwitch } from "@/components/theme-toggle";
 import { getMyGyms, STAFF_ROLES, TEAM_ROLES, type CurrentUser, type GymMembership } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getTheme } from "@/lib/theme";
 
-function initials(name: string, email: string | null) {
-  const source = name.trim() || email || "?";
-  const parts = source.split(/\s+/).filter(Boolean);
-  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : source.slice(0, 2)).toUpperCase();
+function initials(text: string) {
+  const parts = text.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : parts[0].slice(0, 2)).toUpperCase();
+}
+
+function Avatar({ text, size = "md" }: { text: string; size?: "sm" | "md" | "lg" }) {
+  return (
+    <span
+      aria-hidden
+      className={clsx(
+        "flex shrink-0 items-center justify-center rounded-full bg-brand font-semibold text-brand-fg",
+        size === "sm" && "size-7 text-[11px]",
+        size === "md" && "size-9 text-sm",
+        size === "lg" && "size-11 text-base",
+      )}
+    >
+      {initials(text)}
+    </span>
+  );
 }
 
 // Top bar of the admin panel: gym name on the left; notifications and the
-// profile menu (account, gym switcher, theme, sign out) on the right.
+// profile menu (account, gym switcher, appearance, sign out) on the right.
 export async function AdminHeader({ membership, user }: { membership: GymMembership; user: CurrentUser }) {
   const { gym, role } = membership;
   const isStaff = STAFF_ROLES.includes(role);
+  const canConfigure = role === "owner" || role === "admin";
+  const displayName = user.fullName || user.email || "Account";
   const supabase = await createClient();
 
   const [gyms, theme, upi, joins] = await Promise.all([
@@ -42,9 +61,9 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
         {gym.name}
       </Link>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <Dropdown
-          label={notifications.length ? `${notifications.length} notifications` : "Notifications"}
+          label={notifications.length ? `Notifications, ${notifications.length} new` : "Notifications"}
           trigger={
             <span className="relative flex size-9 items-center justify-center rounded-full text-muted hover:bg-border/40">
               <Bell className="size-5" />
@@ -56,54 +75,80 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
             </span>
           }
         >
-          <p className="border-b border-border px-4 py-2 text-xs font-medium uppercase text-muted">Notifications</p>
-          {notifications.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-muted">You&apos;re all caught up.</p>
-          ) : (
-            notifications.map((n) => (
-              <Link key={n.href} href={n.href} role="menuitem" className={menuItemClass}>
-                {n.text}
-              </Link>
-            ))
-          )}
+          <MenuSection title="Notifications">
+            {notifications.length === 0 ? (
+              <p className="px-4 py-2 text-sm text-muted">You&apos;re all caught up.</p>
+            ) : (
+              notifications.map((n) => (
+                <Link key={n.href} href={n.href} role="menuitem" className={menuItemClass}>
+                  <span className="size-2 shrink-0 rounded-full bg-danger" aria-hidden />
+                  {n.text}
+                </Link>
+              ))
+            )}
+          </MenuSection>
         </Dropdown>
 
         <Dropdown
           label="Account menu"
           trigger={
-            <span className="flex size-9 items-center justify-center rounded-full bg-brand text-sm font-semibold text-brand-fg">
-              {initials(user.fullName, user.email)}
+            <span className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-border/40">
+              <Avatar text={displayName} />
+              <span className="hidden max-w-36 truncate text-sm font-medium sm:block">{displayName}</span>
+              <ChevronDown className="hidden size-4 text-muted sm:block" />
             </span>
           }
         >
-          <div className="border-b border-border px-4 py-3">
-            <p className="truncate font-medium">{user.fullName || "No name yet"}</p>
-            <p className="truncate text-sm text-muted">{user.email}</p>
-            <p className="mt-1 text-xs capitalize text-muted">{role} at {gym.name}</p>
+          <div className="flex items-center gap-3 px-4 pb-3 pt-2">
+            <Avatar text={displayName} size="lg" />
+            <div className="min-w-0">
+              <p className="truncate font-medium">{user.fullName || "Add your name"}</p>
+              <p className="truncate text-sm text-muted">{user.email}</p>
+              <span className="mt-1 inline-block rounded-full bg-brand/15 px-2 py-0.5 text-xs font-medium capitalize">
+                {role}
+              </span>
+            </div>
           </div>
-          <Link href={`/account?back=/admin/${gym.slug}`} role="menuitem" className={menuItemClass}>
-            <UserRound className="size-4" /> My profile
-          </Link>
-          {teamGyms.length > 1 && (
-            <div className="border-t border-border py-1">
-              <p className="px-4 py-1 text-xs font-medium uppercase text-muted">Switch gym</p>
-              {teamGyms.map((m) => (
+
+          <MenuSection>
+            <Link href={`/account?back=/admin/${gym.slug}`} role="menuitem" className={menuItemClass}>
+              <UserRound className="size-4 text-muted" /> My profile
+            </Link>
+            {canConfigure && (
+              <Link href={`/admin/${gym.slug}/settings`} role="menuitem" className={menuItemClass}>
+                <Settings className="size-4 text-muted" /> Gym settings
+              </Link>
+            )}
+          </MenuSection>
+
+          <MenuSection title={teamGyms.length > 1 ? "Your gyms" : undefined}>
+            {teamGyms.length > 1 &&
+              teamGyms.map((m) => (
                 <Link key={m.gym.id} href={`/admin/${m.gym.slug}`} role="menuitem" className={menuItemClass}>
-                  {m.gym.id === gym.id ? <Check className="size-4 text-brand" /> : <Building2 className="size-4 text-muted" />}
-                  <span className="truncate">{m.gym.name}</span>
+                  <Avatar text={m.gym.name} size="sm" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate">{m.gym.name}</span>
+                    <span className="block text-xs capitalize text-muted">{m.role}</span>
+                  </span>
+                  {m.gym.id === gym.id && <Check className="size-4 text-brand" aria-label="Current gym" />}
                 </Link>
               ))}
-            </div>
-          )}
-          <Link href="/register-gym" role="menuitem" className={`${menuItemClass} border-t border-border`}>
-            <Plus className="size-4" /> Register another gym
-          </Link>
-          <ThemeToggle initial={theme} className={menuItemClass} />
-          <form action={signOut} className="border-t border-border">
-            <button role="menuitem" className={`${menuItemClass} text-danger`}>
-              <LogOut className="size-4" /> Sign out
-            </button>
-          </form>
+            <Link href="/register-gym" role="menuitem" className={menuItemClass}>
+              <Plus className="size-4 text-muted" /> Register a new gym
+            </Link>
+          </MenuSection>
+
+          <MenuSection>
+            <ThemeSwitch initial={theme} />
+          </MenuSection>
+
+          <MenuSection>
+            <form action={signOut}>
+              <button role="menuitem" className={`${menuItemClass} text-danger`}>
+                <LogOut className="size-4" /> Sign out
+              </button>
+            </form>
+          </MenuSection>
         </Dropdown>
       </div>
     </header>

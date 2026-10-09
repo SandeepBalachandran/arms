@@ -21,8 +21,9 @@ import { RecordPaymentForm } from "./record-payment-form";
 
 export const metadata: Metadata = { title: "Member" };
 
-export default async function MemberPage({ params }: PageProps<"/admin/[slug]/members/[id]">) {
+export default async function MemberPage({ params, searchParams }: PageProps<"/admin/[slug]/members/[id]">) {
   const { slug, id } = await params;
+  const { added } = await searchParams;
   const { gym, role } = await requireGym(slug, TEAM_ROLES);
   const isStaff = STAFF_ROLES.includes(role);
   const supabase = await createClient();
@@ -74,6 +75,11 @@ export default async function MemberPage({ params }: PageProps<"/admin/[slug]/me
     <>
       <Link href={`/admin/${slug}/members`} className="text-sm text-muted hover:underline">← Members</Link>
       <PageHeader title={member.profiles.full_name || "Unnamed member"} />
+      {added && (
+        <div className="mb-6 rounded-xl border border-green-500/50 bg-green-500/10 p-4 text-sm">
+          Member added. Record their first payment on the right to start their membership.
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
