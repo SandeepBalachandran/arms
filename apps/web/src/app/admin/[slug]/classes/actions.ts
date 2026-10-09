@@ -35,6 +35,29 @@ export async function createClassType(_prev: FormState, formData: FormData): Pro
   return { message: `Added ${values.name}.` };
 }
 
+export async function updateClassType(_prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = typeSchema.extend({ id: z.uuid() }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const { slug, id, ...values } = parsed.data;
+  const { gym } = await requireGym(slug, STAFF_ROLES);
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("class_types").update(values).eq("id", id).eq("gym_id", gym.id);
+  if (error) return { error: error.message };
+  revalidatePath(`/admin/${slug}/classes`);
+  return { message: `Saved ${values.name}.` };
+}
+
+// Archived types can't be scheduled again; classes already on the calendar stay.
+export async function archiveClassType(formData: FormData): Promise<ActionResult> {
+  const { slug, id } = z.object({ slug: z.string(), id: z.uuid() }).parse(Object.fromEntries(formData));
+  const { gym } = await requireGym(slug, STAFF_ROLES);
+  const supabase = await createClient();
+  const { error } = await supabase.from("class_types").update({ is_active: false }).eq("id", id).eq("gym_id", gym.id);
+  if (error) return { error: error.message };
+  revalidatePath(`/admin/${slug}/classes`);
+}
+
 const seriesSchema = z.object({
   slug: z.string(),
   class_type_id: z.uuid("Choose a class"),
