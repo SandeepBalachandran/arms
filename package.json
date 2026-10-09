@@ -13,7 +13,9 @@
     "lint": "npm run lint --workspaces --if-present",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local --schema public > packages/shared/src/database.types.ts"
+    "db:types": "node scripts/db.mjs types",
+    "db:push": "node scripts/db.mjs push",
+    "db:types:local": "supabase gen types typescript --local --schema public > packages/shared/src/database.types.ts"
   },
   "devDependencies": {
     "supabase": "^2.120.0"

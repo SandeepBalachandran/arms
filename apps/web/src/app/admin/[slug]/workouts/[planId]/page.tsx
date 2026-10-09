@@ -38,7 +38,7 @@ export default async function PlanPage({ params }: PageProps<"/admin/[slug]/work
       .order("name"),
     supabase
       .from("plan_assignments")
-      .select("id, member_id, gym_members!inner(profiles!inner(full_name))")
+      .select("id, member_id, gym_members!plan_assignments_member_id_fkey!inner(profiles!inner(full_name))")
       .eq("plan_id", planId),
     supabase
       .from("gym_members")

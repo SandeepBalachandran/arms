@@ -56,7 +56,7 @@ export default async function WorkoutsPage({ params }: PageProps<"/admin/[slug]/
           <Card>
             <h2 className="mb-1 font-medium">Exercise library</h2>
             <p className="mb-3 text-sm text-muted">
-              40 common exercises are built in.
+              41 common exercises are built in.
               {customExercises.data.length > 0 &&
                 ` Your own: ${customExercises.data.map((e) => e.name).join(", ")}.`}
             </p>

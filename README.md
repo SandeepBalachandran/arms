@@ -20,8 +20,17 @@ cp apps/web/.env.example apps/web/.env.local
 cp apps/mobile/.env.example apps/mobile/.env.local
 ```
 
-Fill both env files with the same Supabase project. For a local stack
-(needs Docker): `npm run db:start`, then `npx supabase status` prints the keys.
+Fill both env files with the same Supabase project (URL + publishable key).
+For database commands, also put `SUPABASE_DB_PASSWORD` in `apps/web/.env.local`
+(never in the mobile env file).
+
+```bash
+npm run db:push      # apply new supabase/migrations to the hosted project
+npm run db:types     # regenerate packages/shared/src/database.types.ts
+```
+
+Copy `supabase/templates/*.html` into Supabase → Authentication → Email
+Templates so sign-in emails include the 6-digit code.
 
 ## Run
 
@@ -32,8 +41,7 @@ npm run typecheck
 npm run lint
 ```
 
-After changing the schema: `npm run db:types` regenerates
-`packages/shared/src/database.types.ts`.
+After adding a migration: `npm run db:push`, then `npm run db:types`.
 
 ## Join links
 
