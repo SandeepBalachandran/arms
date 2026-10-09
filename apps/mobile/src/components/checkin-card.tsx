@@ -30,8 +30,10 @@ export function CheckinCard() {
         <Text variant="heading" style={{ color: theme.brand }}>
           Checked in today at {time(visits.todayVisit.checked_in_at)} ✓
         </Text>
-      ) : (
+      ) : gym.checkin_self_allowed ? (
         <Button title="I’m at the gym — check in" onPress={() => checkIn.mutate()} loading={checkIn.isPending} />
+      ) : (
+        <Text variant="muted">Show your QR code at the front desk to check in.</Text>
       )}
       {checkIn.error && <Text variant="error">{checkIn.error.message}</Text>}
       <Button title="Show my QR code" variant="secondary" onPress={() => router.push('/checkin-qr')} />

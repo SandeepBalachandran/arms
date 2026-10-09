@@ -30,3 +30,14 @@ export function spotsLeft(c: Pick<ScheduledClass, "capacity" | "booked_count">) 
 export function hasStarted(startsAt: string, now = Date.now()) {
   return new Date(startsAt).getTime() <= now;
 }
+
+// Members may cancel a booked spot until `cutoffHours` before the class
+// (0 = any time); leaving a waitlist is always allowed. Mirrors cancel_booking().
+export function canMemberCancel(
+  c: Pick<ScheduledClass, "starts_at" | "my_status">,
+  cutoffHours: number,
+  now = Date.now(),
+) {
+  if (c.my_status === "waitlisted") return true;
+  return cutoffHours === 0 || new Date(c.starts_at).getTime() - now >= cutoffHours * 3_600_000;
+}

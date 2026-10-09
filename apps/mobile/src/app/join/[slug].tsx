@@ -4,7 +4,14 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
 import { Button, Card, Loading, Screen, Text } from '@/components/ui';
-import { myGymsKey, setPendingJoin, useMyGyms, useSetActiveGym } from '@/lib/gyms';
+import {
+  myGymsKey,
+  setPendingJoin,
+  useMyGyms,
+  usePendingGyms,
+  useSetActiveGym,
+  type GymMembership,
+} from '@/lib/gyms';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 
@@ -17,6 +24,7 @@ export default function JoinGymScreen() {
   const queryClient = useQueryClient();
   const { session } = useSession();
   const myGyms = useMyGyms();
+  const pendingGyms = usePendingGyms();
   const setActiveGym = useSetActiveGym();
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +57,7 @@ export default function JoinGymScreen() {
   }
 
   const alreadyMember = myGyms.data?.some((m) => m.gym.slug === slug);
+  const awaitingApproval = pendingGyms.data?.some((m) => m.gym.slug === slug);
 
   async function openGym() {
     setActiveGym(slug!);
@@ -71,7 +80,12 @@ export default function JoinGymScreen() {
       setJoining(false);
       return setError(error.message);
     }
-    await openGym();
+    // Gyms with "Approve new members" on leave the membership pending.
+    const key = myGymsKey(session.user.id);
+    await queryClient.refetchQueries({ queryKey: key });
+    const mine = queryClient.getQueryData<GymMembership[]>(key)?.find((m) => m.gym.slug === slug);
+    if (mine?.status === 'active') return openGym();
+    setJoining(false);
   }
 
   return (
@@ -86,6 +100,13 @@ export default function JoinGymScreen() {
       {error && <Text variant="error">{error}</Text>}
       {alreadyMember ? (
         <Button title={`Open ${gym.data.name}`} onPress={openGym} />
+      ) : awaitingApproval ? (
+        <Card>
+          <Text variant="heading">Request sent ✓</Text>
+          <Text variant="muted">
+            {gym.data.name} approves new members. You’ll get access as soon as the front desk approves you.
+          </Text>
+        </Card>
       ) : (
         <Button title={session ? 'Join gym' : 'Sign in to join'} onPress={join} loading={joining} />
       )}

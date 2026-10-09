@@ -5,24 +5,17 @@ import { MembershipBadge } from "@/components/membership-badge";
 import { Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES, TEAM_ROLES, type GymRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { updateMember } from "./actions";
+import { reviewJoinRequest, updateMember } from "./actions";
 
 export const metadata: Metadata = { title: "Members" };
 
-const FILTERS = {
-  all: "Everyone",
-  member: "Members",
-  active: "Active membership",
-  expiring: "Expiring in 7 days",
-  expired: "Expired / no plan",
-  team: "Team",
-} as const;
-type Filter = keyof typeof FILTERS;
+const FILTER_KEYS = ["all", "member", "active", "expiring", "expired", "team"] as const;
+type Filter = (typeof FILTER_KEYS)[number];
 
 export default async function MembersPage({ params, searchParams }: PageProps<"/admin/[slug]/members">) {
   const { slug } = await params;
   const { show, q } = await searchParams;
-  const filter: Filter = typeof show === "string" && show in FILTERS ? (show as Filter) : "all";
+  const filter: Filter = FILTER_KEYS.includes(show as Filter) ? (show as Filter) : "all";
   const query = typeof q === "string" ? q.trim() : "";
 
   const { gym, role: myRole, user } = await requireGym(slug, TEAM_ROLES);
@@ -35,6 +28,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
     .from("gym_members")
     .select("id, user_id, role, status, joined_at, profiles!inner(full_name, phone)")
     .eq("gym_id", gym.id)
+    .neq("status", "pending")
     .order("joined_at", { ascending: false })
     .limit(200);
   if (filter === "team") request = request.neq("role", "member");
@@ -42,6 +36,15 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
   if (query) request = request.ilike("profiles.full_name", `%${query}%`);
   const { data: members, error } = await request;
   if (error) throw error;
+
+  const { data: pending } = canManage
+    ? await supabase
+        .from("gym_members")
+        .select("id, joined_at, profiles!inner(full_name, phone)")
+        .eq("gym_id", gym.id)
+        .eq("status", "pending")
+        .order("joined_at")
+    : { data: [] };
 
   const { data: subs, error: subsError } = members.length
     ? await supabase
@@ -64,7 +67,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
     }))
     .filter(({ membership: s }) => {
       if (filter === "active") return s.kind === "active" || s.kind === "upcoming";
-      if (filter === "expiring") return s.kind === "active" && s.daysLeft <= 7;
+      if (filter === "expiring") return s.kind === "active" && s.daysLeft <= gym.expiry_warning_days;
       if (filter === "expired") return s.kind === "expired" || s.kind === "none";
       return true;
     });
@@ -72,6 +75,39 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
   return (
     <>
       <PageHeader title="Members" />
+      {!!pending?.length && (
+        <Card className="mb-6 border-amber-500/50">
+          <h2 className="font-medium">Waiting for approval ({pending.length})</h2>
+          <ul className="mt-2 divide-y divide-border text-sm">
+            {pending.map((p) => (
+              <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                <span>
+                  <span className="font-medium">{p.profiles.full_name || "Unnamed"}</span>
+                  <span className="text-muted"> · {p.profiles.phone ?? "no phone"}</span>
+                </span>
+                <span className="flex gap-2">
+                  {(["true", "false"] as const).map((approve) => (
+                    <form key={approve} action={reviewJoinRequest}>
+                      <input type="hidden" name="slug" value={slug} />
+                      <input type="hidden" name="member_id" value={p.id} />
+                      <input type="hidden" name="approve" value={approve} />
+                      <button
+                        className={
+                          approve === "true"
+                            ? "rounded-lg bg-brand px-3 py-1.5 font-medium text-brand-fg"
+                            : "rounded-lg border border-border px-3 py-1.5 text-danger"
+                        }
+                      >
+                        {approve === "true" ? "Approve" : "Decline"}
+                      </button>
+                    </form>
+                  ))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
       <form className="mb-4 flex flex-wrap gap-2">
         <input
           name="q"
@@ -80,7 +116,14 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
           className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
         />
         <select name="show" defaultValue={filter} className="rounded-lg border border-border bg-surface px-3 py-2 text-sm">
-          {Object.entries(FILTERS).map(([value, label]) => (
+          {Object.entries({
+            all: "Everyone",
+            member: "Members",
+            active: "Active membership",
+            expiring: `Expiring in ${gym.expiry_warning_days} days`,
+            expired: "Expired / no plan",
+            team: "Team",
+          } satisfies Record<Filter, string>).map(([value, label]) => (
             <option key={value} value={value}>{label}</option>
           ))}
         </select>
@@ -111,7 +154,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
                   </td>
                   <td className="p-3 text-muted">{m.profiles.phone ?? "—"}</td>
                   <td className="p-3">
-                    {m.role === "member" ? <MembershipBadge state={m.membership} /> : <span className="text-muted">—</span>}
+                    {m.role === "member" ? <MembershipBadge state={m.membership} warnDays={gym.expiry_warning_days} /> : <span className="text-muted">—</span>}
                   </td>
                   <td className="p-3">
                     {editable ? (

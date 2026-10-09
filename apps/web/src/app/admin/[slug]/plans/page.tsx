@@ -67,7 +67,7 @@ export default async function PlansPage({ params, searchParams }: PageProps<"/ad
         {canEdit && (
           <Card className="h-fit">
             <h2 className="mb-4 font-medium">{editing ? `Edit ${editing.name}` : "New plan"}</h2>
-            <PlanForm key={editing?.id ?? "new"} slug={slug} plan={editing} />
+            <PlanForm key={editing?.id ?? "new"} slug={slug} plan={editing} currency={gym.currency} />
           </Card>
         )}
       </div>

@@ -1,4 +1,4 @@
-import { parseGymCode, type GymRole } from '@gymos/shared';
+import { parseGymCode, type Database, type GymRole } from '@gymos/shared';
 import { useQuery } from '@tanstack/react-query';
 import * as Application from 'expo-application';
 import { createContext, use, useState, type ReactNode } from 'react';
@@ -10,25 +10,15 @@ import { supabase } from '@/lib/supabase';
 export type GymMembership = {
   memberId: string;
   role: GymRole;
-  gym: {
-    id: string;
-    slug: string;
-    name: string;
-    logo_url: string | null;
-    timezone: string;
-    currency: string;
-    upi_id: string | null;
-    upi_payee_name: string | null;
-    checkin_enabled: boolean;
-    classes_enabled: boolean;
-    workouts_enabled: boolean;
-  };
+  status: Database['public']['Enums']['member_status'];
+  // The whole gym row, including its settings (configured in the web admin).
+  gym: Database['public']['Tables']['gyms']['Row'];
 };
 
 export const myGymsKey = (userId: string | undefined) => ['my-gyms', userId] as const;
 
-// Every active gym the signed-in user belongs to (same query as apps/web getMyGyms).
-export function useMyGyms() {
+// All of the signed-in user's gym memberships (active and awaiting approval).
+function useMemberships<T>(select: (rows: GymMembership[]) => T) {
   const { session } = useSession();
   const userId = session?.user.id;
   return useQuery({
@@ -37,15 +27,29 @@ export function useMyGyms() {
     queryFn: async (): Promise<GymMembership[]> => {
       const { data, error } = await supabase
         .from('gym_members')
-        .select('id, role, gyms!inner(id, slug, name, logo_url, timezone, currency, upi_id, upi_payee_name, checkin_enabled, classes_enabled, workouts_enabled, status)')
+        .select('id, role, status, gyms!inner(*)')
         .eq('user_id', userId!)
-        .eq('status', 'active')
+        .in('status', ['active', 'pending'])
         .eq('gyms.status', 'active')
         .order('joined_at');
       if (error) throw error;
-      return data.map((row) => ({ memberId: row.id, role: row.role, gym: row.gyms }));
+      return data.map((row) => ({ memberId: row.id, role: row.role, status: row.status, gym: row.gyms }));
     },
+    select,
   });
+}
+
+const activeOnly = (rows: GymMembership[]) => rows.filter((m) => m.status === 'active');
+const pendingOnly = (rows: GymMembership[]) => rows.filter((m) => m.status === 'pending');
+
+// Gyms the user can use (same as apps/web getMyGyms).
+export function useMyGyms() {
+  return useMemberships(activeOnly);
+}
+
+// Gyms that still have to approve the user (gym setting "Approve new members").
+export function usePendingGyms() {
+  return useMemberships(pendingOnly);
 }
 
 // Active gym ------------------------------------------------------------------

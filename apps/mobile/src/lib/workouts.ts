@@ -34,14 +34,19 @@ export function useExercises() {
     enabled: !!gymId,
     staleTime: 10 * 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('exercises')
-        .select('id, name, muscle_group, measure')
-        .or(`gym_id.is.null,gym_id.eq.${gymId}`)
-        .eq('is_active', true)
-        .order('name');
-      if (error) throw error;
-      return data as ExerciseInfo[];
+      const [exercises, hidden] = await Promise.all([
+        supabase
+          .from('exercises')
+          .select('id, name, muscle_group, measure')
+          .or(`gym_id.is.null,gym_id.eq.${gymId}`)
+          .eq('is_active', true)
+          .order('name'),
+        supabase.from('gym_hidden_exercises').select('exercise_id').eq('gym_id', gymId!),
+      ]);
+      if (exercises.error) throw exercises.error;
+      if (hidden.error) throw hidden.error;
+      const hiddenIds = new Set(hidden.data.map((h) => h.exercise_id));
+      return exercises.data.filter((e) => !hiddenIds.has(e.id)) as ExerciseInfo[];
     },
   });
 }

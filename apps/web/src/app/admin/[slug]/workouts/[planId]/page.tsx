@@ -24,7 +24,7 @@ export default async function PlanPage({ params }: PageProps<"/admin/[slug]/work
     .maybeSingle();
   if (!plan) notFound();
 
-  const [items, exercises, assignments, members] = await Promise.all([
+  const [items, exercises, assignments, members, hidden] = await Promise.all([
     supabase
       .from("workout_plan_items")
       .select("id, day_label, position, sets, reps, rest_sec, notes, exercises(name)")
@@ -48,7 +48,10 @@ export default async function PlanPage({ params }: PageProps<"/admin/[slug]/work
       .eq("status", "active")
       .order("joined_at", { ascending: false })
       .limit(500),
+    supabase.from("gym_hidden_exercises").select("exercise_id").eq("gym_id", gym.id),
   ]);
+  if (hidden.error) throw hidden.error;
+  const hiddenIds = new Set(hidden.data.map((h) => h.exercise_id));
   if (items.error) throw items.error;
   if (exercises.error) throw exercises.error;
   if (assignments.error) throw assignments.error;
@@ -106,7 +109,7 @@ export default async function PlanPage({ params }: PageProps<"/admin/[slug]/work
         <div className="space-y-6">
           <Card>
             <h2 className="mb-3 font-medium">Add exercise</h2>
-            <AddItemForm slug={slug} planId={planId} days={days.map((d) => d.label)} exercises={exercises.data} />
+            <AddItemForm slug={slug} planId={planId} days={days.map((d) => d.label)} exercises={exercises.data.filter((e) => !hiddenIds.has(e.id))} />
           </Card>
           <Card>
             <h2 className="mb-2 font-medium">Assigned to</h2>

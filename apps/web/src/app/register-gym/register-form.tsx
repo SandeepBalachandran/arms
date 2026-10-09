@@ -42,11 +42,6 @@ export function RegisterGymForm() {
           }}
         />
       </Field>
-      <input
-        type="hidden"
-        name="timezone"
-        value={Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata"}
-      />
       <FormError message={state?.error} />
       <Button className="w-full" disabled={pending}>
         {pending ? "Creating…" : "Create gym"}

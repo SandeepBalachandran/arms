@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { addDays, formatMoney, PAYMENT_METHOD_LABELS, todayIn, type PaymentMethod } from "@gymos/shared";
+import { addDays, formatMoney, formatReceipt, PAYMENT_METHOD_LABELS, todayIn, type PaymentMethod } from "@gymos/shared";
 import { Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -92,7 +92,7 @@ export default async function PaymentsPage({ params, searchParams }: PageProps<"
           <tbody>
             {payments.map((p) => (
               <tr key={p.id} className="border-b border-border last:border-0">
-                <td className="p-3 font-mono">#{p.receipt_no}</td>
+                <td className="p-3 font-mono">{formatReceipt(gym.receipt_prefix, p.receipt_no)}</td>
                 <td className="p-3 text-muted">
                   {new Date(p.paid_at!).toLocaleString("en-IN", { timeZone: gym.timezone, dateStyle: "medium", timeStyle: "short" })}
                 </td>

@@ -1,4 +1,4 @@
-import { formatTime, hasStarted, spotsLeft, type ScheduledClass } from '@gymos/shared';
+import { canMemberCancel, formatTime, hasStarted, spotsLeft, type ScheduledClass } from '@gymos/shared';
 import { Alert, View } from 'react-native';
 
 import { Button, Card, Text } from '@/components/ui';
@@ -6,7 +6,11 @@ import { useTheme } from '@/hooks/use-theme';
 import { useBookClass, useCancelBooking } from '@/lib/classes';
 
 // One class in the schedule with its book / waitlist / cancel action.
-export function ClassRow({ item, timezone }: { item: ScheduledClass; timezone: string }) {
+export function ClassRow({ item, timezone, cancelCutoffHours }: {
+  item: ScheduledClass;
+  timezone: string;
+  cancelCutoffHours: number;
+}) {
   const theme = useTheme();
   const book = useBookClass();
   const cancel = useCancelBooking();
@@ -32,6 +36,24 @@ export function ClassRow({ item, timezone }: { item: ScheduledClass; timezone: s
 
   const highlight = item.my_status === 'booked' || item.my_status === 'attended';
 
+  function action() {
+    if (item.my_status === 'attended') return null;
+    if (item.my_status === 'booked' || item.my_status === 'waitlisted') {
+      if (!canMemberCancel(item, cancelCutoffHours)) {
+        return <Text variant="small">Cancellation closes {cancelCutoffHours} h before the class.</Text>;
+      }
+      return (
+        <Button
+          title={item.my_status === 'booked' ? 'Cancel booking' : 'Leave waitlist'}
+          variant="secondary"
+          onPress={confirmCancel}
+          loading={busy}
+        />
+      );
+    }
+    return <Button title={left > 0 ? 'Book' : 'Join waitlist'} onPress={() => book.mutate(item.id)} loading={busy} />;
+  }
+
   return (
     <Card style={highlight ? { borderColor: theme.brand } : undefined}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -50,20 +72,7 @@ export function ClassRow({ item, timezone }: { item: ScheduledClass; timezone: s
         {status}
       </Text>
       {(book.error || cancel.error) && <Text variant="error">{(book.error ?? cancel.error)!.message}</Text>}
-      {item.status === 'scheduled' && !started && (
-        item.my_status === 'booked' || item.my_status === 'waitlisted' ? (
-          <Button
-            title={item.my_status === 'booked' ? 'Cancel booking' : 'Leave waitlist'}
-            variant="secondary"
-            onPress={confirmCancel}
-            loading={busy}
-          />
-        ) : (
-          item.my_status !== 'attended' && (
-            <Button title={left > 0 ? 'Book' : 'Join waitlist'} onPress={() => book.mutate(item.id)} loading={busy} />
-          )
-        )
-      )}
+      {item.status === 'scheduled' && !started && action()}
     </Card>
   );
 }

@@ -181,6 +181,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"gym_hidden_exercises": {
+                  Row: {
+                    "exercise_id": string,"gym_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "exercise_id": string,"gym_id": string
+                  }
+                  Update: {
+                    "exercise_id"?: string,"gym_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gym_hidden_exercises_exercise_id_fkey"
+      columns: ["exercise_id"]
+isOneToOne: false
+      referencedRelation: "exercises"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gym_hidden_exercises_gym_id_fkey"
+      columns: ["gym_id"]
+isOneToOne: false
+      referencedRelation: "gyms"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"gym_members": {
                   Row: {
                     "gym_id": string,"id": string,"joined_at": string,"role": Database["public"]['Enums']["gym_role"],"status": Database["public"]['Enums']["member_status"],"user_id": string
@@ -229,14 +255,14 @@ isOneToOne: true
                   ]
                 },"gyms": {
                   Row: {
-                    "address": string | null,"checkin_enabled": boolean,"classes_enabled": boolean,"created_at": string,"currency": string,"id": string,"logo_url": string | null,"name": string,"phone": string | null,"platform_plan": string,"receipt_seq": number,"slug": string,"status": Database["public"]['Enums']["gym_status"],"timezone": string,"upi_id": string | null,"upi_payee_name": string | null,"workouts_enabled": boolean
+                    "address": string | null,"checkin_dedupe_hours": number,"checkin_enabled": boolean,"checkin_self_allowed": boolean,"classes_booking_window_days": number,"classes_cancel_cutoff_hours": number,"classes_enabled": boolean,"classes_require_membership": boolean,"created_at": string,"currency": string,"expiry_warning_days": number,"id": string,"join_requires_approval": boolean,"logo_url": string | null,"manual_payment_methods": (Database["public"]['Enums']["payment_method"])[],"name": string,"phone": string | null,"phone_country_code": string,"platform_plan": string,"receipt_prefix": string,"receipt_seq": number,"renewal_message": string,"slug": string,"status": Database["public"]['Enums']["gym_status"],"timezone": string,"upi_id": string | null,"upi_payee_name": string | null,"workouts_enabled": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"checkin_enabled"?: boolean,"classes_enabled"?: boolean,"created_at"?: string,"currency"?: string,"id"?: string,"logo_url"?: string | null,"name": string,"phone"?: string | null,"platform_plan"?: string,"receipt_seq"?: number,"slug": string,"status"?: Database["public"]['Enums']["gym_status"],"timezone"?: string,"upi_id"?: string | null,"upi_payee_name"?: string | null,"workouts_enabled"?: boolean
+                    "address"?: string | null,"checkin_dedupe_hours"?: number,"checkin_enabled"?: boolean,"checkin_self_allowed"?: boolean,"classes_booking_window_days"?: number,"classes_cancel_cutoff_hours"?: number,"classes_enabled"?: boolean,"classes_require_membership"?: boolean,"created_at"?: string,"currency"?: string,"expiry_warning_days"?: number,"id"?: string,"join_requires_approval"?: boolean,"logo_url"?: string | null,"manual_payment_methods"?: (Database["public"]['Enums']["payment_method"])[],"name": string,"phone"?: string | null,"phone_country_code"?: string,"platform_plan"?: string,"receipt_prefix"?: string,"receipt_seq"?: number,"renewal_message"?: string,"slug": string,"status"?: Database["public"]['Enums']["gym_status"],"timezone"?: string,"upi_id"?: string | null,"upi_payee_name"?: string | null,"workouts_enabled"?: boolean
                   }
                   Update: {
-                    "address"?: string | null,"checkin_enabled"?: boolean,"classes_enabled"?: boolean,"created_at"?: string,"currency"?: string,"id"?: string,"logo_url"?: string | null,"name"?: string,"phone"?: string | null,"platform_plan"?: string,"receipt_seq"?: number,"slug"?: string,"status"?: Database["public"]['Enums']["gym_status"],"timezone"?: string,"upi_id"?: string | null,"upi_payee_name"?: string | null,"workouts_enabled"?: boolean
+                    "address"?: string | null,"checkin_dedupe_hours"?: number,"checkin_enabled"?: boolean,"checkin_self_allowed"?: boolean,"classes_booking_window_days"?: number,"classes_cancel_cutoff_hours"?: number,"classes_enabled"?: boolean,"classes_require_membership"?: boolean,"created_at"?: string,"currency"?: string,"expiry_warning_days"?: number,"id"?: string,"join_requires_approval"?: boolean,"logo_url"?: string | null,"manual_payment_methods"?: (Database["public"]['Enums']["payment_method"])[],"name"?: string,"phone"?: string | null,"phone_country_code"?: string,"platform_plan"?: string,"receipt_prefix"?: string,"receipt_seq"?: number,"renewal_message"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["gym_status"],"timezone"?: string,"upi_id"?: string | null,"upi_payee_name"?: string | null,"workouts_enabled"?: boolean
                   }
                   Relationships: [
                     
@@ -597,6 +623,9 @@ isOneToOne: false
 "reject_upi_payment":
 { Args: { "p_payment_id": string,"p_reason"?: string }; Returns: undefined
                            },
+"review_join_request":
+{ Args: { "p_approve": boolean,"p_member_id": string }; Returns: undefined
+                           },
 "self_check_in":
 { Args: { "p_gym_id": string }; Returns: Json
                            },
@@ -611,7 +640,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "booking_status": "booked"|"waitlisted"|"cancelled"|"attended"|"no_show","checkin_method": "self"|"scan"|"manual","exercise_measure": "weight_reps"|"reps"|"time","gym_role": "owner"|"admin"|"staff"|"trainer"|"member","gym_status": "pending"|"active"|"suspended","member_status": "invited"|"active"|"inactive","payment_method": "online"|"cash"|"upi"|"card"|"bank_transfer","payment_status": "created"|"paid"|"failed"|"refunded","session_status": "scheduled"|"cancelled","subscription_status": "active"|"cancelled"|"expired"
+            "booking_status": "booked"|"waitlisted"|"cancelled"|"attended"|"no_show","checkin_method": "self"|"scan"|"manual","exercise_measure": "weight_reps"|"reps"|"time","gym_role": "owner"|"admin"|"staff"|"trainer"|"member","gym_status": "pending"|"active"|"suspended","member_status": "invited"|"active"|"inactive"|"pending","payment_method": "online"|"cash"|"upi"|"card"|"bank_transfer","payment_status": "created"|"paid"|"failed"|"refunded","session_status": "scheduled"|"cancelled","subscription_status": "active"|"cancelled"|"expired"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -727,7 +756,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "booking_status": ["booked", "waitlisted", "cancelled", "attended", "no_show"],"checkin_method": ["self", "scan", "manual"],"exercise_measure": ["weight_reps", "reps", "time"],"gym_role": ["owner", "admin", "staff", "trainer", "member"],"gym_status": ["pending", "active", "suspended"],"member_status": ["invited", "active", "inactive"],"payment_method": ["online", "cash", "upi", "card", "bank_transfer"],"payment_status": ["created", "paid", "failed", "refunded"],"session_status": ["scheduled", "cancelled"],"subscription_status": ["active", "cancelled", "expired"]
+            "booking_status": ["booked", "waitlisted", "cancelled", "attended", "no_show"],"checkin_method": ["self", "scan", "manual"],"exercise_measure": ["weight_reps", "reps", "time"],"gym_role": ["owner", "admin", "staff", "trainer", "member"],"gym_status": ["pending", "active", "suspended"],"member_status": ["invited", "active", "inactive", "pending"],"payment_method": ["online", "cash", "upi", "card", "bank_transfer"],"payment_status": ["created", "paid", "failed", "refunded"],"session_status": ["scheduled", "cancelled"],"subscription_status": ["active", "cancelled", "expired"]
           }
         }
 } as const

@@ -43,7 +43,9 @@ export default function ClassesScreen() {
             {section.title}
           </Text>
         )}
-        renderItem={({ item }) => <ClassRow item={item} timezone={gym.timezone} />}
+        renderItem={({ item }) => (
+          <ClassRow item={item} timezone={gym.timezone} cancelCutoffHours={gym.classes_cancel_cutoff_hours} />
+        )}
         stickySectionHeadersEnabled={false}
       />
     </SafeAreaView>

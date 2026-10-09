@@ -79,3 +79,18 @@ export async function cancelSubscription(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath(`/admin/${slug}/members/${member_id}`);
 }
+
+// Approve or turn down someone who joined while "Approve new members" is on.
+export async function reviewJoinRequest(formData: FormData) {
+  const { slug, member_id, approve } = z
+    .object({ slug: z.string(), member_id: z.uuid(), approve: z.enum(["true", "false"]) })
+    .parse(Object.fromEntries(formData));
+  await requireGym(slug, STAFF_ROLES);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("review_join_request", {
+    p_member_id: member_id,
+    p_approve: approve === "true",
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/${slug}`, "layout");
+}

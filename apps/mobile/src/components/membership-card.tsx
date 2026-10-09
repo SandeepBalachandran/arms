@@ -3,12 +3,14 @@ import { View } from 'react-native';
 
 import { Card, Text } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
+import { useActiveGym } from '@/lib/gyms';
 import { useMembership } from '@/lib/memberships';
 
 // Membership status at a glance (Home and Membership tabs).
 export function MembershipCard() {
   const theme = useTheme();
   const { state, isPending } = useMembership();
+  const warnDays = useActiveGym()?.gym.expiry_warning_days ?? 7;
 
   if (isPending || !state) {
     return (
@@ -21,7 +23,7 @@ export function MembershipCard() {
 
   switch (state.kind) {
     case 'active': {
-      const warn = state.daysLeft <= 7;
+      const warn = state.daysLeft <= warnDays;
       return (
         <Card style={warn ? { borderColor: theme.danger } : undefined}>
           <Text variant="small">Membership · {state.current.plan_name}</Text>

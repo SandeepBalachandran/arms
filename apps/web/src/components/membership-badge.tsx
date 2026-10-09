@@ -4,11 +4,11 @@ import { Badge } from "@/components/ui";
 type Dates = { status: "active" | "cancelled" | "expired"; starts_on: string; ends_on: string };
 
 // One-line membership status used in the members list and member page.
-export function MembershipBadge({ state }: { state: MembershipState<Dates> }) {
+export function MembershipBadge({ state, warnDays }: { state: MembershipState<Dates>; warnDays: number }) {
   switch (state.kind) {
     case "active":
       return (
-        <Badge tone={state.daysLeft <= 7 ? "warn" : "good"}>
+        <Badge tone={state.daysLeft <= warnDays ? "warn" : "good"}>
           Active · {state.daysLeft}d left
         </Badge>
       );

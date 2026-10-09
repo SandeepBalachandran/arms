@@ -41,7 +41,7 @@ export default function PayScreen() {
       </Screen>
     );
   }
-  if (!gym.upi_id) {
+  if (!gym.upi_id || gym.currency !== 'INR') {
     return (
       <Screen>
         <Text variant="heading">UPI isn’t set up</Text>

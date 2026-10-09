@@ -3,13 +3,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useActiveGym } from '@/lib/gyms';
 import { supabase } from '@/lib/supabase';
 
-const SCHEDULE_DAYS = 8;
-
-// Upcoming classes (next week) with counts and the member's own booking.
+// Upcoming classes within the gym's booking window, with counts and the
+// member's own booking.
 export function useSchedule() {
   const gym = useActiveGym()?.gym;
   return useQuery({
-    queryKey: ['schedule', gym?.id],
+    queryKey: ['schedule', gym?.id, gym?.classes_booking_window_days],
     enabled: !!gym?.classes_enabled,
     queryFn: async () => {
       const now = Date.now();
@@ -17,7 +16,7 @@ export function useSchedule() {
         p_gym_id: gym!.id,
         // Include classes that started in the last hour so "in progress" still shows.
         p_from: new Date(now - 3_600_000).toISOString(),
-        p_to: new Date(now + SCHEDULE_DAYS * 86_400_000).toISOString(),
+        p_to: new Date(now + gym!.classes_booking_window_days * 86_400_000).toISOString(),
       });
       if (error) throw error;
       return data;

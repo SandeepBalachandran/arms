@@ -4,8 +4,8 @@ import { useActionState, useState } from "react";
 import {
   formatDuration,
   formatMoney,
-  MANUAL_PAYMENT_METHODS,
   PAYMENT_METHOD_LABELS,
+  type PaymentMethod,
   type Plan,
 } from "@gymos/shared";
 import { Button, Field, FormError, Input, Select } from "@/components/ui";
@@ -16,11 +16,14 @@ export function RecordPaymentForm({
   memberId,
   plans,
   currency,
+  methods,
 }: {
   slug: string;
   memberId: string;
   plans: Plan[];
   currency: string;
+  // Front-desk methods this gym accepts (Settings).
+  methods: PaymentMethod[];
 }) {
   const [state, action, pending] = useActionState(recordPayment, undefined);
   const [planId, setPlanId] = useState(plans[0].id);
@@ -40,13 +43,13 @@ export function RecordPaymentForm({
         </Select>
       </Field>
       <Field label="Method">
-        <Select name="method" defaultValue="cash">
-          {MANUAL_PAYMENT_METHODS.map((m) => (
+        <Select name="method" defaultValue={methods[0]}>
+          {methods.map((m) => (
             <option key={m} value={m}>{PAYMENT_METHOD_LABELS[m]}</option>
           ))}
         </Select>
       </Field>
-      <Field label="Amount received (₹)" hint="Change it for a discount.">
+      <Field label={`Amount received (${currency})`} hint="Change it for a discount.">
         <Input
           key={plan.id}
           name="amount"

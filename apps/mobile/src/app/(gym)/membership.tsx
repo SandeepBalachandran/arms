@@ -1,4 +1,4 @@
-import { formatDuration, formatMoney, PAYMENT_METHOD_LABELS } from '@gymos/shared';
+import { formatDuration, formatMoney, formatReceipt, PAYMENT_METHOD_LABELS } from '@gymos/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -20,7 +20,8 @@ export default function MembershipScreen() {
   const payments = useMyPayments();
   const claims = usePaymentClaims();
   const router = useRouter();
-  const upiEnabled = !!gym?.upi_id;
+  // In-app UPI needs a UPI ID and an INR gym (both set in the web admin).
+  const upiEnabled = !!gym?.upi_id && gym.currency === 'INR';
   const pending = claims.data?.pending;
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
@@ -117,7 +118,7 @@ export default function MembershipScreen() {
                   <View>
                     <Text>{p.subscriptions?.plan_name ?? 'Payment'}</Text>
                     <Text variant="small">
-                      #{p.receipt_no} · {new Date(p.paid_at!).toLocaleDateString('en-IN')} · {PAYMENT_METHOD_LABELS[p.method]}
+                      {formatReceipt(gym?.receipt_prefix ?? '', p.receipt_no)} · {new Date(p.paid_at!).toLocaleDateString('en-IN')} · {PAYMENT_METHOD_LABELS[p.method]}
                     </Text>
                   </View>
                   <Text>{formatMoney(p.amount_paise, currency)}</Text>

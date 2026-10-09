@@ -11,7 +11,6 @@ export type RegisterState = { error?: string } | undefined;
 const schema = z.object({
   name: z.string().trim().min(2, "Gym name is too short").max(80),
   slug: gymSlugSchema,
-  timezone: z.string().min(1),
 });
 
 export async function registerGym(_prev: RegisterState, formData: FormData): Promise<RegisterState> {
@@ -24,7 +23,7 @@ export async function registerGym(_prev: RegisterState, formData: FormData): Pro
   const { error } = await supabase.rpc("register_gym", {
     p_name: parsed.data.name,
     p_slug: parsed.data.slug,
-    p_timezone: parsed.data.timezone,
+    // Timezone, currency etc. start at the defaults (India) and are changed in Settings.
   });
   if (error) {
     return { error: error.code === "23505" ? "That link is taken. Try another." : error.message };

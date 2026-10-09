@@ -125,3 +125,18 @@ export async function archivePlan(formData: FormData) {
   if (error) throw new Error(error.message);
   redirect(`/admin/${slug}/workouts`);
 }
+
+// Show or hide a built-in exercise for this gym (Workouts → Exercise library).
+export async function setExerciseHidden(formData: FormData) {
+  const { slug, exercise_id, hidden } = z
+    .object({ slug: z.string(), exercise_id: z.uuid(), hidden: z.enum(["true", "false"]) })
+    .parse(Object.fromEntries(formData));
+  const { gym } = await requireGym(slug, TEAM_ROLES);
+  const supabase = await createClient();
+  const { error } =
+    hidden === "true"
+      ? await supabase.from("gym_hidden_exercises").upsert({ gym_id: gym.id, exercise_id })
+      : await supabase.from("gym_hidden_exercises").delete().eq("gym_id", gym.id).eq("exercise_id", exercise_id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/${slug}/workouts`, "layout");
+}

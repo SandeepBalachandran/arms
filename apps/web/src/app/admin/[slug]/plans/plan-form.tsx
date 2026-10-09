@@ -13,7 +13,7 @@ const DURATION_PRESETS = [
   { label: "1 year", days: 365 },
 ];
 
-export function PlanForm({ slug, plan }: { slug: string; plan?: Plan }) {
+export function PlanForm({ slug, plan, currency }: { slug: string; plan?: Plan; currency: string }) {
   const [state, action, pending] = useActionState(savePlan, undefined);
 
   return (
@@ -23,7 +23,7 @@ export function PlanForm({ slug, plan }: { slug: string; plan?: Plan }) {
       <Field label="Name">
         <Input name="name" defaultValue={plan?.name} placeholder="Monthly" required />
       </Field>
-      <Field label="Price (₹)">
+      <Field label={`Price (${currency})`}>
         <Input
           name="price"
           inputMode="decimal"

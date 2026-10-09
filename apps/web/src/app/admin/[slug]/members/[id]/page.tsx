@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import {
   formatDate,
   formatMoney,
+  formatReceipt,
   membershipState,
   num,
   PAYMENT_METHOD_LABELS,
@@ -77,7 +78,7 @@ export default async function MemberPage({ params }: PageProps<"/admin/[slug]/me
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
           <Card className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
-            <div><span className="text-muted">Membership </span><MembershipBadge state={state} /></div>
+            <div><span className="text-muted">Membership </span><MembershipBadge state={state} warnDays={gym.expiry_warning_days} /></div>
             <div><span className="text-muted">Phone </span>{member.profiles.phone ?? "—"}</div>
             <div><span className="text-muted">Role </span><span className="capitalize">{member.role}</span></div>
             <div><span className="text-muted">Joined </span>{new Date(member.joined_at).toLocaleDateString("en-IN", { timeZone: gym.timezone })}</div>
@@ -186,7 +187,7 @@ export default async function MemberPage({ params }: PageProps<"/admin/[slug]/me
                   <tbody>
                     {payments.data.map((p) => (
                       <tr key={p.id} className="border-b border-border last:border-0">
-                        <td className="p-3 font-mono">{p.receipt_no ? `#${p.receipt_no}` : <Badge>{p.status}</Badge>}</td>
+                        <td className="p-3 font-mono">{p.receipt_no ? formatReceipt(gym.receipt_prefix, p.receipt_no) : <Badge>{p.status}</Badge>}</td>
                         <td className="p-3 text-muted">{new Date(p.paid_at ?? p.created_at).toLocaleDateString("en-IN", { timeZone: gym.timezone })}</td>
                         <td className="p-3 tabular-nums">{formatMoney(p.amount_paise, gym.currency)}</td>
                         <td className="p-3">{PAYMENT_METHOD_LABELS[p.method]}</td>
@@ -215,7 +216,13 @@ export default async function MemberPage({ params }: PageProps<"/admin/[slug]/me
                 Create a plan first on the <Link href={`/admin/${slug}/plans`} className="text-brand hover:underline">Plans</Link> page.
               </p>
             ) : (
-              <RecordPaymentForm slug={slug} memberId={id} plans={plans.data} currency={gym.currency} />
+              <RecordPaymentForm
+                slug={slug}
+                memberId={id}
+                plans={plans.data}
+                currency={gym.currency}
+                methods={gym.manual_payment_methods.filter((m) => m !== "online")}
+              />
             )}
           </Card>
         )}
