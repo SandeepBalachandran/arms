@@ -34,7 +34,16 @@ Conventions: money in paise; dates as `YYYY-MM-DD` in the gym's timezone; secret
 ## Demo data
 
 - Gym **Demo Fitness**, code `demo-fitness`.
-- Owner: `admin@gymos.test` / `GymOS-admin-2026`. Member: `member@gymos.test` / `GymOS-member-2026`.
+- One account per role (`node scripts/seed-demo.mjs` creates them):
+
+| Role | Email | Password |
+|---|---|---|
+| Owner | `admin@gymos.test` | `GymOS-admin-2026` |
+| Admin | `manager@gymos.test` | `GymOS-manager-2026` |
+| Staff | `staff@gymos.test` | `GymOS-staff-2026` |
+| Trainer | `trainer@gymos.test` | `GymOS-trainer-2026` |
+| Member | `member@gymos.test` | `GymOS-member-2026` |
+
 - Has two plans, Zumba and Yoga classes, PT turned on with two packages, and the member on Monthly PT.
 
 ---

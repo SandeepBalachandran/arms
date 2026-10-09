@@ -1,4 +1,5 @@
-// Creates a demo gym with an owner (admin) and one member, plus two plans.
+// Creates a demo gym with one account per role (owner, admin, staff, trainer,
+// member), plus two plans.
 // Safe to re-run: existing users/gym are reused. Uses apps/web/.env.local
 // (SUPABASE_SECRET_KEY to create confirmed users without email).
 //   node scripts/seed-demo.mjs
@@ -14,8 +15,12 @@ if (!url || !publishable || !secret) {
 }
 
 const GYM = { name: "Demo Fitness", slug: "demo-fitness" };
+// The owner keeps the original admin@ login so existing test notes still work.
 const USERS = {
-  admin: { email: "admin@gymos.test", password: "GymOS-admin-2026", full_name: "Asha Owner" },
+  owner: { email: "admin@gymos.test", password: "GymOS-admin-2026", full_name: "Asha Owner" },
+  admin: { email: "manager@gymos.test", password: "GymOS-manager-2026", full_name: "Meera Manager" },
+  staff: { email: "staff@gymos.test", password: "GymOS-staff-2026", full_name: "Suresh Staff" },
+  trainer: { email: "trainer@gymos.test", password: "GymOS-trainer-2026", full_name: "Tara Trainer" },
   member: { email: "member@gymos.test", password: "GymOS-member-2026", full_name: "Ravi Member" },
 };
 
@@ -37,7 +42,7 @@ async function ensureUser({ email, password, full_name }) {
   return { client, id: data.user.id };
 }
 
-const owner = await ensureUser(USERS.admin);
+const owner = await ensureUser(USERS.owner);
 const member = await ensureUser(USERS.member);
 
 let { data: gym } = await admin.from("gyms").select("id").eq("slug", GYM.slug).maybeSingle();
@@ -50,6 +55,19 @@ if (!gym) {
 const { error: joinError } = await member.client.rpc("join_gym", { p_slug: GYM.slug });
 if (joinError) throw joinError;
 
+// Team roles: join like a member, then promote (service key bypasses RLS).
+for (const role of ["admin", "staff", "trainer"]) {
+  const user = await ensureUser(USERS[role]);
+  const { error } = await user.client.rpc("join_gym", { p_slug: GYM.slug });
+  if (error) throw error;
+  const { error: roleError } = await admin
+    .from("gym_members")
+    .update({ role, status: "active" })
+    .eq("gym_id", gym.id)
+    .eq("user_id", user.id);
+  if (roleError) throw roleError;
+}
+
 const { count } = await admin.from("plans").select("id", { count: "exact", head: true }).eq("gym_id", gym.id);
 if (!count) {
   const { error } = await owner.client.from("plans").insert([
@@ -60,4 +78,4 @@ if (!count) {
 }
 
 console.log(`Gym: ${GYM.name} (code: ${GYM.slug})`);
-for (const [role, u] of Object.entries(USERS)) console.log(`${role.padEnd(6)} ${u.email}  /  ${u.password}`);
+for (const [role, u] of Object.entries(USERS)) console.log(`${role.padEnd(7)} ${u.email}  /  ${u.password}`);
