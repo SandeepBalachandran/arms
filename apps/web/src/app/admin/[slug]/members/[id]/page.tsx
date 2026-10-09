@@ -26,6 +26,7 @@ import { CheckInButton } from "../../checkin/check-in-button";
 import { addNote, cancelSubscription, deleteNote } from "../actions";
 import { HistoryTabs } from "./history-tabs";
 import { MemberMenu, RecordPaymentButton } from "./member-actions";
+import { PtCard } from "./pt-card";
 
 export const metadata: Metadata = { title: "Member" };
 
@@ -64,7 +65,7 @@ function EmptyRow({ cols, text }: { cols: number; text: string }) {
 export default async function MemberPage({ params, searchParams }: PageProps<"/admin/[slug]/members/[id]">) {
   const { slug, id } = await params;
   const { added } = await searchParams;
-  const { gym, role, user } = await requireGym(slug, TEAM_ROLES);
+  const { gym, role, user, memberId: myMemberId } = await requireGym(slug, TEAM_ROLES);
   const isStaff = STAFF_ROLES.includes(role);
   const supabase = await createClient();
 
@@ -78,7 +79,7 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
 
   const [subsRes, paymentsRes, plansRes, visitsRes, bookingsRes, notesRes, authUser] = await Promise.all([
     supabase.from("subscriptions").select("*").eq("member_id", id).order("starts_on", { ascending: false }),
-    isStaff ? supabase.from("payments").select("*").eq("member_id", id).order("created_at", { ascending: false }) : empty,
+    isStaff ? supabase.from("payments").select("*, plans(name), pt_subscriptions(package_name)").eq("member_id", id).order("created_at", { ascending: false }) : empty,
     isStaff
       ? supabase.from("plans").select("*").eq("gym_id", gym.id).eq("is_active", true).order("sort_order").order("price_paise")
       : empty,
@@ -286,6 +287,19 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
             </Card>
           )}
 
+          {gym.pt_enabled && (
+            <PtCard
+              gym={gym}
+              slug={slug}
+              memberId={id}
+              memberName={name}
+              myMemberId={myMemberId}
+              userId={user.id}
+              isStaff={isStaff}
+              today={today}
+            />
+          )}
+
           {/* History */}
           <Card>
             <HistoryTabs
@@ -342,7 +356,7 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
                                 <td className="py-2 pr-3">
                                   <p className="font-medium tabular-nums">{formatMoney(p.amount_paise, gym.currency)}</p>
                                   <p className="text-xs text-muted">
-                                    {dateTime(p.paid_at ?? p.created_at)} · {PAYMENT_METHOD_LABELS[p.method]}
+                                    {p.pt_subscriptions ? `PT: ${p.pt_subscriptions.package_name}` : p.plans?.name ?? "Membership"} · {dateTime(p.paid_at ?? p.created_at)} · {PAYMENT_METHOD_LABELS[p.method]}
                                     {p.utr && ` · ref ${p.utr}`}{p.note && ` · ${p.note}`}
                                   </p>
                                 </td>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { formatDay, WEEKDAYS } from "@gymos/shared";
+import { formatClock, formatDay, WEEKDAYS } from "@gymos/shared";
 import { CalendarPlus, Pencil, Plus } from "lucide-react";
 import { Modal } from "@/components/modal";
 import { useSavedToast } from "@/lib/use-saved-toast";
@@ -183,9 +183,3 @@ function SeriesForm({ slug, types, trainers, defaultStart, today, onSaved }: Ser
   );
 }
 
-// "07:00" → "7:00 am"
-function formatClock(hhmm: string) {
-  const [h, m] = hhmm.split(":").map(Number);
-  if (Number.isNaN(h)) return hhmm;
-  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "am" : "pm"}`;
-}

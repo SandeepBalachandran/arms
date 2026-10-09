@@ -255,14 +255,14 @@ isOneToOne: true
                   ]
                 },"gyms": {
                   Row: {
-                    "address": string | null,"checkin_dedupe_hours": number,"checkin_enabled": boolean,"checkin_self_allowed": boolean,"classes_booking_window_days": number,"classes_cancel_cutoff_hours": number,"classes_enabled": boolean,"classes_require_membership": boolean,"created_at": string,"currency": string,"expiry_warning_days": number,"id": string,"join_requires_approval": boolean,"logo_url": string | null,"manual_payment_methods": (Database["public"]['Enums']["payment_method"])[],"name": string,"phone": string | null,"phone_country_code": string,"platform_plan": string,"receipt_prefix": string,"receipt_seq": number,"renewal_message": string,"slug": string,"status": Database["public"]['Enums']["gym_status"],"timezone": string,"upi_id": string | null,"upi_payee_name": string | null,"workouts_enabled": boolean
+                    "address": string | null,"checkin_dedupe_hours": number,"checkin_enabled": boolean,"checkin_self_allowed": boolean,"classes_booking_window_days": number,"classes_cancel_cutoff_hours": number,"classes_enabled": boolean,"classes_require_membership": boolean,"created_at": string,"currency": string,"expiry_warning_days": number,"id": string,"join_requires_approval": boolean,"logo_url": string | null,"manual_payment_methods": (Database["public"]['Enums']["payment_method"])[],"name": string,"opening_hours": NonNullable<Json>,"opening_hours_note": string | null,"phone": string | null,"phone_country_code": string,"platform_plan": string,"pt_enabled": boolean,"pt_expiry_warning_sessions": number,"pt_show_in_app": boolean,"receipt_prefix": string,"receipt_seq": number,"renewal_message": string,"slug": string,"status": Database["public"]['Enums']["gym_status"],"timezone": string,"upi_id": string | null,"upi_payee_name": string | null,"workouts_enabled": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"checkin_dedupe_hours"?: number,"checkin_enabled"?: boolean,"checkin_self_allowed"?: boolean,"classes_booking_window_days"?: number,"classes_cancel_cutoff_hours"?: number,"classes_enabled"?: boolean,"classes_require_membership"?: boolean,"created_at"?: string,"currency"?: string,"expiry_warning_days"?: number,"id"?: string,"join_requires_approval"?: boolean,"logo_url"?: string | null,"manual_payment_methods"?: (Database["public"]['Enums']["payment_method"])[],"name": string,"phone"?: string | null,"phone_country_code"?: string,"platform_plan"?: string,"receipt_prefix"?: string,"receipt_seq"?: number,"renewal_message"?: string,"slug": string,"status"?: Database["public"]['Enums']["gym_status"],"timezone"?: string,"upi_id"?: string | null,"upi_payee_name"?: string | null,"workouts_enabled"?: boolean
+                    "address"?: string | null,"checkin_dedupe_hours"?: number,"checkin_enabled"?: boolean,"checkin_self_allowed"?: boolean,"classes_booking_window_days"?: number,"classes_cancel_cutoff_hours"?: number,"classes_enabled"?: boolean,"classes_require_membership"?: boolean,"created_at"?: string,"currency"?: string,"expiry_warning_days"?: number,"id"?: string,"join_requires_approval"?: boolean,"logo_url"?: string | null,"manual_payment_methods"?: (Database["public"]['Enums']["payment_method"])[],"name": string,"opening_hours"?: NonNullable<Json>,"opening_hours_note"?: string | null,"phone"?: string | null,"phone_country_code"?: string,"platform_plan"?: string,"pt_enabled"?: boolean,"pt_expiry_warning_sessions"?: number,"pt_show_in_app"?: boolean,"receipt_prefix"?: string,"receipt_seq"?: number,"renewal_message"?: string,"slug": string,"status"?: Database["public"]['Enums']["gym_status"],"timezone"?: string,"upi_id"?: string | null,"upi_payee_name"?: string | null,"workouts_enabled"?: boolean
                   }
                   Update: {
-                    "address"?: string | null,"checkin_dedupe_hours"?: number,"checkin_enabled"?: boolean,"checkin_self_allowed"?: boolean,"classes_booking_window_days"?: number,"classes_cancel_cutoff_hours"?: number,"classes_enabled"?: boolean,"classes_require_membership"?: boolean,"created_at"?: string,"currency"?: string,"expiry_warning_days"?: number,"id"?: string,"join_requires_approval"?: boolean,"logo_url"?: string | null,"manual_payment_methods"?: (Database["public"]['Enums']["payment_method"])[],"name"?: string,"phone"?: string | null,"phone_country_code"?: string,"platform_plan"?: string,"receipt_prefix"?: string,"receipt_seq"?: number,"renewal_message"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["gym_status"],"timezone"?: string,"upi_id"?: string | null,"upi_payee_name"?: string | null,"workouts_enabled"?: boolean
+                    "address"?: string | null,"checkin_dedupe_hours"?: number,"checkin_enabled"?: boolean,"checkin_self_allowed"?: boolean,"classes_booking_window_days"?: number,"classes_cancel_cutoff_hours"?: number,"classes_enabled"?: boolean,"classes_require_membership"?: boolean,"created_at"?: string,"currency"?: string,"expiry_warning_days"?: number,"id"?: string,"join_requires_approval"?: boolean,"logo_url"?: string | null,"manual_payment_methods"?: (Database["public"]['Enums']["payment_method"])[],"name"?: string,"opening_hours"?: NonNullable<Json>,"opening_hours_note"?: string | null,"phone"?: string | null,"phone_country_code"?: string,"platform_plan"?: string,"pt_enabled"?: boolean,"pt_expiry_warning_sessions"?: number,"pt_show_in_app"?: boolean,"receipt_prefix"?: string,"receipt_seq"?: number,"renewal_message"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["gym_status"],"timezone"?: string,"upi_id"?: string | null,"upi_payee_name"?: string | null,"workouts_enabled"?: boolean
                   }
                   Relationships: [
                     
@@ -301,14 +301,14 @@ isOneToOne: false
                   ]
                 },"payments": {
                   Row: {
-                    "amount_paise": number,"created_at": string,"gym_id": string,"id": string,"member_id": string,"method": Database["public"]['Enums']["payment_method"],"note": string | null,"paid_at": string | null,"plan_id": string | null,"razorpay_order_id": string | null,"razorpay_payment_id": string | null,"receipt_no": number | null,"recorded_by": string | null,"reviewed_at": string | null,"status": Database["public"]['Enums']["payment_status"],"subscription_id": string | null,"utr": string | null
+                    "amount_paise": number,"created_at": string,"gym_id": string,"id": string,"member_id": string,"method": Database["public"]['Enums']["payment_method"],"note": string | null,"paid_at": string | null,"plan_id": string | null,"pt_subscription_id": string | null,"razorpay_order_id": string | null,"razorpay_payment_id": string | null,"receipt_no": number | null,"recorded_by": string | null,"reviewed_at": string | null,"status": Database["public"]['Enums']["payment_status"],"subscription_id": string | null,"utr": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "amount_paise": number,"created_at"?: string,"gym_id": string,"id"?: string,"member_id": string,"method": Database["public"]['Enums']["payment_method"],"note"?: string | null,"paid_at"?: string | null,"plan_id"?: string | null,"razorpay_order_id"?: string | null,"razorpay_payment_id"?: string | null,"receipt_no"?: number | null,"recorded_by"?: string | null,"reviewed_at"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"subscription_id"?: string | null,"utr"?: string | null
+                    "amount_paise": number,"created_at"?: string,"gym_id": string,"id"?: string,"member_id": string,"method": Database["public"]['Enums']["payment_method"],"note"?: string | null,"paid_at"?: string | null,"plan_id"?: string | null,"pt_subscription_id"?: string | null,"razorpay_order_id"?: string | null,"razorpay_payment_id"?: string | null,"receipt_no"?: number | null,"recorded_by"?: string | null,"reviewed_at"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"subscription_id"?: string | null,"utr"?: string | null
                   }
                   Update: {
-                    "amount_paise"?: number,"created_at"?: string,"gym_id"?: string,"id"?: string,"member_id"?: string,"method"?: Database["public"]['Enums']["payment_method"],"note"?: string | null,"paid_at"?: string | null,"plan_id"?: string | null,"razorpay_order_id"?: string | null,"razorpay_payment_id"?: string | null,"receipt_no"?: number | null,"recorded_by"?: string | null,"reviewed_at"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"subscription_id"?: string | null,"utr"?: string | null
+                    "amount_paise"?: number,"created_at"?: string,"gym_id"?: string,"id"?: string,"member_id"?: string,"method"?: Database["public"]['Enums']["payment_method"],"note"?: string | null,"paid_at"?: string | null,"plan_id"?: string | null,"pt_subscription_id"?: string | null,"razorpay_order_id"?: string | null,"razorpay_payment_id"?: string | null,"receipt_no"?: number | null,"recorded_by"?: string | null,"reviewed_at"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"subscription_id"?: string | null,"utr"?: string | null
                   }
                   Relationships: [
                     {
@@ -328,6 +328,12 @@ isOneToOne: false
       columns: ["plan_id"]
 isOneToOne: false
       referencedRelation: "plans"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payments_pt_subscription_id_fkey"
+      columns: ["pt_subscription_id"]
+isOneToOne: false
+      referencedRelation: "pt_subscriptions"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "payments_recorded_by_fkey"
@@ -414,6 +420,108 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"pt_packages": {
+                  Row: {
+                    "created_at": string,"description": string | null,"gym_id": string,"id": string,"is_active": boolean,"name": string,"price_paise": number,"sessions": number | null,"sort_order": number,"validity_days": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"description"?: string | null,"gym_id": string,"id"?: string,"is_active"?: boolean,"name": string,"price_paise": number,"sessions"?: number | null,"sort_order"?: number,"validity_days": number
+                  }
+                  Update: {
+                    "created_at"?: string,"description"?: string | null,"gym_id"?: string,"id"?: string,"is_active"?: boolean,"name"?: string,"price_paise"?: number,"sessions"?: number | null,"sort_order"?: number,"validity_days"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "pt_packages_gym_id_fkey"
+      columns: ["gym_id"]
+isOneToOne: false
+      referencedRelation: "gyms"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"pt_sessions": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"gym_id": string,"id": string,"notes": string | null,"pt_subscription_id": string,"session_on": string,"trainer_member_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"gym_id": string,"id"?: string,"notes"?: string | null,"pt_subscription_id": string,"session_on": string,"trainer_member_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"gym_id"?: string,"id"?: string,"notes"?: string | null,"pt_subscription_id"?: string,"session_on"?: string,"trainer_member_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "pt_sessions_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pt_sessions_gym_id_fkey"
+      columns: ["gym_id"]
+isOneToOne: false
+      referencedRelation: "gyms"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pt_sessions_pt_subscription_id_fkey"
+      columns: ["pt_subscription_id"]
+isOneToOne: false
+      referencedRelation: "pt_subscriptions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pt_sessions_trainer_member_id_fkey"
+      columns: ["trainer_member_id"]
+isOneToOne: false
+      referencedRelation: "gym_members"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"pt_subscriptions": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"ends_on": string,"gym_id": string,"id": string,"member_id": string,"package_id": string | null,"package_name": string,"sessions_total": number | null,"starts_on": string,"status": string,"trainer_member_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"ends_on": string,"gym_id": string,"id"?: string,"member_id": string,"package_id"?: string | null,"package_name": string,"sessions_total"?: number | null,"starts_on": string,"status"?: string,"trainer_member_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"ends_on"?: string,"gym_id"?: string,"id"?: string,"member_id"?: string,"package_id"?: string | null,"package_name"?: string,"sessions_total"?: number | null,"starts_on"?: string,"status"?: string,"trainer_member_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "pt_subscriptions_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pt_subscriptions_gym_id_fkey"
+      columns: ["gym_id"]
+isOneToOne: false
+      referencedRelation: "gyms"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pt_subscriptions_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "gym_members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pt_subscriptions_package_id_fkey"
+      columns: ["package_id"]
+isOneToOne: false
+      referencedRelation: "pt_packages"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pt_subscriptions_trainer_member_id_fkey"
+      columns: ["trainer_member_id"]
+isOneToOne: false
+      referencedRelation: "gym_members"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"subscriptions": {
                   Row: {
@@ -604,6 +712,9 @@ isOneToOne: false
 "create_class_series":
 { Args: { "p_capacity"?: number,"p_class_type_id": string,"p_duration_min"?: number,"p_local_time": string,"p_room"?: string,"p_start_date": string,"p_trainer_member_id"?: string,"p_weekdays": (number)[],"p_weeks": number }; Returns: number
                            },
+"delete_pt_session":
+{ Args: { "p_session_id": string }; Returns: undefined
+                           },
 "expire_subscriptions":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
@@ -640,8 +751,16 @@ isOneToOne: false
 "log_gym_id":
 { Args: { "p_log_id": string }; Returns: string
                            },
+"log_pt_session":
+{ Args: { "p_notes"?: string,"p_pt_subscription_id": string,"p_session_on"?: string }; Returns: string
+                           },
 "mark_attendance":
 { Args: { "p_attended": boolean,"p_booking_id": string }; Returns: undefined
+                           },
+"my_pt_subscriptions":
+{ Args: { "p_gym_id": string }; Returns: {
+              "ends_on": string,"id": string,"package_name": string,"sessions": Json,"sessions_total": number,"starts_on": string,"status": string,"trainer_name": string
+            }[]
                            },
 "plan_gym_id":
 { Args: { "p_plan_id": string }; Returns: string
@@ -663,6 +782,9 @@ isOneToOne: false
                            },
 "self_check_in":
 { Args: { "p_gym_id": string }; Returns: Json
+                           },
+"sell_pt_package":
+{ Args: { "p_amount_paise"?: number,"p_member_id": string,"p_method": Database["public"]['Enums']["payment_method"],"p_note"?: string,"p_package_id": string,"p_starts_on"?: string,"p_trainer_member_id": string }; Returns: string
                            },
 "staff_check_in":
 { Args: { "p_member_id": string }; Returns: Json

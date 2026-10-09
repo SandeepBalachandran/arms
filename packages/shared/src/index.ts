@@ -7,3 +7,5 @@ export * from "./classes";
 export * from "./workouts";
 export * from "./collections";
 export * from "./settings";
+export * from "./hours";
+export * from "./pt";

@@ -5,7 +5,9 @@ import {
   checkinSettingsSchema,
   classSettingsSchema,
   generalSettingsSchema,
+  hoursSettingsSchema,
   membershipSettingsSchema,
+  ptSettingsSchema,
   upiIdSchema,
   workoutSettingsSchema,
 } from "@gymos/shared";
@@ -29,6 +31,8 @@ const SECTIONS = {
   checkin: checkinSettingsSchema,
   classes: classSettingsSchema,
   workouts: workoutSettingsSchema,
+  pt: ptSettingsSchema,
+  hours: hoursSettingsSchema,
 };
 
 export type SettingsSection = keyof typeof SECTIONS;

@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 
 import { CheckinCard } from '@/components/checkin-card';
+import { HoursCard } from '@/components/hours-card';
 import { MembershipCard } from '@/components/membership-card';
 import { NextClassCard } from '@/components/next-class-card';
 import { Screen, Text } from '@/components/ui';
@@ -26,6 +27,7 @@ export default function HomeScreen() {
       <CheckinCard />
       <MembershipCard />
       <NextClassCard />
+      <HoursCard />
     </Screen>
   );
 }

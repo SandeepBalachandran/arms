@@ -12,6 +12,7 @@ export default async function AdminLayout({ children, params }: LayoutProps<"/ad
     checkinEnabled: gym.checkin_enabled,
     classesEnabled: gym.classes_enabled,
     workoutsEnabled: gym.workouts_enabled,
+    ptEnabled: gym.pt_enabled,
   };
 
   return (

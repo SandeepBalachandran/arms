@@ -3,6 +3,7 @@ import {
   CURRENCIES,
   GYM_DEFAULTS,
   MANUAL_PAYMENT_METHODS,
+  parseOpeningHours,
   PAYMENT_METHOD_LABELS,
   RENEWAL_MESSAGE_PLACEHOLDERS,
   timezoneOptions,
@@ -10,6 +11,7 @@ import {
 import { Field, Input, PageHeader, Select } from "@/components/ui";
 import { requireGym } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { HoursEditor } from "./hours-editor";
 import { RenewalMessageField, SettingsCard } from "./settings-form";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -64,6 +66,19 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
             <Select name="timezone" defaultValue={g.timezone}>
               {timezones.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
             </Select>
+          </Field>
+        </SettingsCard>
+
+        <SettingsCard
+          slug={slug}
+          section="hours"
+          title="Opening hours"
+          description="Shown to members in the app with “Open now” or when you open next. Untick a session to close it that day."
+          className="lg:col-span-2"
+        >
+          <HoursEditor defaultValue={parseOpeningHours(g.opening_hours)} />
+          <Field label="Note for members" hint="Optional, e.g. holiday timings or a ladies-only hour.">
+            <Input name="opening_hours_note" defaultValue={g.opening_hours_note ?? ""} maxLength={200} placeholder="Closed on national holidays" />
           </Field>
         </SettingsCard>
 
@@ -161,6 +176,24 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
           description="Optional. Trainers build and assign plans; members log workouts and measurements. Choose which built-in exercises to offer on the Workouts page."
         >
           <Toggle name="workouts_enabled" label="Use workouts & progress" defaultChecked={g.workouts_enabled} />
+        </SettingsCard>
+
+        <SettingsCard
+          slug={slug}
+          section="pt"
+          title="Personal training"
+          description="Optional. Sell PT packages (a number of sessions, or unlimited for a period), assign a trainer, and track sessions used. Set up packages on the Personal training page."
+        >
+          <Toggle name="pt_enabled" label="Offer personal training" defaultChecked={g.pt_enabled} />
+          <Toggle
+            name="pt_show_in_app"
+            label="Show PT packages and prices in the app"
+            hint="Members always see their own PT sessions. Off: packages are only sold at the front desk."
+            defaultChecked={g.pt_show_in_app}
+          />
+          <Field label="Flag clients with this many sessions left" hint={`They’re marked “running low” so you can offer a renewal. Default ${GYM_DEFAULTS.pt_expiry_warning_sessions}`}>
+            <Input name="pt_expiry_warning_sessions" type="number" min={0} max={50} defaultValue={g.pt_expiry_warning_sessions} required />
+          </Field>
         </SettingsCard>
       </div>
     </>

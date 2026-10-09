@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { openingHoursSchema } from "./hours";
 import { MANUAL_PAYMENT_METHODS } from "./memberships";
 
 // Per-gym settings (columns on public.gyms) and the helpers that use them.
@@ -83,6 +84,28 @@ export const workoutSettingsSchema = z.object({
   workouts_enabled: bool,
 });
 
+export const ptSettingsSchema = z.object({
+  pt_enabled: bool,
+  pt_show_in_app: bool,
+  pt_expiry_warning_sessions: int(0, 50),
+});
+
+// The hours editor posts the whole week as JSON.
+export const hoursSettingsSchema = z.object({
+  opening_hours: z
+    .string()
+    .transform((v, ctx) => {
+      try {
+        return JSON.parse(v) as unknown;
+      } catch {
+        ctx.addIssue({ code: "custom", message: "Invalid opening hours" });
+        return z.NEVER;
+      }
+    })
+    .pipe(openingHoursSchema),
+  opening_hours_note: z.string().trim().max(200).transform((v) => v || null),
+});
+
 // Defaults for a new gym (mirror the column defaults in
 // supabase/migrations/*_gym_settings.sql). Shown as hints in Settings.
 export const GYM_DEFAULTS = {
@@ -96,6 +119,7 @@ export const GYM_DEFAULTS = {
   checkin_dedupe_hours: 3,
   classes_booking_window_days: 7,
   classes_cancel_cutoff_hours: 0,
+  pt_expiry_warning_sessions: 2,
 } as const;
 
 // Phone in international digits without "+" (how Supabase Auth stores it),

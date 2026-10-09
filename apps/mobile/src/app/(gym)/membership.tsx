@@ -6,6 +6,7 @@ import { RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MembershipCard } from '@/components/membership-card';
+import { PtSection } from '@/components/pt-section';
 import { Button, Card, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -101,6 +102,8 @@ export default function MembershipScreen() {
           </Card>
         ))}
 
+        <PtSection />
+
         {!!payments.data?.length && (
           <>
             <Text variant="heading">Receipts</Text>
@@ -116,7 +119,7 @@ export default function MembershipScreen() {
                     borderColor: theme.border,
                   }}>
                   <View>
-                    <Text>{p.subscriptions?.plan_name ?? 'Payment'}</Text>
+                    <Text>{p.pt_subscriptions ? `PT: ${p.pt_subscriptions.package_name}` : (p.subscriptions?.plan_name ?? 'Payment')}</Text>
                     <Text variant="small">
                       {formatReceipt(gym?.receipt_prefix ?? '', p.receipt_no)} · {new Date(p.paid_at!).toLocaleDateString('en-IN')} · {PAYMENT_METHOD_LABELS[p.method]}
                     </Text>

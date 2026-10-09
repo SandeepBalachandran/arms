@@ -55,7 +55,7 @@ export function useMyPayments() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('payments')
-        .select('id, receipt_no, amount_paise, method, paid_at, subscriptions(plan_name)')
+        .select('id, receipt_no, amount_paise, method, paid_at, subscriptions(plan_name), pt_subscriptions(package_name)')
         .eq('member_id', memberId!)
         .eq('status', 'paid')
         .order('paid_at', { ascending: false });

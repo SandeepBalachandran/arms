@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, type ReactNode } from "react";
+import clsx from "clsx";
 import { useSavedToast } from "@/lib/use-saved-toast";
 import { Button, Card, FormError } from "@/components/ui";
 import { saveSettings, type SettingsSection } from "./actions";
@@ -12,19 +13,21 @@ export function SettingsCard({
   section,
   title,
   description,
+  className,
   children,
 }: {
   slug: string;
   section: SettingsSection;
   title: string;
   description?: ReactNode;
+  className?: string;
   children: ReactNode;
 }) {
   const [state, action, pending] = useActionState(saveSettings, undefined);
   useSavedToast(state, `${title} saved`);
 
   return (
-    <Card className="h-fit">
+    <Card className={clsx("h-fit", className)}>
       <h2 className="font-medium">{title}</h2>
       {description && <p className="mt-1 text-sm text-muted">{description}</p>}
       <form action={action} className="mt-4 space-y-4">
