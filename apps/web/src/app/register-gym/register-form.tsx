@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { Building2, Link2, Loader2, MessageCircle } from "lucide-react";
+import { useActionState, useRef, useState } from "react";
+import { Building2, CheckCircle2, Link2, Loader2, MessageCircle, XCircle } from "lucide-react";
 import { AuthField, AuthInput } from "@/components/auth-shell";
 import { Button, FormError } from "@/components/ui";
-import { registerGym } from "./actions";
+import { checkSlug, registerGym, type SlugCheck } from "./actions";
 
 function slugify(name: string) {
   return name
@@ -19,6 +19,28 @@ export function RegisterGymForm({ siteUrl }: { siteUrl: string }) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
+  const [check, setCheck] = useState<SlugCheck | "checking" | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const latest = useRef("");
+
+  // Checks the code shortly after typing stops; late answers for an older
+  // value are ignored.
+  function updateSlug(next: string) {
+    setSlug(next);
+    latest.current = next;
+    clearTimeout(timer.current);
+    if (next.length < 3) return setCheck(null);
+    setCheck("checking");
+    timer.current = setTimeout(async () => {
+      try {
+        const result = await checkSlug(next);
+        if (latest.current === next) setCheck(result);
+      } catch {
+        if (latest.current === next) setCheck(null);
+      }
+    }, 450);
+  }
+  const taken = check !== null && check !== "checking" && check.status !== "available";
   const host = siteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
   return (
@@ -31,7 +53,7 @@ export function RegisterGymForm({ siteUrl }: { siteUrl: string }) {
           value={name}
           onChange={(e) => {
             setName(e.target.value);
-            if (!slugTouched) setSlug(slugify(e.target.value));
+            if (!slugTouched) updateSlug(slugify(e.target.value));
           }}
         />
       </AuthField>
@@ -43,10 +65,44 @@ export function RegisterGymForm({ siteUrl }: { siteUrl: string }) {
           value={slug}
           onChange={(e) => {
             setSlugTouched(true);
-            setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"));
+            updateSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"));
           }}
         />
       </AuthField>
+
+      {check && (
+        <div className="-mt-2 space-y-2 text-sm" aria-live="polite">
+          {check === "checking" ? (
+            <p className="flex items-center gap-1.5 text-muted"><Loader2 className="size-4 animate-spin" /> Checking…</p>
+          ) : check.status === "available" ? (
+            <p className="flex items-center gap-1.5 font-medium text-brand"><CheckCircle2 className="size-4" /> {slug} is available</p>
+          ) : (
+            <>
+              <p className="flex items-center gap-1.5 font-medium text-danger">
+                <XCircle className="size-4" /> {check.status === "taken" ? `${slug} is taken by another gym` : check.message}
+              </p>
+              {check.suggestions.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-muted">Try:</span>
+                  {check.suggestions.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => {
+                        setSlugTouched(true);
+                        updateSlug(s);
+                      }}
+                      className="rounded-full border border-border bg-surface px-3 py-1 font-mono text-xs hover:border-brand hover:text-brand"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Preview of the invite as it will look when shared. */}
       <div className="rounded-xl border border-border bg-background p-3">
@@ -65,7 +121,7 @@ export function RegisterGymForm({ siteUrl }: { siteUrl: string }) {
       </div>
 
       <FormError message={state?.error} />
-      <Button className="h-11 w-full rounded-xl text-base" disabled={pending}>
+      <Button className="h-11 w-full rounded-xl text-base" disabled={pending || taken || check === "checking"}>
         {pending && <Loader2 className="size-4 animate-spin" />}
         {pending ? "Creating…" : "Create gym"}
       </Button>
