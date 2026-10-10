@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: Spacing.three,
   },
-  buttonText: { fontSize: 16, fontWeight: '700' },
+  buttonText: { fontSize: 16, fontFamily: Fonts.bold },
   input: {
     minHeight: 52,
     borderWidth: 1,
@@ -191,7 +191,7 @@ export function Chip({ children, tone = 'outline' }: { children: ReactNode; tone
     : { backgroundColor: 'transparent', borderColor: theme.border, color: theme.text };
   return (
     <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: look.backgroundColor, borderColor: look.borderColor }}>
-      {typeof children === 'string' ? <RNText style={{ color: look.color, fontSize: 13, fontWeight: '600' }}>{children}</RNText> : children}
+      {typeof children === 'string' ? <RNText style={{ color: look.color, fontSize: 13, fontFamily: Fonts.semibold }}>{children}</RNText> : children}
     </View>
   );
 }

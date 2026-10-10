@@ -2,13 +2,15 @@ import { formatDuration, formatMoney, formatReceipt, PAYMENT_METHOD_LABELS } fro
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { CalendarRange, ReceiptText, Sparkles } from 'lucide-react-native';
 import { RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MembershipCard } from '@/components/membership-card';
 import { PtSection } from '@/components/pt-section';
-import { Button, Card, Text } from '@/components/ui';
-import { Spacing } from '@/constants/theme';
+import { Appear } from '@/components/motion';
+import { Button, Card, SectionHeader, Text } from '@/components/ui';
+import { Spacing, type Tint } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useActiveGym } from '@/lib/gyms';
 import { useMyPayments, usePaymentClaims, usePlans } from '@/lib/memberships';
@@ -27,6 +29,10 @@ export default function MembershipScreen() {
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const currency = gym?.currency ?? 'INR';
+  // Cheapest per day among plans of different lengths gets a "Best value" tag.
+  const perDay = (plans.data ?? []).map((p) => ({ id: p.id, rate: p.price_paise / Math.max(1, p.duration_days), days: p.duration_days }));
+  const bestValue =
+    new Set(perDay.map((p) => p.days)).size > 1 ? perDay.reduce((a, b) => (b.rate < a.rate ? b : a)).id : null;
 
   async function refresh() {
     setRefreshing(true);
@@ -39,7 +45,9 @@ export default function MembershipScreen() {
       <ScrollView
         contentContainerStyle={{ padding: Spacing.three, gap: Spacing.three }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={theme.brand} />}>
-        <Text variant="title">Membership</Text>
+        <Appear index={0}>
+          <Text variant="title">Membership</Text>
+        </Appear>
         <MembershipCard />
 
         {pending && (
@@ -72,59 +80,46 @@ export default function MembershipScreen() {
           </Card>
         ))}
 
-        <Text variant="heading">Plans at {gym?.name}</Text>
-        <Text variant="muted">
-          {upiEnabled
-            ? 'Pay by UPI here, or at the front desk.'
-            : 'Pay at the front desk to start or renew your membership.'}
+        <SectionHeader title="Plans" />
+        <Text variant="muted" style={{ marginTop: -8 }}>
+          {upiEnabled ? 'Pay by UPI here, or at the front desk.' : 'Pay at the front desk to start or renew.'}
         </Text>
         {plans.data?.length === 0 && <Text variant="muted">Your gym hasn’t added plans yet.</Text>}
-        {plans.data?.map((plan) => (
-          <Card key={plan.id}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <Text variant="heading">{plan.name}</Text>
-              <Text variant="heading" style={{ color: theme.brand }}>
-                {formatMoney(plan.price_paise, currency)}
-              </Text>
-            </View>
-            <Text variant="muted">
-              {formatDuration(plan.duration_days)}
-              {plan.class_credits != null ? ` · ${plan.class_credits} classes` : ''}
-            </Text>
-            {plan.description && <Text variant="muted">{plan.description}</Text>}
-            {upiEnabled && (
-              <Button
-                title={`Pay ${formatMoney(plan.price_paise, currency)} with UPI`}
-                disabled={!!pending}
-                onPress={() => router.push({ pathname: '/pay/[planId]', params: { planId: plan.id } })}
-              />
-            )}
-          </Card>
+        {plans.data?.map((plan, i) => (
+          <Appear key={plan.id} index={i}>
+            <PlanCard
+              plan={plan}
+              currency={currency}
+              best={plan.id === bestValue}
+              tint={PLAN_TINTS[i % PLAN_TINTS.length]}
+              onPay={upiEnabled ? () => router.push({ pathname: '/pay/[planId]', params: { planId: plan.id } }) : undefined}
+              payDisabled={!!pending}
+            />
+          </Appear>
         ))}
 
         <PtSection />
 
         {!!payments.data?.length && (
           <>
-            <Text variant="heading">Receipts</Text>
+            <SectionHeader title="Receipts" count={payments.data.length} />
             <Card style={{ gap: 0, paddingVertical: Spacing.one }}>
               {payments.data.map((p, i) => (
                 <View
                   key={p.id}
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    paddingVertical: Spacing.two,
-                    borderTopWidth: i ? 1 : 0,
-                    borderColor: theme.border,
-                  }}>
-                  <View>
-                    <Text>{p.pt_subscriptions ? `PT: ${p.pt_subscriptions.package_name}` : (p.subscriptions?.plan_name ?? 'Payment')}</Text>
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderTopWidth: i ? 1 : 0, borderColor: theme.border }}>
+                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: theme.tints.green.bg, alignItems: 'center', justifyContent: 'center' }}>
+                    <ReceiptText size={18} color={theme.tints.green.fg} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontWeight: '600' }} numberOfLines={1}>
+                      {p.pt_subscriptions ? `PT: ${p.pt_subscriptions.package_name}` : (p.subscriptions?.plan_name ?? 'Payment')}
+                    </Text>
                     <Text variant="small">
-                      {formatReceipt(gym?.receipt_prefix ?? '', p.receipt_no)} · {new Date(p.paid_at!).toLocaleDateString('en-IN')} · {PAYMENT_METHOD_LABELS[p.method]}
+                      {new Date(p.paid_at!).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · {PAYMENT_METHOD_LABELS[p.method]} · {formatReceipt(gym?.receipt_prefix ?? '', p.receipt_no)}
                     </Text>
                   </View>
-                  <Text>{formatMoney(p.amount_paise, currency)}</Text>
+                  <Text style={{ fontWeight: '700' }}>{formatMoney(p.amount_paise, currency)}</Text>
                 </View>
               ))}
             </Card>
@@ -132,5 +127,52 @@ export default function MembershipScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+const PLAN_TINTS: Tint[] = ['green', 'blue', 'pink', 'yellow'];
+
+type Plan = NonNullable<ReturnType<typeof usePlans>['data']>[number];
+
+function PlanCard({ plan, currency, best, tint, onPay, payDisabled }: {
+  plan: Plan;
+  currency: string;
+  best: boolean;
+  tint: Tint;
+  onPay?: () => void;
+  payDisabled: boolean;
+}) {
+  const theme = useTheme();
+  const colors = theme.tints[tint];
+  const months = Math.round(plan.duration_days / 30);
+  return (
+    <Card style={[{ padding: 18, gap: 12 }, best && { borderColor: theme.brand, borderWidth: 1.5 }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ width: 46, height: 46, borderRadius: 16, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }}>
+          <CalendarRange size={22} color={colors.fg} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 18, fontWeight: '700' }}>{plan.name}</Text>
+          <Text variant="small">
+            {formatDuration(plan.duration_days)}
+            {plan.class_credits != null ? ` · ${plan.class_credits} classes` : ''}
+          </Text>
+        </View>
+        {best && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: theme.accent }}>
+            <Sparkles size={12} color={theme.accentText} />
+            <Text style={{ fontSize: 12, fontWeight: '700', color: theme.accentText }}>Best value</Text>
+          </View>
+        )}
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+        <Text style={{ fontSize: 28, fontWeight: '800', letterSpacing: -0.5 }}>{formatMoney(plan.price_paise, currency)}</Text>
+        {months > 1 && (
+          <Text variant="small">≈ {formatMoney(Math.round(plan.price_paise / months / 100) * 100, currency)} / month</Text>
+        )}
+      </View>
+      {plan.description && <Text variant="muted">{plan.description}</Text>}
+      {onPay && <Button title={`Pay ${formatMoney(plan.price_paise, currency)} with UPI`} disabled={payDisabled} onPress={onPay} />}
+    </Card>
   );
 }
