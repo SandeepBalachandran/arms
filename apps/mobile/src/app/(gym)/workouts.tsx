@@ -1,5 +1,5 @@
 import { groupPlanDays } from '@gymos/shared';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Card, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useActiveGym } from '@/lib/gyms';
 import { useBodyMetrics, useMyPlans, useWorkoutHistory } from '@/lib/workouts';
 
 export default function WorkoutsScreen() {
@@ -16,6 +17,7 @@ export default function WorkoutsScreen() {
   const history = useWorkoutHistory();
   const metrics = useBodyMetrics();
   const [refreshing, setRefreshing] = useState(false);
+  const gym = useActiveGym()?.gym;
   const latestWeight = [...(metrics.data ?? [])].reverse().find((m) => m.weight_kg !== null);
 
   async function refresh() {
@@ -23,6 +25,9 @@ export default function WorkoutsScreen() {
     await Promise.all([plans.refetch(), history.refetch(), metrics.refetch()]);
     setRefreshing(false);
   }
+
+  // The gym turned workouts off while this screen was open.
+  if (gym && !gym.workouts_enabled) return <Redirect href="/" />;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={['top']}>

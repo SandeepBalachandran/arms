@@ -6,11 +6,12 @@ import {
   Poppins_800ExtraBold,
   useFonts,
 } from '@expo-google-fonts/poppins';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import { AppState, Platform } from 'react-native';
 
 import { SplashView } from '@/components/splash-view';
 import { useScheme } from '@/lib/appearance';
@@ -22,6 +23,12 @@ SplashScreen.preventAutoHideAsync();
 SplashScreen.setOptions({ fade: true, duration: 300 });
 
 const queryClient = new QueryClient();
+
+// Coming back to the app counts as "focus", so data on screen (including gym
+// settings like which features are on) refreshes. Browsers do this already.
+if (Platform.OS !== 'web') {
+  AppState.addEventListener('change', (state) => focusManager.setFocused(state === 'active'));
+}
 
 export default function RootLayout() {
   const scheme = useScheme();

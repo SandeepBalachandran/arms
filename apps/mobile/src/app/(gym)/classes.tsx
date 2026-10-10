@@ -1,5 +1,6 @@
 import { dayKey, formatTime, groupBy, hasStarted, todayIn, type ScheduledClass } from '@gymos/shared';
 import { CalendarDays, CalendarX2, Clock } from 'lucide-react-native';
+import { Redirect } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -33,6 +34,8 @@ export default function ClassesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
   if (!gym) return null;
+  // The gym turned classes off while this screen was open.
+  if (!gym.classes_enabled) return <Redirect href="/" />;
   if (schedule.isPending) return <Loading />;
 
   const today = todayIn(gym.timezone);
