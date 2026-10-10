@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import {
+  addDays,
   daysBetween,
   formatDate,
   formatMoney,
@@ -26,6 +27,7 @@ import { CheckInButton } from "../../checkin/check-in-button";
 import { addNote, cancelSubscription, deleteNote } from "../actions";
 import { HistoryTabs } from "./history-tabs";
 import { MemberMenu, RecordPaymentButton } from "./member-actions";
+import { NutritionCard } from "./nutrition-card";
 import { PtCard } from "./pt-card";
 
 export const metadata: Metadata = { title: "Member" };
@@ -116,6 +118,20 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
 
   const today = todayIn(gym.timezone);
   const state = membershipState(subs.data, today);
+  // Nutrition is health data: owners/admins and the member's own PT trainer only.
+  const nutritionCoach =
+    gym.nutrition_enabled &&
+    (role === "owner" ||
+      role === "admin" ||
+      !!(
+        await supabase
+          .from("pt_subscriptions")
+          .select("id", { count: "exact", head: true })
+          .eq("member_id", id)
+          .eq("trainer_member_id", myMemberId)
+          .eq("status", "active")
+          .gte("ends_on", addDays(today, -7))
+      ).count);
   const name = member.profiles.full_name || "Unnamed member";
   const phone = member.profiles.phone;
   const email = authUser?.data.user?.email ?? null;
@@ -298,6 +314,10 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
               isStaff={isStaff}
               today={today}
             />
+          )}
+
+          {nutritionCoach && (
+            <NutritionCard slug={slug} memberId={id} myMemberId={myMemberId} today={today} />
           )}
 
           {/* History */}

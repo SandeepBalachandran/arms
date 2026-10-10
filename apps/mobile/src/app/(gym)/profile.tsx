@@ -1,7 +1,7 @@
 import { STAFF_ROLES } from '@gymos/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Check, ChevronRight, LogOut, Moon, Pencil, Plus, ScanLine, Sun, type LucideIcon } from 'lucide-react-native';
+import { Apple, Check, ChevronRight, LogOut, Moon, Pencil, Plus, ScanLine, Sun, type LucideIcon } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { z } from 'zod';
@@ -14,6 +14,7 @@ import { useActivity } from '@/lib/activity';
 import { setScheme, useScheme } from '@/lib/appearance';
 import { confirm } from '@/lib/confirm';
 import { useActiveGym, useMyGyms, useSetActiveGym } from '@/lib/gyms';
+import { useNutritionAccess } from '@/lib/nutrition';
 import { profileKey, useProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { saveSplashBrand } from '@/lib/splash-brand';
@@ -36,6 +37,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const active = useActiveGym();
   const [editing, setEditing] = useState(false);
+  const nutrition = useNutritionAccess();
   const canScan = !!active?.gym.checkin_enabled && STAFF_ROLES.includes(active.role);
 
   async function signOut() {
@@ -73,6 +75,7 @@ export default function ProfileScreen() {
         <Text style={{ fontSize: 13, fontWeight: '700', letterSpacing: 0.5 }} variant="small">GYMS</Text>
         <Card style={{ padding: 6, gap: 0 }}>
           <GymSwitcher />
+          {nutrition.available && <Row icon={Apple} tint="yellow" label="Nutrition details" detail="Height, weight, food preference" onPress={() => router.push('/food/setup')} />}
           {canScan && <Row icon={ScanLine} tint="blue" label="Front desk: scan check-ins" onPress={() => router.push('/staff/scan')} />}
           <Row icon={Plus} tint="green" label="Join another gym" onPress={() => router.push('/join')} />
         </Card>

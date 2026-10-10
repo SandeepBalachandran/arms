@@ -1,5 +1,5 @@
 import { TabList, Tabs, TabSlot, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
-import { CalendarDays, CreditCard, Dumbbell, House, User, type LucideIcon } from 'lucide-react-native';
+import { Apple, CalendarDays, CreditCard, Dumbbell, House, User, type LucideIcon } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -7,14 +7,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/use-theme';
 import { useActiveGym } from '@/lib/gyms';
+import { useNutritionAccess } from '@/lib/nutrition';
 import { saveSplashBrand } from '@/lib/splash-brand';
 
 // Floating dark tab bar with icon buttons; the current tab is a lime circle.
-// Optional features (classes, workouts) hide their tab.
+// Optional features (classes, workouts, nutrition) hide their tab.
 export default function GymTabs() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const gym = useActiveGym()?.gym;
+  const nutrition = useNutritionAccess();
   // Remember this gym for the splash screen next time.
   useEffect(() => {
     if (gym) saveSplashBrand({ name: gym.name, logo_url: gym.logo_url });
@@ -23,6 +25,7 @@ export default function GymTabs() {
     { name: 'index', href: '/', label: 'Home', icon: House, shown: true },
     { name: 'classes', href: '/classes', label: 'Classes', icon: CalendarDays, shown: !!gym?.classes_enabled },
     { name: 'workouts', href: '/workouts', label: 'Workouts', icon: Dumbbell, shown: !!gym?.workouts_enabled },
+    { name: 'food', href: '/food', label: 'Food', icon: Apple, shown: nutrition.available },
     { name: 'membership', href: '/membership', label: 'Membership', icon: CreditCard, shown: true },
     { name: 'profile', href: '/profile', label: 'Profile', icon: User, shown: true },
   ] as const;

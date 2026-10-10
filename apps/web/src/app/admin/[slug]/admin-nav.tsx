@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import {
+  Apple,
   CalendarDays,
   CreditCard,
   Dumbbell,
@@ -19,7 +20,7 @@ import {
 } from "lucide-react";
 import type { GymRole } from "@/lib/auth";
 
-// Optional features (check-in, classes, workouts, PT) only show when the gym turns them on.
+// Optional features (check-in, classes, workouts, PT, nutrition) only show when the gym turns them on.
 const ITEMS = [
   { href: "", label: "Dashboard", short: "Home", icon: LayoutDashboard, roles: null },
   { href: "/checkin", label: "Check-in", short: "Check-in", icon: ScanLine, roles: ["owner", "admin", "staff"], needs: "checkin" },
@@ -27,13 +28,14 @@ const ITEMS = [
   { href: "/classes", label: "Classes", short: "Classes", icon: CalendarDays, roles: null, needs: "classes" },
   { href: "/workouts", label: "Workouts", short: "Workouts", icon: Dumbbell, roles: null, needs: "workouts" },
   { href: "/pt", label: "Personal training", short: "PT", icon: HeartHandshake, roles: null, needs: "pt" },
+  { href: "/foods", label: "Foods", short: "Foods", icon: Apple, roles: null, needs: "nutrition" },
   { href: "/plans", label: "Plans", short: "Plans", icon: CreditCard, roles: null },
   { href: "/payments", label: "Payments", short: "Payments", icon: ReceiptText, roles: ["owner", "admin", "staff"] },
   { href: "/settings", label: "Settings", short: "Settings", icon: Settings, roles: ["owner", "admin"] },
 ] as const;
 
 // Order for the phone bottom bar: the first four that apply get a tab, the rest go under "More".
-const BOTTOM_PRIORITY = ["", "/members", "/checkin", "/payments", "/classes", "/plans", "/pt", "/workouts", "/settings"];
+const BOTTOM_PRIORITY = ["", "/members", "/checkin", "/payments", "/classes", "/plans", "/pt", "/workouts", "/foods", "/settings"];
 
 type NavProps = {
   slug: string;
@@ -42,14 +44,15 @@ type NavProps = {
   classesEnabled: boolean;
   workoutsEnabled: boolean;
   ptEnabled: boolean;
+  nutritionEnabled: boolean;
 };
 
 type Item = (typeof ITEMS)[number];
 
-function useNav({ slug, role, checkinEnabled, classesEnabled, workoutsEnabled, ptEnabled }: NavProps) {
+function useNav({ slug, role, checkinEnabled, classesEnabled, workoutsEnabled, ptEnabled, nutritionEnabled }: NavProps) {
   const pathname = usePathname();
   const base = `/admin/${slug}`;
-  const enabled = { checkin: checkinEnabled, classes: classesEnabled, workouts: workoutsEnabled, pt: ptEnabled };
+  const enabled = { checkin: checkinEnabled, classes: classesEnabled, workouts: workoutsEnabled, pt: ptEnabled, nutrition: nutritionEnabled };
   const items = ITEMS.filter(
     (i) => (!i.roles || (i.roles as readonly GymRole[]).includes(role)) && (!("needs" in i) || enabled[i.needs]),
   );

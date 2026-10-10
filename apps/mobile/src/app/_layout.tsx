@@ -107,6 +107,8 @@ function RootNavigator() {
               name="checkin-qr"
               options={{ headerShown: true, title: 'Check-in code', presentation: 'modal' }}
             />
+            <Stack.Screen name="food/add" options={{ headerShown: true, title: 'Add food', presentation: 'modal' }} />
+            <Stack.Screen name="food/setup" options={{ headerShown: true, title: 'Nutrition setup' }} />
             <Stack.Screen name="checkin-scan" options={{ headerShown: true, title: 'Scan to check in' }} />
             <Stack.Screen name="staff/scan" options={{ headerShown: true, title: 'Front desk scan' }} />
             <Stack.Screen name="workout/log" options={{ headerShown: true, title: 'Log workout', gestureEnabled: false }} />

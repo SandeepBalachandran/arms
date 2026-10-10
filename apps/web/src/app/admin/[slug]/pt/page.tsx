@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import clsx from "clsx";
 import {
   addDays,
+  dayTotals,
+  onTarget,
   formatDate,
   formatDuration,
   formatMoney,
@@ -77,6 +79,34 @@ export default async function PtPage({ params, searchParams }: PageProps<"/admin
     });
   const current = clients.filter((c) => c.state.kind === "active" || c.state.kind === "upcoming");
   const ended = clients.filter((c) => c.state.kind === "expired" || c.state.kind === "used_up");
+  // Nutrition at a glance (owners/admins and each client's trainer; RLS hides it from staff).
+  const showNutrition = !!gym.nutrition_enabled && role !== "staff" && current.length > 0;
+  const nutrition = new Map<string, { text: string; tone: "good" | "warn" | "neutral" }>();
+  if (showNutrition) {
+    const ids = [...new Set(current.map((c) => c.member_id))];
+    const [logs, targets] = await Promise.all([
+      supabase.from("food_logs").select("member_id, logged_on, kcal, protein_g").in("member_id", ids).gte("logged_on", addDays(today, -6)),
+      supabase.from("nutrition_targets").select("member_id, kcal, protein_g").in("member_id", ids),
+    ]);
+    if (logs.error) throw logs.error;
+    if (targets.error) throw targets.error;
+    for (const id of ids) {
+      const mine = logs.data.filter((l) => l.member_id === id);
+      const target = targets.data.find((t) => t.member_id === id);
+      const days = [...new Set(mine.map((l) => l.logged_on))];
+      if (!target) nutrition.set(id, { text: "No target set", tone: "neutral" });
+      else if (!days.includes(today) && !days.includes(addDays(today, -1))) nutrition.set(id, { text: days.length ? "Not logged 2 days" : "Not logging", tone: "warn" });
+      else {
+        const perDay = days.map((d) => dayTotals(mine.filter((l) => l.logged_on === d)));
+        const hit = perDay.filter((t) => onTarget(t.kcal, target.kcal)).length;
+        const avgProtein = perDay.reduce((n, t) => n + t.protein_g, 0) / perDay.length;
+        nutrition.set(id, avgProtein < target.protein_g * 0.8
+          ? { text: `${hit}/${days.length} days on target · protein low`, tone: "warn" }
+          : { text: `${hit}/${days.length} days on target`, tone: hit >= days.length / 2 ? "good" : "neutral" });
+      }
+    }
+  }
+
   const revenue = monthRevenue.data?.reduce((n, p) => n + p.amount_paise, 0);
   const soldCounts = new Map<string, number>();
   for (const s of subs.data!) if (s.package_id) soldCounts.set(s.package_id, (soldCounts.get(s.package_id) ?? 0) + 1);
@@ -137,6 +167,7 @@ export default async function PtPage({ params, searchParams }: PageProps<"/admin
                   <th className="px-4 py-2 font-medium">Trainer</th>
                   <th className="px-4 py-2 font-medium">Sessions</th>
                   <th className="px-4 py-2 font-medium">Valid till</th>
+                  {showNutrition && <th className="px-4 py-2 font-medium">Food (7 days)</th>}
                   <th className="px-4 py-2" />
                 </tr>
               </thead>
@@ -172,6 +203,15 @@ export default async function PtPage({ params, searchParams }: PageProps<"/admin
                           </Badge>
                         )}
                       </td>
+                      {showNutrition && (
+                        <td className="px-4 py-3">
+                          {nutrition.get(c.member_id) ? (
+                            <Badge tone={nutrition.get(c.member_id)!.tone}>{nutrition.get(c.member_id)!.text}</Badge>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-right">
                         {canLog && (
                           <LogSessionDialog

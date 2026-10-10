@@ -7,6 +7,7 @@ import {
   generalSettingsSchema,
   hoursSettingsSchema,
   membershipSettingsSchema,
+  nutritionSettingsSchema,
   posterCheckinSettingsSchema,
   ptSettingsSchema,
   upiIdSchema,
@@ -34,6 +35,7 @@ const SECTIONS = {
   classes: classSettingsSchema,
   workouts: workoutSettingsSchema,
   pt: ptSettingsSchema,
+  nutrition: nutritionSettingsSchema,
   hours: hoursSettingsSchema,
 };
 

@@ -147,12 +147,19 @@ Conventions: money in paise; dates as `YYYY-MM-DD` in the gym's timezone; secret
 
 - **QR poster check-in** (optional, Settings): members scan a printed poster; optional location check with a radius; printable poster page with a "New code" to retire old posters.
 
+- **Nutrition coaching (phase 1)** (optional, Settings → Nutrition):
+  - PT clients (or all members) log meals from about 155 built-in Indian and Kerala foods, gym-added foods, or quick calories, plus water.
+  - The trainer sets calorie and protein targets ("Suggest" uses Mifflin–St Jeor), sees a 7-day table and comments.
+  - The PT page flags clients who aren't logging or are low on protein.
+  - Food logs are visible only to the member, their trainer and owners/admins. Needs migration `20261020000000_nutrition.sql`.
+
 ### Follow-ups
+- [ ] **Nutrition phase 2:** diet plan templates the trainer assigns, "Ate as planned" per meal, meal photos, meal reminders.
 - [ ] **To compete** (see MARKET.md): enquiry and lead tracking, automatic WhatsApp reminders, GST invoices, Malayalam in the app. Later: diet plans, reports, staff attendance, biometric integration.
 - [ ] Plans billed by calendar month (1st to last day) as well as by number of days.
 
 ### Waiting to apply
-- [ ] `npm run db:push` for `20261019000000_rename_gos.sql`, `20261019010000_delete_gym.sql` and `20261019020000_poster_checkin.sql`, then `npm run db:types`. The direct DB host is IPv6-only; on IPv4 networks set `SUPABASE_DB_URL` to the session pooler string.
+- [ ] `npm run db:push` for `20261019000000_rename_gos.sql`, `20261019010000_delete_gym.sql` and `20261019020000_poster_checkin.sql`, `20261020000000_nutrition.sql`, then `npm run db:types`. The direct DB host is IPv6-only; on IPv4 networks set `SUPABASE_DB_URL` to the session pooler string.
 
 ### Decided later (on hold)
 - [ ] Roles: co-owners, Admin renamed Manager, Front desk without revenue or payment edits, trainers without member phone numbers.

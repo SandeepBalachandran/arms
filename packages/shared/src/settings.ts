@@ -105,6 +105,11 @@ export const ptSettingsSchema = z.object({
   pt_expiry_warning_sessions: int(0, 50),
 });
 
+export const nutritionSettingsSchema = z.object({
+  nutrition_enabled: bool,
+  nutrition_all_members: bool,
+});
+
 // The hours editor posts the whole week as JSON.
 export const hoursSettingsSchema = z.object({
   opening_hours: z

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Printer } from "lucide-react";
+import { Apple, Printer } from "lucide-react";
 import {
   CURRENCIES,
   GYM_DEFAULTS,
@@ -229,6 +229,26 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
           <Field label="Flag clients with this many sessions left" hint={`They’re marked “running low” so you can offer a renewal. Default ${GYM_DEFAULTS.pt_expiry_warning_sessions}`}>
             <Input name="pt_expiry_warning_sessions" type="number" min={0} max={50} defaultValue={g.pt_expiry_warning_sessions} required />
           </Field>
+        </SettingsCard>
+
+        <SettingsCard
+          slug={slug}
+          section="nutrition"
+          title="Nutrition"
+          description="Optional. Members log what they eat against calorie and protein targets their trainer sets. Food logs are private: only the member, their trainer, and owners or admins see them."
+        >
+          <Toggle name="nutrition_enabled" label="Turn on nutrition tracking" hint="PT clients get a Food tab in the app." defaultChecked={g.nutrition_enabled ?? false} />
+          <Toggle
+            name="nutrition_all_members"
+            label="Open it to all members"
+            hint="Off: only members with an active PT package. Members without a trainer set their own targets."
+            defaultChecked={g.nutrition_all_members ?? false}
+          />
+          {g.nutrition_enabled && (
+            <Link href={`/admin/${slug}/foods`} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline">
+              <Apple className="size-4" /> Your gym&apos;s foods
+            </Link>
+          )}
         </SettingsCard>
 
         {role === "owner" && <DeleteGymCard slug={slug} gymName={g.name} />}

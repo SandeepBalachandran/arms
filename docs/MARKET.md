@@ -61,7 +61,8 @@ Most important first:
 | 4 | **Quick switch from a register or Excel.** Bulk import understands how gyms write dates ("paid 01/10, valid till 31/10") and calendar months, with a checked preview. | Manual entry, or importing done by the vendor |
 | 5 | **Only the features the gym uses.** Classes, PT, workouts and check-in are off until switched on. | Every feature visible, which makes the software feel complicated |
 | 6 | **A modern member app** with streaks, progress, a membership pass and the gym's own logo. | Dated designs, or the member app only on expensive plans |
-| 7 | **Kerala-local.** Visits, setup and support in person and in Malayalam. | Remote sales and support from other states |
+| 7 | **Nutrition coaching for PT clients.** Members log meals from a Kerala and Indian food list (puttu, appam, fish curry…) in home portions; the trainer sets calories and protein, sees the log and comments. | A diet plan PDF or chart, with no idea what the member actually ate |
+| 8 | **Kerala-local.** Visits, setup and support in person and in Malayalam. | Remote sales and support from other states |
 
 **One-line pitch:**
 > *Run your gym from WhatsApp and UPI: members join from one link, pay by UPI, and check in by scanning a poster. No machines, no gateway fees, no data entry.*
@@ -79,7 +80,7 @@ Most important first:
 | **Automatic WhatsApp reminders** | GOS reminders are one tap but manual; competitors send them on schedule | Medium (needs WhatsApp Business API, see COSTS.md) |
 | **GST invoices** | Many gyms need proper tax invoices | Small–medium |
 | **Malayalam in the app** | Nobody has it; a clear Kerala advantage | Medium |
-| **Diet plans** | Common in Indian tools; members ask for it | Medium |
+| **Diet plans** (templates the trainer assigns) | Common in Indian tools; calorie and protein tracking is built, plans are next | Medium |
 | **Biometric machine integration** (eSSL, ZKTeco) | Bigger gyms already own one | Large |
 | **Staff attendance and salary** | Owners like one place for everything | Medium |
 | **Reports** (revenue, renewals, attendance) | Owners want monthly numbers at a glance | Small–medium |

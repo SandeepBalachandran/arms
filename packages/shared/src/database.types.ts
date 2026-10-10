@@ -181,6 +181,34 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"food_logs": {
+                  Row: {
+                    "carbs_g": number,"created_at": string,"fat_g": number,"food_id": string | null,"gym_id": string,"id": string,"kcal": number,"logged_on": string,"meal": Database["public"]["Enums"]["meal_slot"],"member_id": string,"name": string,"protein_g": number,"servings": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "carbs_g"?: number,"created_at"?: string,"fat_g"?: number,"food_id"?: string | null,"gym_id": string,"id"?: string,"kcal": number,"logged_on": string,"meal": Database["public"]["Enums"]["meal_slot"],"member_id": string,"name": string,"protein_g"?: number,"servings"?: number
+                  }
+                  Update: {
+                    "carbs_g"?: number,"created_at"?: string,"fat_g"?: number,"food_id"?: string | null,"gym_id"?: string,"id"?: string,"kcal"?: number,"logged_on"?: string,"meal"?: Database["public"]["Enums"]["meal_slot"],"member_id"?: string,"name"?: string,"protein_g"?: number,"servings"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"foods": {
+                  Row: {
+                    "carbs_g": number,"category": string,"created_at": string,"fat_g": number,"food_type": Database["public"]["Enums"]["food_type"],"gym_id": string | null,"id": string,"is_active": boolean,"kcal": number,"name": string,"name_ml": string | null,"protein_g": number,"serving_g": number | null,"serving_label": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "carbs_g"?: number,"category"?: string,"created_at"?: string,"fat_g"?: number,"food_type"?: Database["public"]["Enums"]["food_type"],"gym_id"?: string | null,"id"?: string,"is_active"?: boolean,"kcal": number,"name": string,"name_ml"?: string | null,"protein_g"?: number,"serving_g"?: number | null,"serving_label": string
+                  }
+                  Update: {
+                    "carbs_g"?: number,"category"?: string,"created_at"?: string,"fat_g"?: number,"food_type"?: Database["public"]["Enums"]["food_type"],"gym_id"?: string | null,"id"?: string,"is_active"?: boolean,"kcal"?: number,"name"?: string,"name_ml"?: string | null,"protein_g"?: number,"serving_g"?: number | null,"serving_label"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"gym_hidden_exercises": {
                   Row: {
                     "exercise_id": string,"gym_id": string
@@ -255,14 +283,14 @@ isOneToOne: true
                   ]
                 },"gyms": {
                   Row: {
-                    "address": string | null,"checkin_dedupe_hours": number,"checkin_enabled": boolean,"checkin_location_required": boolean,"checkin_poster_enabled": boolean,"checkin_poster_version": number,"checkin_radius_m": number,"checkin_self_allowed": boolean,"classes_booking_window_days": number,"classes_cancel_cutoff_hours": number,"classes_enabled": boolean,"classes_require_membership": boolean,"created_at": string,"deleted_at": string | null,"deleted_by": string | null,"currency": string,"expiry_warning_days": number,"id": string,"join_requires_approval": boolean,"latitude": number | null,"longitude": number | null,"logo_url": string | null,"manual_payment_methods": (Database["public"]['Enums']["payment_method"])[],"name": string,"opening_hours": NonNullable<Json>,"opening_hours_note": string | null,"phone": string | null,"phone_country_code": string,"platform_plan": string,"pt_enabled": boolean,"pt_expiry_warning_sessions": number,"pt_show_in_app": boolean,"receipt_prefix": string,"receipt_seq": number,"renewal_message": string,"slug": string,"status": Database["public"]['Enums']["gym_status"],"timezone": string,"upi_id": string | null,"upi_payee_name": string | null,"workouts_enabled": boolean
+                    "address": string | null,"checkin_dedupe_hours": number,"checkin_enabled": boolean,"checkin_location_required": boolean,"checkin_poster_enabled": boolean,"checkin_poster_version": number,"checkin_radius_m": number,"checkin_self_allowed": boolean,"classes_booking_window_days": number,"classes_cancel_cutoff_hours": number,"classes_enabled": boolean,"classes_require_membership": boolean,"created_at": string,"deleted_at": string | null,"deleted_by": string | null,"currency": string,"expiry_warning_days": number,"id": string,"join_requires_approval": boolean,"latitude": number | null,"longitude": number | null,"logo_url": string | null,"manual_payment_methods": (Database["public"]['Enums']["payment_method"])[],"name": string,"nutrition_all_members": boolean,"nutrition_enabled": boolean,"opening_hours": NonNullable<Json>,"opening_hours_note": string | null,"phone": string | null,"phone_country_code": string,"platform_plan": string,"pt_enabled": boolean,"pt_expiry_warning_sessions": number,"pt_show_in_app": boolean,"receipt_prefix": string,"receipt_seq": number,"renewal_message": string,"slug": string,"status": Database["public"]['Enums']["gym_status"],"timezone": string,"upi_id": string | null,"upi_payee_name": string | null,"workouts_enabled": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"checkin_dedupe_hours"?: number,"checkin_enabled"?: boolean,"checkin_location_required"?: boolean,"checkin_poster_enabled"?: boolean,"checkin_poster_version"?: number,"checkin_radius_m"?: number,"checkin_self_allowed"?: boolean,"classes_booking_window_days"?: number,"classes_cancel_cutoff_hours"?: number,"classes_enabled"?: boolean,"classes_require_membership"?: boolean,"created_at"?: string,"deleted_at"?: string | null,"deleted_by"?: string | null,"currency"?: string,"expiry_warning_days"?: number,"id"?: string,"join_requires_approval"?: boolean,"latitude"?: number | null,"longitude"?: number | null,"logo_url"?: string | null,"manual_payment_methods"?: (Database["public"]['Enums']["payment_method"])[],"name": string,"opening_hours"?: NonNullable<Json>,"opening_hours_note"?: string | null,"phone"?: string | null,"phone_country_code"?: string,"platform_plan"?: string,"pt_enabled"?: boolean,"pt_expiry_warning_sessions"?: number,"pt_show_in_app"?: boolean,"receipt_prefix"?: string,"receipt_seq"?: number,"renewal_message"?: string,"slug": string,"status"?: Database["public"]['Enums']["gym_status"],"timezone"?: string,"upi_id"?: string | null,"upi_payee_name"?: string | null,"workouts_enabled"?: boolean
+                    "address"?: string | null,"checkin_dedupe_hours"?: number,"checkin_enabled"?: boolean,"checkin_location_required"?: boolean,"checkin_poster_enabled"?: boolean,"checkin_poster_version"?: number,"checkin_radius_m"?: number,"checkin_self_allowed"?: boolean,"classes_booking_window_days"?: number,"classes_cancel_cutoff_hours"?: number,"classes_enabled"?: boolean,"classes_require_membership"?: boolean,"created_at"?: string,"deleted_at"?: string | null,"deleted_by"?: string | null,"currency"?: string,"expiry_warning_days"?: number,"id"?: string,"join_requires_approval"?: boolean,"latitude"?: number | null,"longitude"?: number | null,"logo_url"?: string | null,"manual_payment_methods"?: (Database["public"]['Enums']["payment_method"])[],"name": string,"nutrition_all_members"?: boolean,"nutrition_enabled"?: boolean,"opening_hours"?: NonNullable<Json>,"opening_hours_note"?: string | null,"phone"?: string | null,"phone_country_code"?: string,"platform_plan"?: string,"pt_enabled"?: boolean,"pt_expiry_warning_sessions"?: number,"pt_show_in_app"?: boolean,"receipt_prefix"?: string,"receipt_seq"?: number,"renewal_message"?: string,"slug": string,"status"?: Database["public"]['Enums']["gym_status"],"timezone"?: string,"upi_id"?: string | null,"upi_payee_name"?: string | null,"workouts_enabled"?: boolean
                   }
                   Update: {
-                    "address"?: string | null,"checkin_dedupe_hours"?: number,"checkin_enabled"?: boolean,"checkin_location_required"?: boolean,"checkin_poster_enabled"?: boolean,"checkin_poster_version"?: number,"checkin_radius_m"?: number,"checkin_self_allowed"?: boolean,"classes_booking_window_days"?: number,"classes_cancel_cutoff_hours"?: number,"classes_enabled"?: boolean,"classes_require_membership"?: boolean,"created_at"?: string,"deleted_at"?: string | null,"deleted_by"?: string | null,"currency"?: string,"expiry_warning_days"?: number,"id"?: string,"join_requires_approval"?: boolean,"latitude"?: number | null,"longitude"?: number | null,"logo_url"?: string | null,"manual_payment_methods"?: (Database["public"]['Enums']["payment_method"])[],"name"?: string,"opening_hours"?: NonNullable<Json>,"opening_hours_note"?: string | null,"phone"?: string | null,"phone_country_code"?: string,"platform_plan"?: string,"pt_enabled"?: boolean,"pt_expiry_warning_sessions"?: number,"pt_show_in_app"?: boolean,"receipt_prefix"?: string,"receipt_seq"?: number,"renewal_message"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["gym_status"],"timezone"?: string,"upi_id"?: string | null,"upi_payee_name"?: string | null,"workouts_enabled"?: boolean
+                    "address"?: string | null,"checkin_dedupe_hours"?: number,"checkin_enabled"?: boolean,"checkin_location_required"?: boolean,"checkin_poster_enabled"?: boolean,"checkin_poster_version"?: number,"checkin_radius_m"?: number,"checkin_self_allowed"?: boolean,"classes_booking_window_days"?: number,"classes_cancel_cutoff_hours"?: number,"classes_enabled"?: boolean,"classes_require_membership"?: boolean,"created_at"?: string,"deleted_at"?: string | null,"deleted_by"?: string | null,"currency"?: string,"expiry_warning_days"?: number,"id"?: string,"join_requires_approval"?: boolean,"latitude"?: number | null,"longitude"?: number | null,"logo_url"?: string | null,"manual_payment_methods"?: (Database["public"]['Enums']["payment_method"])[],"name"?: string,"nutrition_all_members"?: boolean,"nutrition_enabled"?: boolean,"opening_hours"?: NonNullable<Json>,"opening_hours_note"?: string | null,"phone"?: string | null,"phone_country_code"?: string,"platform_plan"?: string,"pt_enabled"?: boolean,"pt_expiry_warning_sessions"?: number,"pt_show_in_app"?: boolean,"receipt_prefix"?: string,"receipt_seq"?: number,"renewal_message"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["gym_status"],"timezone"?: string,"upi_id"?: string | null,"upi_payee_name"?: string | null,"workouts_enabled"?: boolean
                   }
                   Relationships: [
                     
@@ -298,6 +326,61 @@ isOneToOne: false
       referencedRelation: "gym_members"
       referencedColumns: ["id"]
     }
+                  ]
+                },"nutrition_comments": {
+                  Row: {
+                    "author_member_id": string | null,"body": string,"created_at": string,"day": string,"gym_id": string,"id": string,"member_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_member_id"?: string | null,"body": string,"created_at"?: string,"day": string,"gym_id": string,"id"?: string,"member_id": string
+                  }
+                  Update: {
+                    "author_member_id"?: string | null,"body"?: string,"created_at"?: string,"day"?: string,"gym_id"?: string,"id"?: string,"member_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "nutrition_comments_author_member_id_fkey"
+      columns: ["author_member_id"]
+isOneToOne: false
+      referencedRelation: "gym_members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "nutrition_comments_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "gym_members"
+      referencedColumns: ["id"]
+    }
+                    
+                  ]
+                },"nutrition_profiles": {
+                  Row: {
+                    "activity": string,"birth_year": number | null,"consent_at": string | null,"food_pref": Database["public"]["Enums"]["food_type"] | null,"gym_id": string,"height_cm": number | null,"member_id": string,"notes": string | null,"sex": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "activity"?: string,"birth_year"?: number | null,"consent_at"?: string | null,"food_pref"?: Database["public"]["Enums"]["food_type"] | null,"gym_id": string,"height_cm"?: number | null,"member_id": string,"notes"?: string | null,"sex"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "activity"?: string,"birth_year"?: number | null,"consent_at"?: string | null,"food_pref"?: Database["public"]["Enums"]["food_type"] | null,"gym_id"?: string,"height_cm"?: number | null,"member_id"?: string,"notes"?: string | null,"sex"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"nutrition_targets": {
+                  Row: {
+                    "gym_id": string,"goal": Database["public"]["Enums"]["nutrition_goal"],"kcal": number,"member_id": string,"protein_g": number,"set_by": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "gym_id": string,"goal"?: Database["public"]["Enums"]["nutrition_goal"],"kcal": number,"member_id": string,"protein_g": number,"set_by"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "gym_id"?: string,"goal"?: Database["public"]["Enums"]["nutrition_goal"],"kcal"?: number,"member_id"?: string,"protein_g"?: number,"set_by"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
                   ]
                 },"payments": {
                   Row: {
@@ -587,6 +670,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"water_logs": {
+                  Row: {
+                    "glasses": number,"gym_id": string,"logged_on": string,"member_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "glasses"?: number,"gym_id": string,"logged_on": string,"member_id": string
+                  }
+                  Update: {
+                    "glasses"?: number,"gym_id"?: string,"logged_on"?: string,"member_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"workout_logs": {
                   Row: {
                     "day_label": string | null,"duration_min": number | null,"gym_id": string,"id": string,"member_id": string,"notes": string | null,"performed_at": string,"plan_id": string | null
@@ -715,6 +812,9 @@ isOneToOne: false
 "checkin_poster_key":
 { Args: { "p_gym_id": string }; Returns: string
                            },
+"can_coach":
+{ Args: { "p_member_id": string }; Returns: boolean
+                           },
 "delete_gym":
 { Args: { "p_confirm": string,"p_gym_id": string }; Returns: undefined
                            },
@@ -812,7 +912,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "booking_status": "booked"|"waitlisted"|"cancelled"|"attended"|"no_show","checkin_method": "self"|"scan"|"manual"|"poster","exercise_measure": "weight_reps"|"reps"|"time","gym_role": "owner"|"admin"|"staff"|"trainer"|"member","gym_status": "pending"|"active"|"suspended","member_status": "invited"|"active"|"inactive"|"pending","payment_method": "online"|"cash"|"upi"|"card"|"bank_transfer","payment_status": "created"|"paid"|"failed"|"refunded","session_status": "scheduled"|"cancelled","subscription_status": "active"|"cancelled"|"expired"
+            "booking_status": "booked"|"waitlisted"|"cancelled"|"attended"|"no_show","checkin_method": "self"|"scan"|"manual"|"poster","exercise_measure": "weight_reps"|"reps"|"time","food_type": "veg"|"egg"|"nonveg","gym_role": "owner"|"admin"|"staff"|"trainer"|"member","meal_slot": "early"|"breakfast"|"lunch"|"snack"|"dinner","nutrition_goal": "lose"|"maintain"|"gain","gym_status": "pending"|"active"|"suspended","member_status": "invited"|"active"|"inactive"|"pending","payment_method": "online"|"cash"|"upi"|"card"|"bank_transfer","payment_status": "created"|"paid"|"failed"|"refunded","session_status": "scheduled"|"cancelled","subscription_status": "active"|"cancelled"|"expired"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -928,7 +1028,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "booking_status": ["booked", "waitlisted", "cancelled", "attended", "no_show"],"checkin_method": ["self", "scan", "manual", "poster"],"exercise_measure": ["weight_reps", "reps", "time"],"gym_role": ["owner", "admin", "staff", "trainer", "member"],"gym_status": ["pending", "active", "suspended"],"member_status": ["invited", "active", "inactive", "pending"],"payment_method": ["online", "cash", "upi", "card", "bank_transfer"],"payment_status": ["created", "paid", "failed", "refunded"],"session_status": ["scheduled", "cancelled"],"subscription_status": ["active", "cancelled", "expired"]
+            "booking_status": ["booked", "waitlisted", "cancelled", "attended", "no_show"],"checkin_method": ["self", "scan", "manual", "poster"],"exercise_measure": ["weight_reps", "reps", "time"],"food_type": ["veg", "egg", "nonveg"],"gym_role": ["owner", "admin", "staff", "trainer", "member"],"meal_slot": ["early", "breakfast", "lunch", "snack", "dinner"],"nutrition_goal": ["lose", "maintain", "gain"],"gym_status": ["pending", "active", "suspended"],"member_status": ["invited", "active", "inactive", "pending"],"payment_method": ["online", "cash", "upi", "card", "bank_transfer"],"payment_status": ["created", "paid", "failed", "refunded"],"session_status": ["scheduled", "cancelled"],"subscription_status": ["active", "cancelled", "expired"]
           }
         }
 } as const
