@@ -7,8 +7,9 @@ import { Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES, TEAM_ROLES, type GymRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { joinUrl } from "@/lib/site";
-import { reviewJoinRequest, updateMember } from "./actions";
+import { reviewJoinRequest } from "./actions";
 import { AddMember } from "./add-member";
+import { RoleSelect } from "./role-select";
 import { EditMemberButton } from "./[id]/member-actions";
 
 export const metadata: Metadata = { title: "Members" };
@@ -175,14 +176,13 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
                   </td>
                   <td className="hidden p-3 md:table-cell">
                     {editable ? (
-                      <ActionForm action={updateMember} success="Role updated" className="flex gap-1">
-                        <input type="hidden" name="slug" value={slug} />
-                        <input type="hidden" name="id" value={m.id} />
-                        <select name="role" defaultValue={m.role} className="rounded border border-border bg-surface px-2 py-1 capitalize">
-                          {assignable.map((r) => <option key={r} value={r}>{r}</option>)}
-                        </select>
-                        <button className="rounded px-2 text-xs text-muted hover:bg-border/40">Save</button>
-                      </ActionForm>
+                      <RoleSelect
+                        slug={slug}
+                        memberId={m.id}
+                        role={m.role}
+                        options={assignable}
+                        name={m.profiles.full_name || "This member"}
+                      />
                     ) : (
                       <span className="capitalize">{m.role}</span>
                     )}
