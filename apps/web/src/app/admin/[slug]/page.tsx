@@ -149,12 +149,12 @@ export default async function AdminDashboard({ params }: PageProps<"/admin/[slug
         <Card>
           <h2 className="font-medium">Invite members</h2>
           <p className="mt-1 text-sm text-muted">
-            Share this link in your WhatsApp group. It opens the GymOS app (or offers the install) and joins{" "}
+            Share this link in your WhatsApp group. It opens the GOS app (or offers the install) and joins{" "}
             {gym.name}. Members can also type the gym code <span className="font-mono font-medium text-foreground">{slug}</span> in the app.
           </p>
           <CopyJoinLink path={`/join/${slug}`} />
           <a
-            href={`https://wa.me/?text=${encodeURIComponent(`Join ${gym.name} on GymOS: ${joinUrl(slug)}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`Join ${gym.name} on GOS: ${joinUrl(slug)}`)}`}
             target="_blank"
             rel="noreferrer"
             className="mt-3 inline-block text-sm font-medium text-brand hover:underline"

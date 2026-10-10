@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: { default: "GymOS", template: "%s · GymOS" },
+  title: { default: "GOS", template: "%s · GOS" },
   description: "Run your gym: memberships, check-ins, classes and workouts.",
 };
 

@@ -1,4 +1,4 @@
-# GymOS mobile (Expo)
+# GOS mobile (Expo)
 
 Member app. See the root README for setup.
 

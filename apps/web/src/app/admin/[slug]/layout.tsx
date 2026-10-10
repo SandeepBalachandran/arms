@@ -20,7 +20,7 @@ export default async function AdminLayout({ children, params }: LayoutProps<"/ad
       {/* Sidebar from tablet width up; phones get the bottom bar instead. */}
       <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-border bg-surface md:flex">
         <p className="flex h-14 items-center border-b border-border px-5 text-lg font-bold">
-          Gym<span className="text-brand">OS</span>
+          G<span className="text-brand">OS</span>
         </p>
         <div className="flex-1 overflow-y-auto py-2">
           <AdminNav {...navProps} />

@@ -1,4 +1,4 @@
-# GymOS
+# GOS
 
 Multi-tenant gym platform: a web admin panel for gym owners and staff, and an
 Android/iOS app for members. Gym owners share a join link on WhatsApp; it opens

@@ -253,11 +253,11 @@ otp_expiry = 3600
 # Both templates include both. Copy them to the hosted project's
 # Authentication → Email Templates as well.
 [auth.email.template.magic_link]
-subject = "Your GymOS sign-in code"
+subject = "Your GOS sign-in code"
 content_path = "./supabase/templates/magic_link.html"
 
 [auth.email.template.confirmation]
-subject = "Your GymOS sign-in code"
+subject = "Your GOS sign-in code"
 content_path = "./supabase/templates/confirmation.html"
 
 # Uncomment to customize notification email template

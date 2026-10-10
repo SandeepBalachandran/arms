@@ -10,7 +10,7 @@ export function SplashView() {
   return (
     <View
       style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.background }}
-      accessibilityLabel="GymOS is loading">
+      accessibilityLabel="GOS is loading">
       <Image source={require('@/assets/images/splash-icon.png')} style={{ width: 240, height: 240 }} contentFit="contain" />
     </View>
   );

@@ -96,7 +96,7 @@ export default async function ProfilePage({ params }: PageProps<"/admin/[slug]/p
           </dl>
           <PasswordForm />
           <form action={signOutEverywhere} className="mt-4 border-t border-border pt-4">
-            <p className="mb-2 text-sm text-muted">Lost a phone or used a shared computer? Sign out of GymOS on every device.</p>
+            <p className="mb-2 text-sm text-muted">Lost a phone or used a shared computer? Sign out of GOS on every device.</p>
             <button className="rounded-lg border border-border px-3 py-1.5 text-sm text-danger hover:bg-danger/10">
               Sign out everywhere
             </button>

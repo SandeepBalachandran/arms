@@ -74,7 +74,7 @@ export function AuthHeading({ title, subtitle }: { title: string; subtitle?: Rea
 function Logo({ dark }: { dark?: boolean }) {
   return (
     <Link href="/" className="relative text-xl font-bold">
-      Gym<span className={dark ? "text-[#c8f04b]" : "text-brand"}>OS</span>
+      G<span className={dark ? "text-[#c8f04b]" : "text-brand"}>OS</span>
     </Link>
   );
 }

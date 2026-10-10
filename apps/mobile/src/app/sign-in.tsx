@@ -49,7 +49,7 @@ export default function SignInScreen() {
   return (
     <Screen>
       <Text variant="title" style={{ marginTop: 48 }}>
-        GymOS
+        GOS
       </Text>
       <Text variant="muted">Your membership, check-ins, classes and workouts.</Text>
 

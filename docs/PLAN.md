@@ -1,4 +1,4 @@
-# GymOS — Plan and Milestones
+# GOS — Plan and Milestones
 
 Multi-tenant gym SaaS: a **Next.js web admin** for gym owners and staff, and an **Expo (React Native) member app** that gyms share on WhatsApp. One shared app; each member joins their gym by link or gym code.
 
@@ -8,7 +8,7 @@ Repo: https://github.com/SandeepBalachandran/arms
 
 | Area | Decision |
 |---|---|
-| Product | One shared app ("GymOS") for all gyms; gyms share a join link on WhatsApp |
+| Product | One shared app ("GOS") for all gyms; gyms share a join link on WhatsApp |
 | Admin | Stays in the browser (Next.js), works on phones with a bottom nav |
 | Member app | React Native with Expo (not Flutter): same TypeScript/React, shared types, EAS builds iOS from Windows |
 | Platforms | Android first, iOS next |
@@ -38,11 +38,11 @@ Conventions: money in paise; dates as `YYYY-MM-DD` in the gym's timezone; secret
 
 | Role | Email | Password |
 |---|---|---|
-| Owner | `admin@gymos.test` | `GymOS-admin-2026` |
-| Admin | `manager@gymos.test` | `GymOS-manager-2026` |
-| Staff | `staff@gymos.test` | `GymOS-staff-2026` |
-| Trainer | `trainer@gymos.test` | `GymOS-trainer-2026` |
-| Member | `member@gymos.test` | `GymOS-member-2026` |
+| Owner | `admin@gymos.test` | `GOS-admin-2026` |
+| Admin | `manager@gymos.test` | `GOS-manager-2026` |
+| Staff | `staff@gymos.test` | `GOS-staff-2026` |
+| Trainer | `trainer@gymos.test` | `GOS-trainer-2026` |
+| Member | `member@gymos.test` | `GOS-member-2026` |
 
 - Has two plans, Zumba and Yoga classes, PT turned on with two packages, and the member on Monthly PT.
 

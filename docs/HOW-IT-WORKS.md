@@ -1,6 +1,6 @@
-# How GymOS Works
+# How GOS Works
 
-This document explains GymOS end to end. Part 1 describes the product: who uses it and what happens in each flow. Part 2 describes the system: architecture, data, security, and how to run, change and ship it.
+This document explains GOS end to end. Part 1 describes the product: who uses it and what happens in each flow. Part 2 describes the system: architecture, data, security, and how to run, change and ship it.
 
 For what has been built so far and what comes next, see [PLAN.md](PLAN.md).
 
@@ -8,12 +8,12 @@ For what has been built so far and what comes next, see [PLAN.md](PLAN.md).
 
 # Part 1 — The product
 
-## What GymOS is
+## What GOS is
 
-GymOS is software for running a gym, offered to many gyms at once (multi-tenant).
+GOS is software for running a gym, offered to many gyms at once (multi-tenant).
 
 - **Gym owners and staff** use the **web admin** in a browser, on a laptop or a phone.
-- **Members** use the **GymOS app** on Android (iOS later). There is one shared app for every gym; a member joins *their* gym inside it.
+- **Members** use the **GOS app** on Android (iOS later). There is one shared app for every gym; a member joins *their* gym inside it.
 - A gym only sees its own members, payments and data.
 
 Optional features (check-in, classes, workouts, personal training) are switched on per gym. A small gym where people just pay and train can turn them all off and use only memberships and payments.
@@ -47,7 +47,7 @@ There are three ways in. All of them end with the member joined to the gym in th
 |---|---|
 | **WhatsApp link** | The admin shares `https://<site>/join/<gym-code>`. With the app installed, the link opens it straight to "Join". Without it, the page sends them to the Play Store, and the app remembers the gym after install (Play install referrer). |
 | **Gym code** | In the app: *Join a gym* → type the code. |
-| **Added by staff** | On **Members → Add member**, staff enter a name with an email and/or phone. GymOS creates the account; the member signs in later with that email or phone. |
+| **Added by staff** | On **Members → Add member**, staff enter a name with an email and/or phone. GOS creates the account; the member signs in later with that email or phone. |
 
 If **Approve new members** is on (Settings), people who join themselves wait as *pending* until staff approve them on the Members page.
 
@@ -79,7 +79,7 @@ Check-ins within a set time of each other count as one visit (default 3 hours). 
 
 ### 5. Group classes (optional)
 1. Create **class types** (e.g. Zumba: 20 spots, 45 minutes).
-2. **Schedule classes:** pick the days, time, start date and number of weeks. GymOS creates every session (e.g. "Adds 12 classes").
+2. **Schedule classes:** pick the days, time, start date and number of weeks. GOS creates every session (e.g. "Adds 12 classes").
 3. Members **book** in the app. When a class is full they join the **waitlist**; if someone cancels, the first person waiting moves up automatically.
 4. Rules come from Settings: how many days ahead booking opens, how late members can cancel, and whether an active membership is required.
 5. After the class, the trainer marks **Came / No-show**. Staff can cancel a session with a reason; members see it as cancelled.
@@ -355,11 +355,11 @@ Logic both apps need lives here so it behaves identically:
 | `npm run typecheck` / `npm run lint` | Check both apps |
 
 **Demo accounts:**
-- Owner: `admin@gymos.test` / `GymOS-admin-2026`
-- Admin: `manager@gymos.test` / `GymOS-manager-2026`
-- Staff: `staff@gymos.test` / `GymOS-staff-2026`
-- Trainer: `trainer@gymos.test` / `GymOS-trainer-2026`
-- Member: `member@gymos.test` / `GymOS-member-2026`
+- Owner: `admin@gymos.test` / `GOS-admin-2026`
+- Admin: `manager@gymos.test` / `GOS-manager-2026`
+- Staff: `staff@gymos.test` / `GOS-staff-2026`
+- Trainer: `trainer@gymos.test` / `GOS-trainer-2026`
+- Member: `member@gymos.test` / `GOS-member-2026`
 - Gym code: `demo-fitness`
 
 ## Changing the database

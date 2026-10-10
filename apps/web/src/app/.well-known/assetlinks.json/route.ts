@@ -1,7 +1,7 @@
 import { ANDROID_PACKAGE } from "@/lib/site";
 
 // Digital Asset Links: lets Android verify that https://<site>/join/* links
-// should open the GymOS app. Fingerprints are the SHA-256 of the app signing
+// should open the GOS app. Fingerprints are the SHA-256 of the app signing
 // certificates (debug + Play App Signing), comma-separated.
 export function GET() {
   const fingerprints = (process.env.ANDROID_SHA256_CERT_FINGERPRINTS ?? "")

@@ -114,7 +114,7 @@ export const GYM_DEFAULTS = {
   phone_country_code: "91",
   expiry_warning_days: 7,
   renewal_message:
-    "Hi {name}, your {gym} membership ends on {date}. Renew at the front desk or in the GymOS app.",
+    "Hi {name}, your {gym} membership ends on {date}. Renew at the front desk or in the GOS app.",
   receipt_prefix: "",
   checkin_dedupe_hours: 3,
   classes_booking_window_days: 7,

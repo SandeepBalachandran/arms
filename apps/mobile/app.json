@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "GymOS",
+    "name": "GOS",
     "slug": "gymos",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -39,7 +39,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "GymOS uses the camera at the front desk to scan members’ check-in codes.",
+          "cameraPermission": "GOS uses the camera at the front desk to scan members’ check-in codes.",
           "microphonePermission": false,
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": true

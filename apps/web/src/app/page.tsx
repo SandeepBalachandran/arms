@@ -19,7 +19,7 @@ export default async function Home() {
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
       <header className="flex items-center justify-between">
         <span className="text-xl font-bold">
-          Gym<span className="text-brand">OS</span>
+          G<span className="text-brand">OS</span>
         </span>
         <nav className="flex items-center gap-4 text-sm">
           <ThemeToggle initial={await getTheme()} />

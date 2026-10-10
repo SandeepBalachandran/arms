@@ -22,7 +22,7 @@ const getGym = cache(async (slug: string) => {
 export async function generateMetadata({ params }: PageProps<"/join/[slug]">): Promise<Metadata> {
   const gym = await getGym((await params).slug);
   if (!gym) return { title: "Gym not found" };
-  const title = `Join ${gym.name} on GymOS`;
+  const title = `Join ${gym.name} on GOS`;
   const description = "Membership, check-in, classes and workouts — all in one app.";
   return { title, description, openGraph: { title, description, type: "website" } };
 }
@@ -43,7 +43,7 @@ export default async function JoinGymPage({ params }: PageProps<"/join/[slug]">)
           href={playStoreUrl(gym.slug)}
           className="block rounded-lg bg-brand px-4 py-3 font-medium text-brand-fg"
         >
-          Get the GymOS app
+          Get the GOS app
         </a>
 
         <div className="rounded-lg border border-dashed border-border p-3">

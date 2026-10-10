@@ -56,7 +56,7 @@ export function RegisterGymForm({ siteUrl }: { siteUrl: string }) {
             <MessageCircle className="size-4" />
           </span>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">Join {name.trim() || "your gym"} on GymOS</p>
+            <p className="truncate text-sm font-medium">Join {name.trim() || "your gym"} on GOS</p>
             <p className="truncate font-mono text-xs text-muted">
               {host}/join/<span className="text-brand">{slug || "your-gym"}</span>
             </p>
