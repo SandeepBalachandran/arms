@@ -11,6 +11,7 @@ import {
 import { Field, Input, PageHeader, Select } from "@/components/ui";
 import { requireGym } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { DeleteGymCard } from "./delete-gym";
 import { HoursEditor } from "./hours-editor";
 import { RenewalMessageField, SettingsCard } from "./settings-form";
 
@@ -32,7 +33,7 @@ function Toggle({ name, label, hint, defaultChecked }: { name: string; label: st
 
 export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/settings">) {
   const { slug } = await params;
-  const { gym } = await requireGym(slug, ["owner", "admin"]);
+  const { gym, role } = await requireGym(slug, ["owner", "admin"]);
   const supabase = await createClient();
   const { data: g, error } = await supabase.from("gyms").select("*").eq("id", gym.id).single();
   if (error) throw error;
@@ -195,6 +196,8 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
             <Input name="pt_expiry_warning_sessions" type="number" min={0} max={50} defaultValue={g.pt_expiry_warning_sessions} required />
           </Field>
         </SettingsCard>
+
+        {role === "owner" && <DeleteGymCard slug={slug} gymName={g.name} />}
       </div>
     </>
   );

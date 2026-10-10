@@ -132,9 +132,21 @@ Conventions: money in paise; dates as `YYYY-MM-DD` in the gym's timezone; secret
 - EAS profiles: `preview` builds an installable APK, `production` builds an AAB for Google Play.
 - Supports Android 7.0+ (minSdk 24) and targets Android 16 (SDK 36).
 
+### M19. Polish, roles and rename
+- Product renamed from GymOS to **GOS** (visible names only; internal IDs unchanged).
+- Poppins on web and mobile; redesigned sign-in and register pages; role changes autosave.
+- One demo account per role.
+- **Delete gym** (owners, Settings): type-to-confirm, CSV download of members and payments, 30-day restore from the admin home, then a daily job removes the gym's data.
+
 ---
 
 ## Next up
+
+### Waiting to apply
+- [ ] `npm run db:push` for `20261019000000_rename_gos.sql` and `20261019010000_delete_gym.sql`, then `npm run db:types`. The direct DB host is IPv6-only; on IPv4 networks set `SUPABASE_DB_URL` to the session pooler string.
+
+### Decided later (on hold)
+- [ ] Roles: co-owners, Admin renamed Manager, Front desk without revenue or payment edits, trainers without member phone numbers.
 
 ### In progress
 - [ ] **First APK build:** log in to Expo, set the `EXPO_PUBLIC_*` variables on EAS, then run `eas build -p android --profile preview`.

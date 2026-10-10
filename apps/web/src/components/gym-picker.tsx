@@ -8,15 +8,20 @@ export function GymPicker({
   gyms,
   hrefPrefix,
   empty,
+  notice,
+  children,
 }: {
   title: string;
   gyms: GymMembership[];
   hrefPrefix: "/admin";
   empty: React.ReactNode;
+  notice?: string;
+  children?: React.ReactNode;
 }) {
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-4 py-12">
       <h1 className="mb-4 text-2xl font-semibold">{title}</h1>
+      {notice && <p role="status" className="mb-4 rounded-lg border border-border bg-surface px-3 py-2 text-sm">{notice}</p>}
       {gyms.length === 0 ? (
         <Card className="text-sm text-muted">{empty}</Card>
       ) : (
@@ -33,6 +38,7 @@ export function GymPicker({
           ))}
         </ul>
       )}
+      {children}
     </main>
   );
 }
