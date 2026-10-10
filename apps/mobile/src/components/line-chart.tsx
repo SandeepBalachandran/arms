@@ -4,6 +4,7 @@ import { Pressable, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Line, Polyline, Text as SvgText } from 'react-native-svg';
 
 import { Text } from '@/components/ui';
+import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type Point = { day: string; value: number };
@@ -71,11 +72,11 @@ export function LineChart({ points, unit }: { points: Point[]; unit: string }) {
               />
             ))}
             {rawMax !== rawMin && (
-              <SvgText x={width - 4} y={y(rawMax) + 4} fontSize={11} fill={theme.textSecondary} textAnchor="end">
+              <SvgText x={width - 4} y={y(rawMax) + 4} fontSize={11} fontFamily={Fonts.regular} fill={theme.textSecondary} textAnchor="end">
                 {Number(rawMax.toFixed(1))}
               </SvgText>
             )}
-            <SvgText x={width - 4} y={y(rawMin) + 4} fontSize={11} fill={theme.textSecondary} textAnchor="end">
+            <SvgText x={width - 4} y={y(rawMin) + 4} fontSize={11} fontFamily={Fonts.regular} fill={theme.textSecondary} textAnchor="end">
               {Number(rawMin.toFixed(1))}
             </SvgText>
             {active && (
@@ -111,11 +112,11 @@ export function LineChart({ points, unit }: { points: Point[]; unit: string }) {
               textAnchor="end">
               {fmt(last.value)}
             </SvgText>
-            <SvgText x={PAD.left} y={HEIGHT - 4} fontSize={11} fill={theme.textSecondary}>
+            <SvgText x={PAD.left} y={HEIGHT - 4} fontSize={11} fontFamily={Fonts.regular} fill={theme.textSecondary}>
               {formatDate(points[0].day)}
             </SvgText>
             {points.length > 1 && (
-              <SvgText x={PAD.left + plotW} y={HEIGHT - 4} fontSize={11} fill={theme.textSecondary} textAnchor="end">
+              <SvgText x={PAD.left + plotW} y={HEIGHT - 4} fontSize={11} fontFamily={Fonts.regular} fill={theme.textSecondary} textAnchor="end">
                 {formatDate(last.day)}
               </SvgText>
             )}

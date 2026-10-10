@@ -5,7 +5,7 @@ import { Alert, FlatList, Modal, Pressable, ScrollView, TextInput, View } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Card, Input, Loading, Text } from '@/components/ui';
-import { Radius, Spacing } from '@/constants/theme';
+import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
   useExercises,
@@ -212,6 +212,7 @@ function NumberField({ value, onChange, placeholder, decimal }: {
         color: theme.text,
         paddingHorizontal: Spacing.two,
         fontSize: 16,
+        fontFamily: Fonts.regular,
         textAlign: 'center',
       }}
     />

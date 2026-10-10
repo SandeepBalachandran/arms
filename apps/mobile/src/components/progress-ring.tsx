@@ -1,7 +1,8 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 import { useCountUp } from '@/components/motion';
+import { Text } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
 
 // Dark disc with a lime arc for `value` (0–1) that sweeps in on mount, and a

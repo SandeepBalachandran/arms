@@ -69,3 +69,23 @@ export const Spacing = {
 } as const;
 
 export const Radius = 20;
+
+// Poppins, one file per weight (loaded in app/_layout.tsx). Android can't
+// synthesise weights for a custom font, so pick the file instead of setting
+// fontWeight. Text in components/ui.tsx does this from `fontWeight`.
+export const Fonts = {
+  regular: 'Poppins_400Regular',
+  medium: 'Poppins_500Medium',
+  semibold: 'Poppins_600SemiBold',
+  bold: 'Poppins_700Bold',
+  extrabold: 'Poppins_800ExtraBold',
+} as const;
+
+export function fontFor(weight?: string | number) {
+  const w = weight === 'bold' ? 700 : Number(weight) || 400;
+  if (w >= 800) return Fonts.extrabold;
+  if (w >= 700) return Fonts.bold;
+  if (w >= 600) return Fonts.semibold;
+  if (w >= 500) return Fonts.medium;
+  return Fonts.regular;
+}

@@ -1,3 +1,11 @@
+import {
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+  useFonts,
+} from '@expo-google-fonts/poppins';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -40,7 +48,15 @@ function RootNavigator() {
   const hasGym = !!gyms.data?.length;
   // Read once: after the intro, welcome.tsx replaces itself with sign-in.
   const [welcomed] = useState(hasSeenWelcome);
-  const ready = !isLoading && (!signedIn || !gyms.isPending);
+  // Keys match Fonts in constants/theme.ts. On error, fall back to the system font.
+  const [fontsLoaded, fontError] = useFonts({
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+  });
+  const ready = (fontsLoaded || !!fontError) && !isLoading && (!signedIn || !gyms.isPending);
 
   useEffect(() => {
     checkInstallReferrer();

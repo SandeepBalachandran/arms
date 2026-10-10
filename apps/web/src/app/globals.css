@@ -37,7 +37,7 @@
   --color-brand: var(--brand);
   --color-brand-fg: var(--brand-fg);
   --color-danger: var(--danger);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
 }
 

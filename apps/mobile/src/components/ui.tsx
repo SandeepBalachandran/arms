@@ -10,11 +10,12 @@ import {
   type PressableProps,
   type TextInputProps,
   type TextProps,
+  type TextStyle,
   type ViewProps,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Radius, Spacing } from '@/constants/theme';
+import { Fonts, fontFor, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 // Shared primitives so every screen uses the same tokens (constants/theme.ts).
@@ -41,7 +42,9 @@ export function Text({ variant = 'body', style, ...props }: TextProps & { varian
   const theme = useTheme();
   const color =
     variant === 'muted' || variant === 'small' ? theme.textSecondary : variant === 'error' ? theme.danger : theme.text;
-  return <RNText style={[styles[variant], { color }, style]} {...props} />;
+  // Swap fontWeight for the matching Poppins file (see fontFor).
+  const { fontWeight, ...flat }: TextStyle = StyleSheet.flatten([styles[variant], { color }, style]);
+  return <RNText style={{ ...flat, fontFamily: flat.fontFamily ?? fontFor(fontWeight) }} {...props} />;
 }
 
 export function Button({
@@ -83,7 +86,7 @@ export function Input({ label, style, ...props }: TextInputProps & { label?: str
       {label && <Text variant="small">{label}</Text>}
       <TextInput
         placeholderTextColor={theme.textSecondary}
-        style={[styles.input, { color: theme.text, backgroundColor: theme.surface, borderColor: theme.border }, style]}
+        style={[styles.input, { color: theme.text, backgroundColor: theme.surface, borderColor: theme.border, fontFamily: Fonts.regular }, style]}
         {...props}
       />
     </View>
