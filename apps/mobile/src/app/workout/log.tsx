@@ -1,11 +1,12 @@
 import { formatSet } from '@gymos/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { FlatList, Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Card, Input, Loading, Text } from '@/components/ui';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { confirm } from '@/lib/confirm';
 import { useTheme } from '@/hooks/use-theme';
 import {
   useExercises,
@@ -87,13 +88,11 @@ function Logger({ planId, dayLabel, initial }: { planId: string | null; dayLabel
     );
   }
 
-  function leave() {
+  async function leave() {
     const anyDone = exercises.some((e) => e.sets.some((s) => s.done));
     if (!anyDone) return router.back();
-    Alert.alert('Discard this workout?', 'Your sets will not be saved.', [
-      { text: 'Keep logging', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: () => router.back() },
-    ]);
+    const ok = await confirm({ title: 'Discard this workout?', message: 'Your sets will not be saved.', confirmText: 'Discard', cancelText: 'Keep logging' });
+    if (ok) router.back();
   }
 
   return (

@@ -1,9 +1,10 @@
 import { canMemberCancel, formatTime, hasStarted, spotsLeft, type ScheduledClass } from '@gymos/shared';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Button, Card, Text } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
 import { useBookClass, useCancelBooking } from '@/lib/classes';
+import { confirm } from '@/lib/confirm';
 
 // One class in the schedule with its book / waitlist / cancel action.
 export function ClassRow({ item, timezone, cancelCutoffHours }: {
@@ -18,12 +19,15 @@ export function ClassRow({ item, timezone, cancelCutoffHours }: {
   const left = spotsLeft(item);
   const busy = book.isPending || cancel.isPending;
 
-  function confirmCancel() {
+  async function confirmCancel() {
     const what = item.my_status === 'waitlisted' ? 'Leave the waitlist' : 'Cancel your spot';
-    Alert.alert(`${what}?`, `${item.class_name} at ${formatTime(item.starts_at, timezone)}`, [
-      { text: 'Keep it', style: 'cancel' },
-      { text: what, style: 'destructive', onPress: () => cancel.mutate(item.my_booking_id!) },
-    ]);
+    const ok = await confirm({
+      title: `${what}?`,
+      message: `${item.class_name} at ${formatTime(item.starts_at, timezone)}`,
+      confirmText: what,
+      cancelText: 'Keep it',
+    });
+    if (ok) cancel.mutate(item.my_booking_id!);
   }
 
   let status: string;
