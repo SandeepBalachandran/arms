@@ -6,6 +6,7 @@ import { internationalPhone, MANUAL_PAYMENT_METHODS, rupeesSchema } from "@gymos
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
+import { findOrCreateUser } from "@/lib/member-accounts";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -109,9 +110,7 @@ const addMemberSchema = z
   })
   .refine((v) => v.email || v.phone, "Enter a phone number or an email");
 
-// Front desk adds a member directly (walk-ins, people without the app). Creates
-// the person's login if they don't have one; with an email they can later sign
-// in to the app with a code and see their membership.
+// Front desk adds a member directly (walk-ins, people without the app).
 export async function addMember(_prev: AddMemberState, formData: FormData): Promise<AddMemberState> {
   const parsed = addMemberSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -122,23 +121,9 @@ export async function addMember(_prev: AddMemberState, formData: FormData): Prom
   if (phone && !intlPhone) return { error: "Check the phone number" };
 
   const admin = createAdminClient();
-  const { data: existingId, error: findError } = await admin.rpc("find_user_id", {
-    ...(email ? { p_email: email } : {}),
-    ...(intlPhone ? { p_phone: intlPhone } : {}),
-  });
-  if (findError) return { error: findError.message };
-
-  let userId = existingId;
-  if (!userId) {
-    const { data, error } = await admin.auth.admin.createUser({
-      ...(email ? { email, email_confirm: true } : {}),
-      ...(intlPhone ? { phone: `+${intlPhone}`, phone_confirm: true } : {}),
-      user_metadata: { full_name },
-    });
-    if (error) return { error: error.message };
-    userId = data.user.id;
-    await admin.from("profiles").update({ full_name, phone: phone || null }).eq("id", userId);
-  }
+  const account = await findOrCreateUser(admin, { full_name, email, phone, intlPhone });
+  if (account.error !== undefined) return { error: account.error };
+  const userId = account.userId;
 
   const { data: member, error } = await admin
     .from("gym_members")

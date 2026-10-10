@@ -142,6 +142,12 @@ Conventions: money in paise; dates as `YYYY-MM-DD` in the gym's timezone; secret
 
 ## Next up
 
+### Done since M19
+- **Import members** (Members → Import): CSV template or paste from a spreadsheet, a checked preview, batch import with progress. Optional current plan with last paid date, paid-until date and amount.
+
+### Follow-ups
+- [ ] Plans billed by calendar month (1st to last day) as well as by number of days.
+
 ### Waiting to apply
 - [ ] `npm run db:push` for `20261019000000_rename_gos.sql` and `20261019010000_delete_gym.sql`, then `npm run db:types`. The direct DB host is IPv6-only; on IPv4 networks set `SUPABASE_DB_URL` to the session pooler string.
 

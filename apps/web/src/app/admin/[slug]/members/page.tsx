@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Upload } from "lucide-react";
 import { membershipState, todayIn, type Subscription } from "@gymos/shared";
 import { ActionForm } from "@/components/action-form";
 import { MembershipBadge } from "@/components/membership-badge";
@@ -83,12 +84,20 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
         title="Members"
         actions={
           canManage && (
-            <AddMember
-              slug={slug}
-              gymName={gym.name}
-              countryCode={gym.phone_country_code}
-              whatsappHref={`https://wa.me/?text=${encodeURIComponent(`Join ${gym.name} on GOS: ${joinUrl(slug)}`)}`}
-            />
+            <div className="flex gap-2">
+              <Link
+                href={`/admin/${slug}/members/import`}
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-border/40"
+              >
+                <Upload className="size-4" /> Import
+              </Link>
+              <AddMember
+                slug={slug}
+                gymName={gym.name}
+                countryCode={gym.phone_country_code}
+                whatsappHref={`https://wa.me/?text=${encodeURIComponent(`Join ${gym.name} on GOS: ${joinUrl(slug)}`)}`}
+              />
+            </div>
           )
         }
       />
