@@ -13,6 +13,7 @@ the app (or the Play Store) and joins their gym.
 | `docs/HOW-IT-WORKS.md` | How everything works: product flows, architecture, data, security, running and releasing |
 | `docs/PLAN.md` | Milestones done and what’s next |
 | `docs/COSTS.md` | What it costs to run GOS: hosting, database, messaging, domains, app stores, and hidden charges |
+| `docs/MARKET.md` | Competitors in India and Kerala, what makes GOS different, gaps, pricing |
 
 ## Setup
 

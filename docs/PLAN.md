@@ -148,6 +148,7 @@ Conventions: money in paise; dates as `YYYY-MM-DD` in the gym's timezone; secret
 - **QR poster check-in** (optional, Settings): members scan a printed poster; optional location check with a radius; printable poster page with a "New code" to retire old posters.
 
 ### Follow-ups
+- [ ] **To compete** (see MARKET.md): enquiry and lead tracking, automatic WhatsApp reminders, GST invoices, Malayalam in the app. Later: diet plans, reports, staff attendance, biometric integration.
 - [ ] Plans billed by calendar month (1st to last day) as well as by number of days.
 
 ### Waiting to apply
