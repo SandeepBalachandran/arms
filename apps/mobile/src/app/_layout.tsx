@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 
 import { SplashView } from '@/components/splash-view';
+import { ConfirmHost } from '@/lib/confirm';
 import { useScheme } from '@/lib/appearance';
 import { ActiveGymProvider, checkInstallReferrer, takePendingJoin, useMyGyms } from '@/lib/gyms';
 import { SessionProvider, useSession } from '@/lib/session';
@@ -40,6 +41,7 @@ export default function RootLayout() {
         <SessionProvider>
           <ActiveGymProvider>
             <RootNavigator />
+            <ConfirmHost />
           </ActiveGymProvider>
         </SessionProvider>
       </QueryClientProvider>
