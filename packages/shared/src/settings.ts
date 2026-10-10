@@ -73,6 +73,21 @@ export const checkinSettingsSchema = z.object({
   checkin_dedupe_hours: int(0, 24),
 });
 
+const coordinate = (limit: number) =>
+  z.union([z.literal(""), z.coerce.number().min(-limit).max(limit)]).transform((v) => (v === "" ? null : v));
+
+// QR poster check-in (members scan the gym's poster) and its optional location check.
+export const posterCheckinSettingsSchema = z
+  .object({
+    checkin_poster_enabled: bool,
+    checkin_location_required: bool,
+    checkin_radius_m: int(50, 2000),
+    latitude: coordinate(90),
+    longitude: coordinate(180),
+  })
+  .refine((v) => (v.latitude === null) === (v.longitude === null), "Enter both latitude and longitude, or neither")
+  .refine((v) => !v.checkin_location_required || v.latitude !== null, "Set the gym's location to use the location check");
+
 export const classSettingsSchema = z.object({
   classes_enabled: bool,
   classes_booking_window_days: int(1, 60),
@@ -117,6 +132,7 @@ export const GYM_DEFAULTS = {
     "Hi {name}, your {gym} membership ends on {date}. Renew at the front desk or in the GOS app.",
   receipt_prefix: "",
   checkin_dedupe_hours: 3,
+  checkin_radius_m: 200,
   classes_booking_window_days: 7,
   classes_cancel_cutoff_hours: 0,
   pt_expiry_warning_sessions: 2,

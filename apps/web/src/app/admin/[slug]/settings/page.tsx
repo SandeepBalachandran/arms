@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { Printer } from "lucide-react";
 import {
   CURRENCIES,
   GYM_DEFAULTS,
@@ -12,6 +14,7 @@ import { Field, Input, PageHeader, Select } from "@/components/ui";
 import { requireGym } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteGymCard } from "./delete-gym";
+import { LocationField } from "./location-field";
 import { HoursEditor } from "./hours-editor";
 import { LogoUploader } from "./logo-uploader";
 import { RenewalMessageField, SettingsCard } from "./settings-form";
@@ -152,6 +155,35 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
           <Field label="Count repeat check-ins within (hours) as one visit" hint={`0 counts every check-in. Default ${GYM_DEFAULTS.checkin_dedupe_hours}`}>
             <Input name="checkin_dedupe_hours" type="number" min={0} max={24} defaultValue={g.checkin_dedupe_hours} required />
           </Field>
+        </SettingsCard>
+
+        <SettingsCard
+          slug={slug}
+          section="poster"
+          title="QR poster check-in"
+          description="Optional. Print a QR poster for the entrance; members scan it with the app when they arrive. No staff needed."
+        >
+          <Toggle
+            name="checkin_poster_enabled"
+            label="Members can check in by scanning the poster"
+            hint="Works alongside the other ways. Needs check-in turned on."
+            defaultChecked={g.checkin_poster_enabled ?? false}
+          />
+          <Toggle
+            name="checkin_location_required"
+            label="Only when they're at the gym (location check)"
+            hint="Stops check-ins from a photo of the poster. Members are asked for location access once."
+            defaultChecked={g.checkin_location_required ?? false}
+          />
+          <LocationField latitude={g.latitude ?? null} longitude={g.longitude ?? null} />
+          <Field label="Allowed distance (metres)" hint={`How far from the gym still counts. Default ${GYM_DEFAULTS.checkin_radius_m}`}>
+            <Input name="checkin_radius_m" type="number" min={50} max={2000} defaultValue={g.checkin_radius_m ?? GYM_DEFAULTS.checkin_radius_m} required />
+          </Field>
+          {g.checkin_poster_enabled && (
+            <Link href={`/admin/${slug}/checkin/poster`} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline">
+              <Printer className="size-4" /> Print the poster
+            </Link>
+          )}
         </SettingsCard>
 
         <SettingsCard slug={slug} section="classes" title="Classes" description="Optional. Group classes members book in the app.">

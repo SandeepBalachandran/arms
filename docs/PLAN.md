@@ -145,11 +145,13 @@ Conventions: money in paise; dates as `YYYY-MM-DD` in the gym's timezone; secret
 ### Done since M19
 - **Import members** (Members → Import): CSV template or paste from a spreadsheet, a checked preview, batch import with progress. Optional current plan with last paid date, paid-until date and amount.
 
+- **QR poster check-in** (optional, Settings): members scan a printed poster; optional location check with a radius; printable poster page with a "New code" to retire old posters.
+
 ### Follow-ups
 - [ ] Plans billed by calendar month (1st to last day) as well as by number of days.
 
 ### Waiting to apply
-- [ ] `npm run db:push` for `20261019000000_rename_gos.sql` and `20261019010000_delete_gym.sql`, then `npm run db:types`. The direct DB host is IPv6-only; on IPv4 networks set `SUPABASE_DB_URL` to the session pooler string.
+- [ ] `npm run db:push` for `20261019000000_rename_gos.sql`, `20261019010000_delete_gym.sql` and `20261019020000_poster_checkin.sql`, then `npm run db:types`. The direct DB host is IPv6-only; on IPv4 networks set `SUPABASE_DB_URL` to the session pooler string.
 
 ### Decided later (on hold)
 - [ ] Roles: co-owners, Admin renamed Manager, Front desk without revenue or payment edits, trainers without member phone numbers.

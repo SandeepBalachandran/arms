@@ -39,10 +39,18 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "GOS uses the camera at the front desk to scan members’ check-in codes.",
+          "cameraPermission": "GOS uses the camera to scan check-in codes: your gym's poster, or members' codes at the front desk.",
           "microphonePermission": false,
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "GOS checks you're at the gym when you scan its check-in poster.",
+          "isAndroidBackgroundLocationEnabled": false,
+          "isIosBackgroundLocationEnabled": false
         }
       ]
     ],

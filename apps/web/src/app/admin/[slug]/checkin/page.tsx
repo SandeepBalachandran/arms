@@ -12,7 +12,7 @@ import { Scanner } from "./scanner";
 
 export const metadata: Metadata = { title: "Check-in" };
 
-const METHOD_LABELS = { self: "App", scan: "Scan", manual: "Desk" } as const;
+const METHOD_LABELS = { self: "App", scan: "Scan", manual: "Desk", poster: "QR poster" } as const;
 
 export default async function CheckinPage({ params, searchParams }: PageProps<"/admin/[slug]/checkin">) {
   const { slug } = await params;
