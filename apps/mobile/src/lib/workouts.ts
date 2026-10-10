@@ -59,14 +59,32 @@ export function useWorkoutHistory() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('workout_logs')
-        .select('id, performed_at, day_label, duration_min, workout_plans(name), workout_log_sets(count)')
+        .select('id, performed_at, day_label, duration_min, plan_id, workout_plans(name), workout_log_sets(reps, weight_kg)')
         .eq('member_id', memberId!)
         .order('performed_at', { ascending: false })
         .limit(30);
       if (error) throw error;
-      return data;
+      return data.map((log) => ({
+        ...log,
+        sets: log.workout_log_sets.length,
+        volumeKg: workoutVolume(log.workout_log_sets),
+      }));
     },
   });
+}
+
+export type WorkoutHistoryItem = NonNullable<ReturnType<typeof useWorkoutHistory>['data']>[number];
+
+// Total weight moved: kg × reps over every weighted set.
+export function workoutVolume(sets: { reps: number | null; weight_kg: number | string | null }[]) {
+  return Math.round(sets.reduce((n, s) => n + (num(s.weight_kg) ?? 0) * (s.reps ?? 0), 0));
+}
+
+// The plan day to do next: the one after the last day logged from this plan.
+export function nextPlanDay(dayLabels: string[], planId: string, history: { plan_id: string | null; day_label: string | null }[]) {
+  const last = history.find((h) => h.plan_id === planId && h.day_label && dayLabels.includes(h.day_label));
+  if (!last) return dayLabels[0];
+  return dayLabels[(dayLabels.indexOf(last.day_label!) + 1) % dayLabels.length];
 }
 
 type SetRow = { exercise_id: string; set_no: number; reps: number | null; weight_kg: number | string | null; duration_sec: number | null };
