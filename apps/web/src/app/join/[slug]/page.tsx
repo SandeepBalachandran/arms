@@ -12,7 +12,7 @@ const getGym = cache(async (slug: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("gyms")
-    .select("name, slug, address")
+    .select("name, slug, address, logo_url")
     .eq("slug", slug)
     .eq("status", "active")
     .maybeSingle();
@@ -35,6 +35,10 @@ export default async function JoinGymPage({ params }: PageProps<"/join/[slug]">)
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-12">
       <Card className="space-y-5 p-6 text-center">
+        {gym.logo_url && (
+          // eslint-disable-next-line @next/next/no-img-element -- user upload on Supabase Storage
+          <img src={gym.logo_url} alt="" className="mx-auto size-20 rounded-2xl object-cover" />
+        )}
         <p className="text-sm text-muted">You&apos;re invited to join</p>
         <h1 className="text-2xl font-semibold">{gym.name}</h1>
         {gym.address && <p className="text-sm text-muted">{gym.address}</p>}

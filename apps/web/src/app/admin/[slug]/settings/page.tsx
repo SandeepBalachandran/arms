@@ -13,6 +13,7 @@ import { requireGym } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteGymCard } from "./delete-gym";
 import { HoursEditor } from "./hours-editor";
+import { LogoUploader } from "./logo-uploader";
 import { RenewalMessageField, SettingsCard } from "./settings-form";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -44,6 +45,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
       <PageHeader title="Settings" />
       <div className="grid max-w-5xl gap-6 lg:grid-cols-2">
         <SettingsCard slug={slug} section="general" title="Gym profile">
+          <LogoUploader slug={slug} gymName={g.name} logoUrl={g.logo_url} />
           <Field label="Name">
             <Input name="name" defaultValue={g.name} required />
           </Field>

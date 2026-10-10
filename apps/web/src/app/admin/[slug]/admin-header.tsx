@@ -58,8 +58,12 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-border bg-surface/90 px-4 backdrop-blur md:px-8">
-      <Link href={`/admin/${gym.slug}`} className="truncate font-semibold">
-        {gym.name}
+      <Link href={`/admin/${gym.slug}`} className="flex min-w-0 items-center gap-2.5 font-semibold">
+        {gym.logo_url && (
+          // eslint-disable-next-line @next/next/no-img-element -- user upload on Supabase Storage
+          <img src={gym.logo_url} alt="" className="size-8 shrink-0 rounded-lg object-cover" />
+        )}
+        <span className="truncate">{gym.name}</span>
       </Link>
 
       <div className="flex items-center gap-1">
