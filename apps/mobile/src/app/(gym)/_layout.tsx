@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/use-theme';
 import { useActiveGym } from '@/lib/gyms';
+import { saveSplashBrand } from '@/lib/splash-brand';
 
 // Floating dark tab bar with icon buttons; the current tab is a lime circle.
 // Optional features (classes, workouts) hide their tab.
@@ -14,6 +15,10 @@ export default function GymTabs() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const gym = useActiveGym()?.gym;
+  // Remember this gym for the splash screen next time.
+  useEffect(() => {
+    if (gym) saveSplashBrand({ name: gym.name, logo_url: gym.logo_url });
+  }, [gym?.name, gym?.logo_url]); // eslint-disable-line react-hooks/exhaustive-deps
   const tabs = [
     { name: 'index', href: '/', label: 'Home', icon: House, shown: true },
     { name: 'classes', href: '/classes', label: 'Classes', icon: CalendarDays, shown: !!gym?.classes_enabled },

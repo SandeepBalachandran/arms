@@ -23,6 +23,7 @@ SplashScreen.preventAutoHideAsync();
 SplashScreen.setOptions({ fade: true, duration: 300 });
 
 const queryClient = new QueryClient();
+const SPLASH_MIN_MS = 1400;
 
 // Coming back to the app counts as "focus", so data on screen (including gym
 // settings like which features are on) refreshes. Browsers do this already.
@@ -63,17 +64,25 @@ function RootNavigator() {
     Poppins_700Bold,
     Poppins_800ExtraBold,
   });
-  const ready = (fontsLoaded || !!fontError) && !isLoading && (!signedIn || !gyms.isPending);
+  const fontsReady = fontsLoaded || !!fontError;
+  const loaded = !isLoading && (!signedIn || !gyms.isPending);
+  // The animated splash stays at least this long so it reads as a moment, not a flicker.
+  const [minShown, setMinShown] = useState(false);
 
   useEffect(() => {
     checkInstallReferrer();
   }, []);
 
+  // Swap the static native splash for the animated one as soon as text can render.
   useEffect(() => {
-    if (ready) SplashScreen.hide();
-  }, [ready]);
+    if (!fontsReady) return;
+    SplashScreen.hide();
+    const timer = setTimeout(() => setMinShown(true), SPLASH_MIN_MS);
+    return () => clearTimeout(timer);
+  }, [fontsReady]);
 
-  if (!ready) return <SplashView />;
+  if (!fontsReady) return null; // native splash is still showing
+  if (!loaded || !minShown) return <SplashView />;
 
   return (
     <>

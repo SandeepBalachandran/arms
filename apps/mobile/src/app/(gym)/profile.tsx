@@ -16,6 +16,7 @@ import { confirm } from '@/lib/confirm';
 import { useActiveGym, useMyGyms, useSetActiveGym } from '@/lib/gyms';
 import { profileKey, useProfile } from '@/lib/profile';
 import { useSession } from '@/lib/session';
+import { saveSplashBrand } from '@/lib/splash-brand';
 import { supabase } from '@/lib/supabase';
 
 const profileSchema = z.object({
@@ -39,6 +40,7 @@ export default function ProfileScreen() {
 
   async function signOut() {
     if (await confirm({ title: 'Sign out?', message: 'You can sign back in any time.', confirmText: 'Sign out' })) {
+      saveSplashBrand(null);
       supabase.auth.signOut();
     }
   }
