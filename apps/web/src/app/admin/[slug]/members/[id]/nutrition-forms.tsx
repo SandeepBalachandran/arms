@@ -75,10 +75,14 @@ export function CommentForm({ slug, memberId, days }: { slug: string; memberId: 
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="member_id" value={memberId} />
       <div className="flex gap-2">
-        <Select name="day" defaultValue={days[0]?.value} className="w-36 shrink-0">
-          {days.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-        </Select>
-        <Input name="body" placeholder="e.g. Good protein today 👍 Swap the porotta for chapati." maxLength={500} required />
+        <div className="w-36 shrink-0">
+          <Select name="day" defaultValue={days[0]?.value} aria-label="Day">
+            {days.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+          </Select>
+        </div>
+        <div className="min-w-0 flex-1">
+          <Input name="body" placeholder="e.g. Good protein today 👍 Swap the porotta for chapati." maxLength={500} required aria-label="Comment" />
+        </div>
         <Button className="shrink-0">Send</Button>
       </div>
     </ActionForm>

@@ -62,7 +62,9 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
   const byDay = new Map(days.map((d) => [d, logs.filter((l) => l.logged_on === d)]));
   const water = new Map((waterRes.data ?? []).map((w) => [w.logged_on, w.glasses]));
   const logged = days.filter((d) => byDay.get(d)!.length > 0);
-  const hits = target ? logged.filter((d) => onTarget(dayTotals(byDay.get(d)!).kcal, target.kcal)).length : 0;
+  // Today is still in progress, so only finished days count towards "on target".
+  const finished = logged.filter((d) => d !== today);
+  const hits = target ? finished.filter((d) => onTarget(dayTotals(byDay.get(d)!).kcal, target.kcal)).length : 0;
   const dayLabel = (d: string) => (d === today ? "Today" : d === addDays(today, -1) ? "Yesterday" : formatDay(d));
 
   return (
@@ -75,7 +77,7 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
         </div>
         {target && logged.length > 0 && (
           <p className="text-sm text-muted">
-            Logged {logged.length} of {DAYS} days · on target {hits} {hits === 1 ? "day" : "days"}
+            Logged {logged.length} of {DAYS} days{finished.length > 0 && <> · on target {hits} of {finished.length}</>}
           </p>
         )}
       </div>
@@ -142,7 +144,7 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
                   <td className="py-2 pr-3 tabular-nums">
                     {items.length ? <>{t.kcal}{target && <span className="text-muted"> / {target.kcal}</span>}</> : "—"}
                   </td>
-                  <td className={clsx("py-2 pr-3 tabular-nums", target && items.length && t.protein_g < target.protein_g * 0.8 && "text-amber-600")}>
+                  <td className={clsx("py-2 pr-3 tabular-nums", target && items.length && d !== today && t.protein_g < target.protein_g * 0.8 && "text-amber-600")}>
                     {items.length ? <>{Math.round(t.protein_g)} g{target && <span className="text-muted"> / {target.protein_g}</span>}</> : "—"}
                   </td>
                   <td className="py-2 pr-3">

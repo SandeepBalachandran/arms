@@ -148,7 +148,7 @@ Conventions: money in paise; dates as `YYYY-MM-DD` in the gym's timezone; secret
 - **QR poster check-in** (optional, Settings): members scan a printed poster; optional location check with a radius; printable poster page with a "New code" to retire old posters.
 
 - **Nutrition coaching (phase 1)** (optional, Settings → Nutrition):
-  - PT clients (or all members) log meals from about 155 built-in Indian and Kerala foods, gym-added foods, or quick calories, plus water.
+  - PT clients (or all members) log meals from about 140 built-in Indian and Kerala foods, gym-added foods, or quick calories, plus water.
   - The trainer sets calorie and protein targets ("Suggest" uses Mifflin–St Jeor), sees a 7-day table and comments.
   - The PT page flags clients who aren't logging or are low on protein.
   - Food logs are visible only to the member, their trainer and owners/admins. Needs migration `20261020000000_nutrition.sql`.

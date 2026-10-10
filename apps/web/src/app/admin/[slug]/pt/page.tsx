@@ -97,12 +97,17 @@ export default async function PtPage({ params, searchParams }: PageProps<"/admin
       if (!target) nutrition.set(id, { text: "No target set", tone: "neutral" });
       else if (!days.includes(today) && !days.includes(addDays(today, -1))) nutrition.set(id, { text: days.length ? "Not logged 2 days" : "Not logging", tone: "warn" });
       else {
-        const perDay = days.map((d) => dayTotals(mine.filter((l) => l.logged_on === d)));
-        const hit = perDay.filter((t) => onTarget(t.kcal, target.kcal)).length;
-        const avgProtein = perDay.reduce((n, t) => n + t.protein_g, 0) / perDay.length;
-        nutrition.set(id, avgProtein < target.protein_g * 0.8
-          ? { text: `${hit}/${days.length} days on target · protein low`, tone: "warn" }
-          : { text: `${hit}/${days.length} days on target`, tone: hit >= days.length / 2 ? "good" : "neutral" });
+        // Today is still in progress, so only finished days count.
+        const finished = days.filter((d) => d !== today);
+        if (!finished.length) nutrition.set(id, { text: "Logging today", tone: "neutral" });
+        else {
+          const perDay = finished.map((d) => dayTotals(mine.filter((l) => l.logged_on === d)));
+          const hit = perDay.filter((t) => onTarget(t.kcal, target.kcal)).length;
+          const avgProtein = perDay.reduce((n, t) => n + t.protein_g, 0) / perDay.length;
+          nutrition.set(id, avgProtein < target.protein_g * 0.8
+            ? { text: `${hit}/${finished.length} days on target · protein low`, tone: "warn" }
+            : { text: `${hit}/${finished.length} days on target`, tone: hit >= finished.length / 2 ? "good" : "neutral" });
+        }
       }
     }
   }
