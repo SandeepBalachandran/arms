@@ -5,7 +5,17 @@ import { z } from "zod";
 import { safeNextPath } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
-export type AuthState = { error?: string; message?: string } | undefined;
+// `sent` switches the form to a "check your email" screen.
+export type AuthState = { error?: string; sent?: "confirm" | "link" } | undefined;
+
+// Supabase's messages are written for developers; show people something plainer.
+function friendly(message: string) {
+  if (/invalid login credentials/i.test(message)) return "That email and password don't match. Try again or use an email link.";
+  if (/email not confirmed/i.test(message)) return "Confirm your email first: open the link we sent you.";
+  if (/already registered|already been registered/i.test(message)) return "There's already an account with this email. Sign in instead.";
+  if (/rate limit|too many|security purposes/i.test(message)) return "Too many tries. Wait a minute and try again.";
+  return message;
+}
 
 const credentials = z.object({
   email: z.email("Enter a valid email"),
@@ -18,7 +28,7 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
-  if (error) return { error: error.message };
+  if (error) return { error: friendly(error.message) };
 
   redirect(safeNextPath(formData.get("next") as string, "/admin"));
 }
@@ -39,8 +49,8 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
       emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${encodeURIComponent(next)}`,
     },
   });
-  if (error) return { error: error.message };
-  if (!data.session) return { message: "Check your email to confirm your account." };
+  if (error) return { error: friendly(error.message) };
+  if (!data.session) return { sent: "confirm" };
 
   redirect(next);
 }
@@ -57,8 +67,8 @@ export async function sendMagicLink(_prev: AuthState, formData: FormData): Promi
       emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${encodeURIComponent(next)}`,
     },
   });
-  if (error) return { error: error.message };
-  return { message: "Check your email for a sign-in link." };
+  if (error) return { error: friendly(error.message) };
+  return { sent: "link" };
 }
 
 export async function signOut() {
