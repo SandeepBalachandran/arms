@@ -28,6 +28,7 @@ import {
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
+import { GymBadge } from '@/components/gym-badge';
 import { Appear, Float, PressableScale } from '@/components/motion';
 import { ProgressRing } from '@/components/progress-ring';
 import { IconButton, Text } from '@/components/ui';
@@ -67,25 +68,30 @@ export function HomeHeader() {
     (state?.kind === 'active' && !state.next && state.daysLeft <= (gym?.expiry_warning_days ?? 7));
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.three }}>
-      <Pressable
-        onPress={() => router.push('/profile')}
-        accessibilityRole="button"
-        accessibilityLabel="Profile"
-        style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: theme.accent, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontSize: 18, fontWeight: '800', color: theme.accentText }}>{initials(name || 'Me')}</Text>
-      </Pressable>
-      <View style={{ flex: 1 }}>
-        <Text variant="muted" style={{ fontSize: 14 }}>
-          {gym ? greeting(gym.timezone) : 'Hello'}
-        </Text>
-        <Text style={{ fontSize: 18, fontWeight: '700' }} numberOfLines={1}>
-          {name.split(' ')[0] || 'there'}
-        </Text>
+    <View style={{ gap: Spacing.three }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <GymBadge />
+        <IconButton label={attention ? 'Membership needs attention' : 'Membership'} dot={attention} onPress={() => router.push('/membership')}>
+          <Bell size={22} color={theme.text} />
+        </IconButton>
       </View>
-      <IconButton label={attention ? 'Membership needs attention' : 'Membership'} dot={attention} onPress={() => router.push('/membership')}>
-        <Bell size={22} color={theme.text} />
-      </IconButton>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.three }}>
+        <Pressable
+          onPress={() => router.push('/profile')}
+          accessibilityRole="button"
+          accessibilityLabel="Profile"
+          style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: theme.accent, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 18, fontWeight: '800', color: theme.accentText }}>{initials(name || 'Me')}</Text>
+        </Pressable>
+        <View style={{ flex: 1 }}>
+          <Text variant="muted" style={{ fontSize: 14 }}>
+            {gym ? greeting(gym.timezone) : 'Hello'}
+          </Text>
+          <Text style={{ fontSize: 18, fontWeight: '700' }} numberOfLines={1}>
+            {name.split(' ')[0] || 'there'}
+          </Text>
+        </View>
+      </View>
     </View>
   );
 }
