@@ -16,8 +16,6 @@ const KEEP_DAYS = 30;
 export default async function AdminIndex({ searchParams }: PageProps<"/admin">) {
   const user = await requireUser("/admin");
   const { deleted } = await searchParams;
-  const gyms = (await getMyGyms()).filter((m) => TEAM_ROLES.includes(m.role));
-
   // Gyms this user owns that were deleted in the last 30 days and can be restored.
   const supabase = await createClient();
   const { data: restorable } = await supabase
@@ -28,6 +26,10 @@ export default async function AdminIndex({ searchParams }: PageProps<"/admin">) 
     .eq("status", "active")
     .not("gyms.deleted_at", "is", null);
   const recentlyDeleted = (restorable ?? []).map((r) => r.gyms);
+  // Right after a delete the cached gym list (loaded by the delete action in
+  // this same request) still has the deleted gym, so leave it out here.
+  const deletedIds = new Set(recentlyDeleted.map((g) => g.id));
+  const gyms = (await getMyGyms()).filter((m) => TEAM_ROLES.includes(m.role) && !deletedIds.has(m.gym.id));
 
   if (gyms.length === 1 && !recentlyDeleted.length && !deleted) redirect(`/admin/${gyms[0].gym.slug}`);
 
