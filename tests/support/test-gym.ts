@@ -30,7 +30,7 @@ const NAMES: Record<TestRole, string> = {
   outsider: "Omar Outsider",
 };
 
-async function signedIn(email: string) {
+export async function signedIn(email: string) {
   const client = anonClient();
   const { data, error } = await client.auth.signInWithPassword({ email, password: TEST_PASSWORD });
   if (error) throw error;
@@ -95,11 +95,13 @@ export async function removeTestGym(t: Pick<TestGym, "run" | "gym" | "users">) {
   for (const id of [...Object.values(t.users).map((u) => u.id), ...extra]) await deleteAccount(admin, id);
 }
 
-// The account and its profile photos (storage isn't removed with the user).
-async function deleteAccount(admin: Db, userId: string) {
+// The account, its profile photos (storage isn't removed with the user) and
+// its "Deleted member" profile (kept for gyms' records, but not test ones).
+export async function deleteAccount(admin: Db, userId: string) {
   const { data: files } = await admin.storage.from("avatars").list(userId);
   if (files?.length) await admin.storage.from("avatars").remove(files.map((f) => `${userId}/${f.name}`));
   await admin.auth.admin.deleteUser(userId);
+  await admin.from("profiles").delete().eq("id", userId);
 }
 
 // Accounts the tests created through the app (e.g. "Add member", import):

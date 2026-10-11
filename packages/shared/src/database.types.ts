@@ -557,14 +557,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "avatar_url": string | null,"created_at": string,"full_name": string,"id": string,"is_platform_admin": boolean,"phone": string | null
+                    "avatar_url": string | null,"created_at": string,"deleted_at": string | null,"full_name": string,"id": string,"is_platform_admin": boolean,"phone": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "avatar_url"?: string | null,"created_at"?: string,"full_name"?: string,"id": string,"is_platform_admin"?: boolean,"phone"?: string | null
+                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id": string,"is_platform_admin"?: boolean,"phone"?: string | null
                   }
                   Update: {
-                    "avatar_url"?: string | null,"created_at"?: string,"full_name"?: string,"id"?: string,"is_platform_admin"?: boolean,"phone"?: string | null
+                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id"?: string,"is_platform_admin"?: boolean,"phone"?: string | null
                   }
                   Relationships: [
                     
@@ -901,11 +901,17 @@ isOneToOne: false
 "delete_gym":
 { Args: { "p_confirm": string,"p_gym_id": string }; Returns: undefined
                            },
+"delete_my_account":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
 "delete_pt_session":
 { Args: { "p_session_id": string }; Returns: undefined
                            },
 "distance_m":
 { Args: { "lat1": number,"lat2": number,"lng1": number,"lng2": number }; Returns: number
+                           },
+"erase_personal_data":
+{ Args: { "p_user_id": string }; Returns: undefined
                            },
 "expire_subscriptions":
 { Args: Record<PropertyKey, never>; Returns: number
@@ -960,7 +966,7 @@ isOneToOne: false
                            },
 "my_pt_subscriptions":
 { Args: { "p_gym_id": string }; Returns: {
-              "ends_on": string,"id": string,"package_name": string,"sessions": Json,"sessions_total": number,"starts_on": string,"status": string,"trainer_name": string
+              "ends_on": string,"id": string,"package_name": string,"sessions": Json,"sessions_total": number,"starts_on": string,"status": string,"trainer_avatar": string,"trainer_name": string
             }[]
                            },
 "plan_gym_id":

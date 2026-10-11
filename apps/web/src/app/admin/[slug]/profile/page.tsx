@@ -5,6 +5,7 @@ import { Building2, Check, LogOut, Plus } from "lucide-react";
 import { ProfileForm } from "@/app/account/profile-form";
 import { signOut } from "@/app/(auth)/actions";
 import { AvatarEditor } from "@/components/avatar-editor";
+import { DeleteAccount } from "@/components/delete-account";
 import { ThemeSwitch } from "@/components/theme-toggle";
 import { Card, PageHeader } from "@/components/ui";
 import { signAvatar } from "@/lib/avatars";
@@ -127,6 +128,13 @@ export default async function ProfilePage({ params }: PageProps<"/admin/[slug]/p
           <div className="-mx-4 -my-2">
             <ThemeSwitch initial={theme} />
           </div>
+        </Section>
+
+        <Section
+          title="Delete account"
+          description="Deletes your sign-in and personal details. Your gyms keep their payment and visit records."
+        >
+          <DeleteAccount />
         </Section>
 
         <form action={signOut}>

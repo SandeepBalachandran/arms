@@ -4,6 +4,7 @@ import { Droplets, MessageCircle, Minus, Plus, Salad, X } from 'lucide-react-nat
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
+import { Avatar } from '@/components/avatar';
 import { Appear, GrowBar, GrowFill } from '@/components/motion';
 import { ProgressRing } from '@/components/progress-ring';
 import { Button, Card, Loading, Screen, SectionHeader, Text } from '@/components/ui';
@@ -92,7 +93,11 @@ export default function FoodScreen() {
       {latest && (
         <Appear index={2}>
           <Card style={{ flexDirection: 'row', gap: 12, backgroundColor: theme.tints.blue.bg, borderColor: theme.tints.blue.bg }}>
-            <MessageCircle size={20} color={theme.tints.blue.fg} />
+            {access.trainerAvatar ? (
+              <Avatar name={access.trainer ?? ''} path={access.trainerAvatar} size={32} />
+            ) : (
+              <MessageCircle size={20} color={theme.tints.blue.fg} />
+            )}
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={{ fontWeight: '600' }}>{latest.body}</Text>
               <Text variant="small">{access.trainer ?? 'Your coach'}</Text>

@@ -90,3 +90,20 @@ test("front desk can't change a trainer's photo", async ({ page }) => {
   await expect(page.getByRole("heading", { name: fx.users.trainer.name })).toBeVisible();
   await expect(page.getByRole("button", { name: /photo$/ })).toHaveCount(0);
 });
+
+test("an iPhone (HEIC) photo is converted and replaces the old one", async ({ page }) => {
+  const noErrors = watchErrors(page);
+  const userId = fx.users.member2.id;
+  const before = (await service.from("profiles").select("avatar_url").eq("id", userId).single()).data!.avatar_url;
+  await page.goto(`${admin}/members/${fx.users.member2.memberId}`);
+  await page.getByRole("button", { name: /photo$/ }).click();
+  await page.getByRole("dialog").getByLabel("Photo file").setInputFiles("tests/e2e/files/face.heic");
+  await expect(page.getByText("Photo saved")).toBeVisible({ timeout: 30_000 });
+
+  const after = (await service.from("profiles").select("avatar_url").eq("id", userId).single()).data!.avatar_url;
+  expect(after).toMatch(/\.jpg$/);
+  expect(after).not.toBe(before);
+  const { data: files } = await service.storage.from("avatars").list(userId);
+  expect(files?.map((f) => `${userId}/${f.name}`)).toEqual([after]);
+  noErrors();
+});

@@ -64,10 +64,14 @@ export function AvatarEditor({
 
   async function pickFile(file: File) {
     try {
-      const bitmap = await createImageBitmap(file);
+      // iPhone photos (HEIC) only open natively in Safari; convert them here.
+      const heic = /\.hei[cf]$/i.test(file.name) || /^image\/hei[cf]/.test(file.type);
+      const bitmap = heic
+        ? await (await import("heic-to/next")).heicTo({ blob: file, type: "bitmap" })
+        : await createImageBitmap(file);
       send(await toSquareJpeg(bitmap, bitmap.width, bitmap.height));
     } catch {
-      toast.error("Couldn't open that image. Use a JPG, PNG or WebP photo.");
+      toast.error("Couldn't open that image. Use a JPG, PNG, WebP or iPhone (HEIC) photo.");
     }
     if (input.current) input.current.value = "";
   }
@@ -102,7 +106,7 @@ export function AvatarEditor({
             <p className="text-center text-sm text-muted">
               {memberId
                 ? "Helps the front desk recognise them at check-in. Only the gym's team can see it."
-                : "Shown to your gym's team. Members can't see it."}
+                : "Shown to your gym's team, and to members so they know who you are."}
             </p>
             <div className="flex flex-wrap justify-center gap-2">
               <Button type="button" disabled={pending} onClick={() => setCamera(true)}>
@@ -120,7 +124,7 @@ export function AvatarEditor({
             <input
               ref={input}
               type="file"
-              accept="image/jpeg,image/png,image/webp"
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
               className="sr-only"
               tabIndex={-1}
               aria-label="Photo file"

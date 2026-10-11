@@ -8,7 +8,7 @@ import { requireGym, STAFF_ROLES } from "@/lib/auth";
 import { signAvatars } from "@/lib/avatars";
 import { createClient } from "@/lib/supabase/server";
 import { hoursAgo } from "@/lib/time";
-import { CheckInButton } from "./check-in-button";
+import { CheckInRow } from "./check-in-button";
 import { LiveRefresh } from "./live-refresh";
 import { Scanner } from "./scanner";
 
@@ -78,15 +78,16 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
             {query && (
               <ul className="mt-3 divide-y divide-border">
                 {matches.data.map((m) => (
-                  <li key={m.id} className="flex items-start justify-between gap-2 py-2 text-sm">
-                    <div className="flex items-center gap-3">
-                      <Avatar name={m.profiles.full_name || "?"} src={photo(m.profiles.avatar_url)} size="md" />
-                      <div>
-                        <p className="font-medium">{m.profiles.full_name || "Unnamed member"}</p>
-                        <p className="text-muted">{m.profiles.phone ?? ""}</p>
+                  <li key={m.id} className="py-2 text-sm">
+                    <CheckInRow slug={slug} memberId={m.id}>
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar name={m.profiles.full_name || "?"} src={photo(m.profiles.avatar_url)} size="md" />
+                        <div className="min-w-0">
+                          <p className="font-medium">{m.profiles.full_name || "Unnamed member"}</p>
+                          <p className="text-muted">{m.profiles.phone ?? ""}</p>
+                        </div>
                       </div>
-                    </div>
-                    <CheckInButton slug={slug} memberId={m.id} />
+                    </CheckInRow>
                   </li>
                 ))}
                 {matches.data.length === 0 && <li className="py-2 text-sm text-muted">No member found.</li>}

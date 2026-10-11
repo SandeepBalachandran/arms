@@ -1,7 +1,7 @@
 import { STAFF_ROLES } from '@gymos/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Apple, Camera, Check, ChevronRight, LogOut, Moon, Pencil, Plus, ScanLine, Sun, type LucideIcon } from 'lucide-react-native';
+import { Apple, Camera, Check, ChevronRight, LogOut, Moon, Pencil, Plus, ScanLine, Sun, Trash2, type LucideIcon } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import { z } from 'zod';
@@ -12,6 +12,7 @@ import { PhotoSheet } from '@/components/photo-sheet';
 import { Button, Card, Input, Screen, Text } from '@/components/ui';
 import type { Tint } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { deleteMyAccount } from '@/lib/account';
 import { useActivity } from '@/lib/activity';
 import { setScheme, useScheme } from '@/lib/appearance';
 import { useSetAvatar } from '@/lib/avatar';
@@ -36,6 +37,27 @@ export default function ProfileScreen() {
   const [editing, setEditing] = useState(false);
   const nutrition = useNutritionAccess();
   const canScan = !!active?.gym.checkin_enabled && STAFF_ROLES.includes(active.role);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string>();
+
+  async function deleteAccount() {
+    const ok = await confirm({
+      title: 'Delete your account?',
+      message:
+        'Your name, phone, photo, workouts, body measurements and food log are deleted, and you can’t sign in to this account again. Your gyms keep their payment and visit records as “Deleted member”.',
+      confirmText: 'Delete my account',
+    });
+    if (!ok || !session) return;
+    setDeleteError(undefined);
+    setDeleting(true);
+    try {
+      saveSplashBrand(null);
+      await deleteMyAccount(session.user.id);
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : 'Couldn’t delete your account. Try again.');
+      setDeleting(false);
+    }
+  }
 
   async function signOut() {
     if (await confirm({ title: 'Sign out?', message: 'You can sign back in any time.', confirmText: 'Sign out' })) {
@@ -81,7 +103,17 @@ export default function ProfileScreen() {
       <Appear index={4}>
         <Card style={{ padding: 6 }}>
           <Row icon={LogOut} tint="pink" label="Sign out" danger onPress={signOut} chevron={false} />
+          <Row
+            icon={Trash2}
+            tint="pink"
+            label={deleting ? 'Deleting…' : 'Delete account'}
+            detail="Your account and personal details"
+            danger
+            onPress={deleting ? undefined : deleteAccount}
+            chevron={false}
+          />
         </Card>
+        {deleteError && <Text variant="error" style={{ marginTop: 8 }}>{deleteError}</Text>}
       </Appear>
     </Screen>
   );

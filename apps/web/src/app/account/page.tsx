@@ -4,6 +4,7 @@ import { Card } from "@/components/ui";
 import { redirect } from "next/navigation";
 import { getMyGyms, requireUser, safeNextPath, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { DeleteAccount } from "@/components/delete-account";
 import { ProfileForm } from "./profile-form";
 
 export const metadata: Metadata = { title: "My profile" };
@@ -25,6 +26,13 @@ export default async function AccountPage({ searchParams }: PageProps<"/account"
       <p className="mt-1 text-sm text-muted">{user.email}</p>
       <Card className="mt-6">
         <ProfileForm fullName={profile?.full_name ?? ""} phone={profile?.phone ?? ""} />
+      </Card>
+      <Card className="mt-6 space-y-3">
+        <div>
+          <h2 className="font-medium">Delete account</h2>
+          <p className="mt-1 text-sm text-muted">Deletes your sign-in and personal details. Your gyms keep their payment and visit records.</p>
+        </div>
+        <DeleteAccount />
       </Card>
     </main>
   );

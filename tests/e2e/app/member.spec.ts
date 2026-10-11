@@ -118,6 +118,25 @@ test("add a profile photo from the gallery", async ({ page }) => {
   noErrors();
 });
 
+test("the PT card shows the trainer's photo", async ({ page }) => {
+  const noErrors = watchErrors(page);
+  const trainer = fx.users.trainer.id;
+  const path = `${trainer}/e2e.jpg`;
+  await service.storage.from("avatars").upload(path, png.buffer, { contentType: "image/png", upsert: true });
+  await service.from("profiles").update({ avatar_url: path }).eq("id", trainer);
+  try {
+    await openApp(page);
+    await page.getByRole("tab", { name: "Membership" }).click();
+    const line = page.getByText(`with ${fx.users.trainer.name}`).filter({ visible: true }).first();
+    await expect(line).toBeVisible();
+    await expect(line.locator("xpath=..").locator("img")).toHaveAttribute("src", /\/object\/sign\/avatars\//);
+  } finally {
+    await service.from("profiles").update({ avatar_url: null }).eq("id", trainer);
+    await service.storage.from("avatars").remove([path]);
+  }
+  noErrors();
+});
+
 test("every tab opens without errors", async ({ page }) => {
   const noErrors = watchErrors(page);
   await openApp(page);

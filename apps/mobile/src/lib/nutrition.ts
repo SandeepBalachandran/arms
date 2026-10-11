@@ -12,10 +12,11 @@ export function useNutritionAccess() {
   const gym = useActiveGym()?.gym;
   const pt = useMyPt();
   const activePt = (pt.data ?? []).filter((s) => s.state.kind === 'active' || s.state.kind === 'upcoming');
-  const trainer = activePt.find((s) => s.trainer_name)?.trainer_name ?? null;
+  const coached = activePt.find((s) => s.trainer_name);
   return {
     available: nutritionAvailable(gym, activePt.length > 0),
-    trainer,
+    trainer: coached?.trainer_name ?? null,
+    trainerAvatar: coached?.trainer_avatar ?? null,
     isPending: !!gym?.nutrition_enabled && !!gym.pt_enabled && pt.isPending,
   };
 }

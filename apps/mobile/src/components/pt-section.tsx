@@ -3,6 +3,7 @@ import { Dumbbell, HeartHandshake } from 'lucide-react-native';
 import { View } from 'react-native';
 import Animated, { useReducedMotion, ZoomIn } from 'react-native-reanimated';
 
+import { Avatar } from '@/components/avatar';
 import { GrowFill } from '@/components/motion';
 import { Card, SectionHeader, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
@@ -38,7 +39,12 @@ export function PtSection() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontWeight: '700', fontSize: 16 }}>{s.package_name}</Text>
-                {s.trainer_name && <Text variant="small">with {s.trainer_name}</Text>}
+                {s.trainer_name && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                    <Avatar name={s.trainer_name} path={s.trainer_avatar} size={22} />
+                    <Text variant="small">with {s.trainer_name}</Text>
+                  </View>
+                )}
               </View>
             </View>
             <Text style={{ fontSize: 24, fontWeight: '800', color: theme.tints.blue.fg }}>{formatSessionsLeft(s, used)}</Text>

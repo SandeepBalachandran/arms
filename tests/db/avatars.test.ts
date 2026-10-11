@@ -7,10 +7,12 @@ const bucket = "avatars";
 const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0, 1, 0xff, 0xd9]);
 const member = fx.users.member.id;
 const path = `${member}/test.jpg`;
+const trainerPath = `${fx.users.trainer.id}/test.jpg`;
 
 afterAll(async () => {
   await service.from("profiles").update({ avatar_url: null }).in("id", [member, fx.users.member2.id]);
-  await service.storage.from(bucket).remove([path, `${fx.users.member2.id}/sneaky.jpg`]);
+  await service.from("profiles").update({ avatar_url: null }).eq("id", fx.users.trainer.id);
+  await service.storage.from(bucket).remove([path, `${fx.users.member2.id}/sneaky.jpg`, trainerPath]);
 });
 
 describe("profile photos", () => {
@@ -68,5 +70,14 @@ describe("profile photos", () => {
     expect((await service.storage.from(bucket).list(member)).data?.map((f) => f.name)).toContain("test.jpg");
     const replace = await as.staff.storage.from(bucket).update(path, jpeg, { contentType: "image/jpeg" });
     expect(replace.error).toBeTruthy();
+  });
+
+  it("members see their gym team's photos (to know their trainer), not other gyms'", async () => {
+    expect((await as.trainer.storage.from(bucket).upload(trainerPath, jpeg, { contentType: "image/jpeg", upsert: true })).error).toBeNull();
+    await as.trainer.from("profiles").update({ avatar_url: trainerPath }).eq("id", fx.users.trainer.id);
+    for (const role of ["member", "member2"] as const) {
+      expect((await as[role].storage.from(bucket).createSignedUrl(trainerPath, 60)).error, role).toBeNull();
+    }
+    expect((await as.outsider.storage.from(bucket).createSignedUrl(trainerPath, 60)).error).toBeTruthy();
   });
 });

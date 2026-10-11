@@ -10,6 +10,9 @@ test("check a member in by name", async ({ page }) => {
   const row = page.locator("li, tr, div").filter({ hasText: fx.users.member.name }).filter({ has: page.getByRole("button", { name: "Check in" }) }).last();
   await row.getByRole("button", { name: "Check in" }).click();
   await expect(page.getByText(/Checked in/).first()).toBeVisible();
+  // The full result, with the photo (or a nudge to add one), across the row.
+  await expect(page.getByText(/^(Checked in at|Already checked in at) /).first()).toBeVisible();
+  await expect(page.getByText(/No photo yet|Membership|membership/).first()).toBeVisible();
 
   const { count } = await service.from("checkins").select("*", { count: "exact", head: true }).eq("member_id", fx.users.member.memberId!);
   expect(count).toBeGreaterThan(0);
