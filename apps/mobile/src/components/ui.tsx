@@ -85,6 +85,8 @@ export function Input({ label, style, ...props }: TextInputProps & { label?: str
     <View style={{ gap: Spacing.one }}>
       {label && <Text variant="small">{label}</Text>}
       <TextInput
+        // The visible label is separate text, so name the field for screen readers.
+        accessibilityLabel={label}
         placeholderTextColor={theme.textSecondary}
         style={[styles.input, { color: theme.text, backgroundColor: theme.surface, borderColor: theme.border, fontFamily: Fonts.regular }, style]}
         {...props}
