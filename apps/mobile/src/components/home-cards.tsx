@@ -28,6 +28,7 @@ import {
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
+import { Avatar } from '@/components/avatar';
 import { GymBadge } from '@/components/gym-badge';
 import { Appear, Float, PressableScale } from '@/components/motion';
 import { ProgressRing } from '@/components/progress-ring';
@@ -40,12 +41,6 @@ import { useMembership, usePaymentClaims, usePlans } from '@/lib/memberships';
 import { useProfile } from '@/lib/profile';
 import { useMyPt } from '@/lib/pt';
 import { useMyPlans } from '@/lib/workouts';
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return '?';
-  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : parts[0].slice(0, 2)).toUpperCase();
-}
 
 function greeting(timezone: string) {
   const hour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: timezone, hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
@@ -80,8 +75,8 @@ export function HomeHeader() {
           onPress={() => router.push('/profile')}
           accessibilityRole="button"
           accessibilityLabel="Profile"
-          style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: theme.accent, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 18, fontWeight: '800', color: theme.accentText }}>{initials(name || 'Me')}</Text>
+          style={{ borderRadius: 26 }}>
+          <Avatar name={name} path={profile.data?.avatar_url} size={52} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text variant="muted" style={{ fontSize: 14 }}>

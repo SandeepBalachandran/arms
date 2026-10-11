@@ -1,8 +1,9 @@
 import { formatDate, type CheckinResult } from "@gymos/shared";
 import clsx from "clsx";
+import { Avatar } from "@/components/avatar";
 
 // Outcome of a check-in. Never blocking: an inactive membership is a warning.
-export function CheckinResultBanner({ result, error }: { result?: CheckinResult; error?: string }) {
+export function CheckinResultBanner({ result, photoUrl, error }: { result?: CheckinResult; photoUrl?: string | null; error?: string }) {
   if (error) {
     return <div className="rounded-xl border border-danger/50 bg-danger/10 p-4 text-sm text-danger">{error}</div>;
   }
@@ -16,17 +17,24 @@ export function CheckinResultBanner({ result, error }: { result?: CheckinResult;
         result.membership_ok ? "border-green-500/50 bg-green-500/10" : "border-amber-500/50 bg-amber-500/10",
       )}
     >
-      <p className="text-lg font-semibold">{result.full_name || "Member"}</p>
-      <p className="text-sm">
-        {result.duplicate ? `Already checked in at ${time}` : `Checked in at ${time}`}
-      </p>
-      <p className="mt-1 text-sm font-medium">
-        {result.membership_ok
-          ? `Membership active till ${formatDate(result.ends_on!)}`
-          : result.ends_on
-            ? `Membership expired on ${formatDate(result.ends_on)}. Remind them to renew.`
-            : "No membership yet. Remind them to pick a plan."}
-      </p>
+      <div className="flex items-center gap-4">
+        {/* Big enough to compare with the face at the desk. */}
+        <Avatar name={result.full_name || "Member"} src={photoUrl} size="xl" />
+        <div className="min-w-0">
+          <p className="text-lg font-semibold">{result.full_name || "Member"}</p>
+          <p className="text-sm">
+            {result.duplicate ? `Already checked in at ${time}` : `Checked in at ${time}`}
+          </p>
+          <p className="mt-1 text-sm font-medium">
+            {result.membership_ok
+              ? `Membership active till ${formatDate(result.ends_on!)}`
+              : result.ends_on
+                ? `Membership expired on ${formatDate(result.ends_on)}. Remind them to renew.`
+                : "No membership yet. Remind them to pick a plan."}
+          </p>
+          {!photoUrl && <p className="mt-1 text-xs text-muted">No photo yet. Add one on their member page.</p>}
+        </div>
+      </div>
     </div>
   );
 }

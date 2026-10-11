@@ -92,7 +92,14 @@ export async function removeTestGym(t: Pick<TestGym, "run" | "gym" | "users">) {
   const admin = serviceClient();
   const extra = await accountsMadeDuringRun(admin, t);
   await removeGymsLike(admin, t.gym.slug);
-  for (const id of [...Object.values(t.users).map((u) => u.id), ...extra]) await admin.auth.admin.deleteUser(id);
+  for (const id of [...Object.values(t.users).map((u) => u.id), ...extra]) await deleteAccount(admin, id);
+}
+
+// The account and its profile photos (storage isn't removed with the user).
+async function deleteAccount(admin: Db, userId: string) {
+  const { data: files } = await admin.storage.from("avatars").list(userId);
+  if (files?.length) await admin.storage.from("avatars").remove(files.map((f) => `${userId}/${f.name}`));
+  await admin.auth.admin.deleteUser(userId);
 }
 
 // Accounts the tests created through the app (e.g. "Add member", import):
@@ -131,7 +138,7 @@ async function sweepLeftovers(admin: Db) {
     const { data } = await admin.auth.admin.listUsers({ page, perPage: 200 });
     const users = data?.users ?? [];
     for (const u of users) {
-      if (u.email && TEST_EMAIL.test(u.email) && u.created_at < cutoff) await admin.auth.admin.deleteUser(u.id);
+      if (u.email && TEST_EMAIL.test(u.email) && u.created_at < cutoff) await deleteAccount(admin, u.id);
     }
     if (users.length < 200) break;
   }

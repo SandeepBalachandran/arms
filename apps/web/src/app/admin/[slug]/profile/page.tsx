@@ -4,8 +4,10 @@ import type { ReactNode } from "react";
 import { Building2, Check, LogOut, Plus } from "lucide-react";
 import { ProfileForm } from "@/app/account/profile-form";
 import { signOut } from "@/app/(auth)/actions";
+import { AvatarEditor } from "@/components/avatar-editor";
 import { ThemeSwitch } from "@/components/theme-toggle";
 import { Card, PageHeader } from "@/components/ui";
+import { signAvatar } from "@/lib/avatars";
 import { getMyGyms, requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getTheme } from "@/lib/theme";
@@ -13,12 +15,6 @@ import { signOutEverywhere } from "./actions";
 import { PasswordForm } from "./password-form";
 
 export const metadata: Metadata = { title: "My profile" };
-
-function initials(text: string) {
-  const parts = text.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "?";
-  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : parts[0].slice(0, 2)).toUpperCase();
-}
 
 function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
@@ -35,11 +31,12 @@ export default async function ProfilePage({ params }: PageProps<"/admin/[slug]/p
   const { slug } = await params;
   const { user, gym } = await requireGym(slug, TEAM_ROLES);
   const supabase = await createClient();
-  const [{ data: profile }, gyms, theme, { data: auth }] = await Promise.all([
+  const [{ data: profile }, gyms, theme, { data: auth }, photo] = await Promise.all([
     supabase.from("profiles").select("full_name, phone, created_at").eq("id", user.id).single(),
     getMyGyms(),
     getTheme(),
     supabase.auth.getUser(),
+    signAvatar(user.avatarPath),
   ]);
   const displayName = profile?.full_name || user.email || "You";
   const providers = auth.user?.app_metadata?.providers as string[] | undefined;
@@ -50,9 +47,7 @@ export default async function ProfilePage({ params }: PageProps<"/admin/[slug]/p
       <PageHeader title="My profile" />
       <div className="max-w-4xl space-y-6">
         <Card className="flex flex-wrap items-center gap-4">
-          <span className="flex size-16 items-center justify-center rounded-full bg-brand text-xl font-bold text-brand-fg">
-            {initials(displayName)}
-          </span>
+          <AvatarEditor slug={slug} name={displayName} src={photo} />
           <div className="min-w-0 flex-1">
             <p className="text-xl font-semibold">{profile?.full_name || "Add your name"}</p>
             <p className="truncate text-sm text-muted">{user.email}</p>

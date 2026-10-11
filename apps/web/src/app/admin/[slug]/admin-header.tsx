@@ -1,35 +1,14 @@
 import Link from "next/link";
-import clsx from "clsx";
 import { Bell, Check, ChevronDown, LogOut, Plus, Settings, UserRound } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
+import { Avatar } from "@/components/avatar";
 import { Dropdown, MenuSection } from "@/components/dropdown";
 import { menuItemClass } from "@/components/menu-styles";
 import { ThemeSwitch } from "@/components/theme-toggle";
+import { signAvatar } from "@/lib/avatars";
 import { getMyGyms, STAFF_ROLES, TEAM_ROLES, type CurrentUser, type GymMembership } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getTheme } from "@/lib/theme";
-
-function initials(text: string) {
-  const parts = text.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : parts[0].slice(0, 2)).toUpperCase();
-}
-
-function Avatar({ text, size = "md" }: { text: string; size?: "sm" | "md" | "lg" }) {
-  return (
-    <span
-      aria-hidden
-      className={clsx(
-        "flex shrink-0 items-center justify-center rounded-full bg-brand font-semibold text-brand-fg",
-        size === "sm" && "size-7 text-[11px]",
-        size === "md" && "size-9 text-sm",
-        size === "lg" && "size-11 text-base",
-      )}
-    >
-      {initials(text)}
-    </span>
-  );
-}
 
 // Top bar of the admin panel: gym name on the left; notifications and the
 // profile menu (account, gym switcher, appearance, sign out) on the right.
@@ -40,7 +19,7 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
   const displayName = user.fullName || user.email || "Account";
   const supabase = await createClient();
 
-  const [gyms, theme, upi, joins] = await Promise.all([
+  const [gyms, theme, upi, joins, photo] = await Promise.all([
     getMyGyms(),
     getTheme(),
     isStaff
@@ -49,6 +28,7 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
     isStaff
       ? supabase.from("gym_members").select("id", { count: "exact", head: true }).eq("gym_id", gym.id).eq("status", "pending")
       : Promise.resolve({ count: 0 }),
+    signAvatar(user.avatarPath),
   ]);
   const teamGyms = gyms.filter((m) => TEAM_ROLES.includes(m.role));
   const notifications = [
@@ -100,14 +80,14 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
           tooltip="Account"
           trigger={
             <span className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-border/40">
-              <Avatar text={displayName} />
+              <Avatar name={displayName} src={photo} />
               <span className="hidden max-w-36 truncate text-sm font-medium sm:block">{displayName}</span>
               <ChevronDown className="hidden size-4 text-muted sm:block" />
             </span>
           }
         >
           <div className="flex items-center gap-3 px-4 pb-3 pt-2">
-            <Avatar text={displayName} size="lg" />
+            <Avatar name={displayName} src={photo} size="md" />
             <div className="min-w-0">
               <p className="truncate font-medium">{user.fullName || "Add your name"}</p>
               <p className="truncate text-sm text-muted">{user.email}</p>
@@ -132,7 +112,7 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
             {teamGyms.length > 1 &&
               teamGyms.map((m) => (
                 <Link key={m.gym.id} href={`/admin/${m.gym.slug}`} role="menuitem" className={menuItemClass}>
-                  <Avatar text={m.gym.name} size="sm" />
+                  <Avatar name={m.gym.name} size="xs" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate">{m.gym.name}</span>
                     <span className="block text-xs capitalize text-muted">{m.role}</span>

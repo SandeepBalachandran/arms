@@ -11,3 +11,4 @@ export * from "./hours";
 export * from "./pt";
 export * from "./nutrition";
 export * from "./receipts";
+export * from "./avatars";

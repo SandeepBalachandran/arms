@@ -10,6 +10,8 @@ export type CurrentUser = {
   id: string;
   email: string | null;
   fullName: string;
+  // Storage path of their profile photo (see lib/avatars), or null.
+  avatarPath: string | null;
   isPlatformAdmin: boolean;
 };
 
@@ -29,7 +31,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, is_platform_admin")
+    .select("full_name, avatar_url, is_platform_admin")
     .eq("id", claims.sub)
     .single();
 
@@ -37,6 +39,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     id: claims.sub,
     email: (claims.email as string | undefined) ?? null,
     fullName: profile?.full_name ?? "",
+    avatarPath: profile?.avatar_url ?? null,
     isPlatformAdmin: profile?.is_platform_admin ?? false,
   };
 });

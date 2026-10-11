@@ -17,9 +17,12 @@ import {
 } from "@gymos/shared";
 import { Mail, MessageCircle, Phone } from "lucide-react";
 import { ActionForm } from "@/components/action-form";
+import { Avatar } from "@/components/avatar";
+import { AvatarEditor } from "@/components/avatar-editor";
 import { MembershipBadge } from "@/components/membership-badge";
 import { Badge, Card } from "@/components/ui";
 import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
+import { signAvatar } from "@/lib/avatars";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { hoursAgo } from "@/lib/time";
@@ -38,12 +41,6 @@ const empty = { data: [], error: null };
 function must<T>(result: { data: T | null; error: unknown }): T {
   if (result.error) throw result.error;
   return result.data as T;
-}
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "?";
-  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : parts[0].slice(0, 2)).toUpperCase();
 }
 
 function Stat({ label, value, sub }: { label: string; value: ReactNode; sub?: ReactNode }) {
@@ -73,13 +70,13 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
 
   const { data: member } = await supabase
     .from("gym_members")
-    .select("id, user_id, role, status, joined_at, profiles!inner(full_name, phone)")
+    .select("id, user_id, role, status, joined_at, profiles!inner(full_name, phone, avatar_url)")
     .eq("id", id)
     .eq("gym_id", gym.id)
     .maybeSingle();
   if (!member) notFound();
 
-  const [subsRes, paymentsRes, plansRes, visitsRes, bookingsRes, notesRes, authUser] = await Promise.all([
+  const [subsRes, paymentsRes, plansRes, visitsRes, bookingsRes, notesRes, authUser, photo] = await Promise.all([
     supabase.from("subscriptions").select("*").eq("member_id", id).order("starts_on", { ascending: false }),
     isStaff ? supabase.from("payments").select("*, plans(name), pt_subscriptions(package_name)").eq("member_id", id).order("created_at", { ascending: false }) : empty,
     isStaff
@@ -98,6 +95,7 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
     supabase.from("member_notes").select("id, body, created_at, author_id, profiles(full_name)")
       .eq("member_id", id).order("created_at", { ascending: false }),
     isStaff ? createAdminClient().auth.admin.getUserById(member.user_id) : Promise.resolve(null),
+    signAvatar(member.profiles.avatar_url),
   ]);
   const subs = { data: must(subsRes) };
   const payments = { data: must(paymentsRes) };
@@ -183,9 +181,13 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
 
       {/* Profile header */}
       <Card className="mt-4 flex flex-wrap items-center gap-4">
-        <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-brand text-xl font-bold text-brand-fg">
-          {initials(name)}
-        </span>
+        {member.user_id === user.id ? (
+          <AvatarEditor slug={slug} name={name} src={photo} />
+        ) : isStaff && member.role === "member" ? (
+          <AvatarEditor slug={slug} memberId={id} name={name} src={photo} />
+        ) : (
+          <Avatar name={name} src={photo} size="lg" />
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-semibold">{name}</h1>

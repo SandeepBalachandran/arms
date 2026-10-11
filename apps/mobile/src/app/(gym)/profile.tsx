@@ -1,17 +1,20 @@
 import { STAFF_ROLES } from '@gymos/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Apple, Check, ChevronRight, LogOut, Moon, Pencil, Plus, ScanLine, Sun, type LucideIcon } from 'lucide-react-native';
+import { Apple, Camera, Check, ChevronRight, LogOut, Moon, Pencil, Plus, ScanLine, Sun, type LucideIcon } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 import { z } from 'zod';
 
+import { Avatar } from '@/components/avatar';
 import { Appear } from '@/components/motion';
+import { PhotoSheet } from '@/components/photo-sheet';
 import { Button, Card, Input, Screen, Text } from '@/components/ui';
 import type { Tint } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useActivity } from '@/lib/activity';
 import { setScheme, useScheme } from '@/lib/appearance';
+import { useSetAvatar } from '@/lib/avatar';
 import { confirm } from '@/lib/confirm';
 import { useActiveGym, useMyGyms, useSetActiveGym } from '@/lib/gyms';
 import { useNutritionAccess } from '@/lib/nutrition';
@@ -24,12 +27,6 @@ const profileSchema = z.object({
   full_name: z.string().trim().min(2, 'Enter your name').max(80),
   phone: z.string().trim().max(20).transform((v) => v || null),
 });
-
-function initials(text: string) {
-  const parts = text.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return '?';
-  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : parts[0].slice(0, 2)).toUpperCase();
-}
 
 export default function ProfileScreen() {
   const { session } = useSession();
@@ -97,6 +94,9 @@ function ProfileHero({ onEdit }: { onEdit: () => void }) {
   const active = useActiveGym();
   const name = profile.data?.full_name || 'Add your name';
   const contact = session?.user.email || profile.data?.phone || '';
+  const [sheet, setSheet] = useState(false);
+  const setAvatar = useSetAvatar();
+  const hasPhoto = !!profile.data?.avatar_url;
 
   return (
     <Card style={{ backgroundColor: theme.hero, borderColor: theme.hero, padding: 20, alignItems: 'center', gap: 6, overflow: 'hidden' }}>
@@ -111,11 +111,26 @@ function ProfileHero({ onEdit }: { onEdit: () => void }) {
         <Pencil size={17} color={theme.heroText} />
       </Pressable>
 
-      <View style={{ width: 88, height: 88, borderRadius: 44, borderWidth: 3, borderColor: 'rgba(200,240,75,0.45)', alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
-        <View style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: theme.accent, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 28, fontWeight: '800', color: theme.accentText }}>{initials(profile.data?.full_name || 'Me')}</Text>
+      <Pressable
+        onPress={() => setSheet(true)}
+        disabled={setAvatar.isPending}
+        accessibilityRole="button"
+        accessibilityLabel={hasPhoto ? 'Change your photo' : 'Add your photo'}
+        style={{ width: 88, height: 88, borderRadius: 44, borderWidth: 3, borderColor: 'rgba(200,240,75,0.45)', alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
+        <Avatar name={profile.data?.full_name || 'Me'} path={profile.data?.avatar_url} size={76} />
+        {setAvatar.isPending && (
+          <View style={{ position: 'absolute', width: 76, height: 76, borderRadius: 38, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator color="#ffffff" />
+          </View>
+        )}
+        <View style={{ position: 'absolute', right: -2, bottom: -2, width: 30, height: 30, borderRadius: 15, backgroundColor: theme.accent, borderWidth: 3, borderColor: theme.hero, alignItems: 'center', justifyContent: 'center' }}>
+          <Camera size={14} color={theme.accentText} />
         </View>
-      </View>
+      </Pressable>
+      <PhotoSheet visible={sheet} hasPhoto={hasPhoto} onClose={() => setSheet(false)} onPick={(source) => setAvatar.mutate(source)} />
+      {setAvatar.error && (
+        <Text style={{ color: '#fca5a5', fontSize: 13, textAlign: 'center' }}>{setAvatar.error.message}</Text>
+      )}
       <Text style={{ color: theme.heroText, fontSize: 22, fontWeight: '800', marginTop: 4 }} numberOfLines={1}>{name}</Text>
       {!!contact && <Text style={{ color: theme.heroMuted, fontSize: 14 }}>{contact}</Text>}
       {active && (

@@ -863,6 +863,9 @@ isOneToOne: false
 "can_coach":
 { Args: { "p_member_id": string }; Returns: boolean
                            },
+"can_see_avatar":
+{ Args: { "p_folder": string }; Returns: boolean
+                           },
 "cancel_booking":
 { Args: { "p_booking_id": string }; Returns: undefined
                            },

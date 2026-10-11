@@ -59,7 +59,7 @@ export function Scanner({ slug }: { slug: string }) {
         {running ? "Stop camera" : "Start scanning"}
       </Button>
       {cameraError && <p className="text-sm text-danger">{cameraError}</p>}
-      <CheckinResultBanner result={state?.result} error={state?.error} />
+      <CheckinResultBanner result={state?.result} photoUrl={state?.photoUrl} error={state?.error} />
     </div>
   );
 }

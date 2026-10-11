@@ -96,6 +96,28 @@ test("open a receipt from Membership", async ({ page }) => {
   noErrors();
 });
 
+// A 1×1 PNG: the app crops and shrinks it to a 400 px JPEG before upload.
+const png = { name: "me.png", mimeType: "image/png", buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64") };
+
+test("add a profile photo from the gallery", async ({ page }) => {
+  const noErrors = watchErrors(page);
+  const userId = fx.users.member.id;
+  await openApp(page);
+  await page.getByRole("tab", { name: "Profile" }).click();
+  await page.getByRole("button", { name: "Add your photo" }).click();
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "Choose from gallery" }).click();
+  await (await chooser).setFiles(png);
+
+  await expect(page.getByRole("button", { name: "Change your photo" })).toBeVisible();
+  const { data } = await service.from("profiles").select("avatar_url").eq("id", userId).single();
+  expect(data!.avatar_url).toMatch(/^[0-9a-f-]{36}\/\d+\.jpg$/);
+  expect(data!.avatar_url!.startsWith(`${userId}/`)).toBe(true);
+  const { data: files } = await service.storage.from("avatars").list(userId);
+  expect(files).toHaveLength(1);
+  noErrors();
+});
+
 test("every tab opens without errors", async ({ page }) => {
   const noErrors = watchErrors(page);
   await openApp(page);

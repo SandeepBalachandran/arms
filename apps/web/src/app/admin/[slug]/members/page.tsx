@@ -3,9 +3,11 @@ import Link from "next/link";
 import { Upload } from "lucide-react";
 import { membershipState, todayIn, type Subscription } from "@gymos/shared";
 import { ActionForm } from "@/components/action-form";
+import { Avatar } from "@/components/avatar";
 import { MembershipBadge } from "@/components/membership-badge";
 import { Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES, TEAM_ROLES, type GymRole } from "@/lib/auth";
+import { signAvatars } from "@/lib/avatars";
 import { createClient } from "@/lib/supabase/server";
 import { joinUrl } from "@/lib/site";
 import { reviewJoinRequest } from "./actions";
@@ -32,7 +34,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
   const supabase = await createClient();
   let request = supabase
     .from("gym_members")
-    .select("id, user_id, role, status, joined_at, profiles!inner(full_name, phone)")
+    .select("id, user_id, role, status, joined_at, profiles!inner(full_name, phone, avatar_url)")
     .eq("gym_id", gym.id)
     .neq("status", "pending")
     .order("joined_at", { ascending: false })
@@ -77,6 +79,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
       if (filter === "expired") return s.kind === "expired" || s.kind === "none";
       return true;
     });
+  const photos = await signAvatars(rows.map((m) => m.profiles.avatar_url));
 
   return (
     <>
@@ -175,7 +178,8 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
               return (
                 <tr key={m.id} className="border-b border-border last:border-0">
                   <td className="p-3 font-medium">
-                    <Link href={`/admin/${slug}/members/${m.id}`} className="hover:underline">
+                    <Link href={`/admin/${slug}/members/${m.id}`} className="flex items-center gap-2.5 hover:underline">
+                      <Avatar name={m.profiles.full_name || "?"} src={photos.get(m.profiles.avatar_url ?? "")} size="xs" />
                       {m.profiles.full_name || "Unnamed member"}
                     </Link>
                   </td>

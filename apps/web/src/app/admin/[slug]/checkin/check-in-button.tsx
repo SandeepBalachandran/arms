@@ -25,7 +25,7 @@ export function CheckInButton({ slug, memberId, showResult = false }: {
         </button>
       </form>
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
-      {showResult && <CheckinResultBanner result={state?.result} />}
+      {showResult && <CheckinResultBanner result={state?.result} photoUrl={state?.photoUrl} />}
     </div>
   );
 }

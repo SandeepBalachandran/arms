@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { todayIn } from "@gymos/shared";
+import { Avatar } from "@/components/avatar";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES } from "@/lib/auth";
+import { signAvatars } from "@/lib/avatars";
 import { createClient } from "@/lib/supabase/server";
 import { hoursAgo } from "@/lib/time";
 import { CheckInButton } from "./check-in-button";
@@ -28,14 +30,14 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
   const [recent, matches] = await Promise.all([
     supabase
       .from("checkins")
-      .select("id, checked_in_at, method, membership_ok, member_id, gym_members!inner(profiles!inner(full_name))")
+      .select("id, checked_in_at, method, membership_ok, member_id, gym_members!inner(profiles!inner(full_name, avatar_url))")
       .eq("gym_id", gym.id)
       .gte("checked_in_at", since)
       .order("checked_in_at", { ascending: false }),
     query
       ? supabase
           .from("gym_members")
-          .select("id, profiles!inner(full_name, phone)")
+          .select("id, profiles!inner(full_name, phone, avatar_url)")
           .eq("gym_id", gym.id)
           .eq("status", "active")
           .ilike("profiles.full_name", `%${query}%`)
@@ -46,6 +48,11 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
   if (matches.error) throw matches.error;
 
   const todays = recent.data.filter((c) => todayIn(gym.timezone, new Date(c.checked_in_at)) === today);
+  const photos = await signAvatars([
+    ...todays.map((c) => c.gym_members.profiles.avatar_url),
+    ...matches.data.map((m) => m.profiles.avatar_url),
+  ]);
+  const photo = (path: string | null) => (path ? photos.get(path) : null);
 
   return (
     <>
@@ -72,9 +79,12 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
               <ul className="mt-3 divide-y divide-border">
                 {matches.data.map((m) => (
                   <li key={m.id} className="flex items-start justify-between gap-2 py-2 text-sm">
-                    <div>
-                      <p className="font-medium">{m.profiles.full_name || "Unnamed member"}</p>
-                      <p className="text-muted">{m.profiles.phone ?? ""}</p>
+                    <div className="flex items-center gap-3">
+                      <Avatar name={m.profiles.full_name || "?"} src={photo(m.profiles.avatar_url)} size="md" />
+                      <div>
+                        <p className="font-medium">{m.profiles.full_name || "Unnamed member"}</p>
+                        <p className="text-muted">{m.profiles.phone ?? ""}</p>
+                      </div>
                     </div>
                     <CheckInButton slug={slug} memberId={m.id} />
                   </li>
@@ -90,7 +100,8 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
           <ul className="mt-3 divide-y divide-border text-sm">
             {todays.map((c) => (
               <li key={c.id} className="flex items-center justify-between gap-2 py-2">
-                <Link href={`/admin/${slug}/members/${c.member_id}`} className="hover:underline">
+                <Link href={`/admin/${slug}/members/${c.member_id}`} className="flex min-w-0 items-center gap-2.5 hover:underline">
+                  <Avatar name={c.gym_members.profiles.full_name || "?"} src={photo(c.gym_members.profiles.avatar_url)} size="sm" />
                   {c.gym_members.profiles.full_name || "Unnamed member"}
                 </Link>
                 <span className="flex items-center gap-2">

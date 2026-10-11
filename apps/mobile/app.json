@@ -41,9 +41,17 @@
       ],
       "expo-sqlite",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "GOS lets you choose a profile photo from your gallery.",
+          "cameraPermission": "GOS uses the camera to take your profile photo.",
+          "microphonePermission": false
+        }
+      ],
+      [
         "expo-camera",
         {
-          "cameraPermission": "GOS uses the camera to scan check-in codes: your gym's poster, or members' codes at the front desk.",
+          "cameraPermission": "GOS uses the camera to scan check-in codes (your gym's poster, or members' codes at the front desk) and to take your profile photo.",
           "microphonePermission": false,
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": true
