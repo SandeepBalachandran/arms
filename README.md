@@ -52,7 +52,16 @@ After adding a migration: `npm run db:push`, then `npm run db:types`.
 npm test            # everything
 npm run test:unit   # shared logic: hours, money, dates, UPI, import, nutrition (seconds, no network)
 npm run test:db     # database rules and permissions, per role (about 1.5 minutes)
+npm run test:e2e    # browser tests of the admin and the member app (about 4 minutes)
+npm run test:e2e -- --ui   # the same, watching each step
 ```
+
+- **Browser tests** (`tests/e2e`, Playwright) click through the real screens:
+  - **Admin:** sign-in, adding and importing members, recording a payment, check-in by name, plans, role autosave, settings (UPI, check-in hours), PT sessions, nutrition targets and comments, and what each role can't open.
+  - **Member app** (Expo, in the browser): check-in, booking and cancelling a class, logging a workout, nutrition setup and food logging, paying by UPI, and joining a gym by code.
+  - **Servers:** they start the web and Expo servers if these aren't already running.
+  - **Browser:** they use Edge locally.
+  - **On failure:** a screenshot and a step-by-step trace are saved (`npx playwright show-report`).
 
 - **Logic tests** (`tests/unit`) check the pure functions in `packages/shared` and the member import.
 - **Database tests** (`tests/db`) sign in as an owner, admin, staff, trainer, two members and an outsider, then check what each can see and do:

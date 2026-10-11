@@ -20,3 +20,8 @@ npm-debug.log*
 # env files: only examples are committed
 .env*
 !.env.example
+
+# Playwright
+tests/e2e/.auth/
+test-results/
+playwright-report/
