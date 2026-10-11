@@ -6,7 +6,7 @@ import { z } from "zod";
 export const upiIdSchema = z
   .string()
   .trim()
-  .regex(/^[A-Za-z0-9._-]{2,256}@[A-Za-z0-9]{2,64}$/, "Enter a UPI ID like name@okhdfcbank");
+  .regex(/^[A-Za-z0-9._-]{2,64}@[A-Za-z0-9]{2,64}$/, "Enter a UPI ID like name@okhdfcbank");
 
 // UPI transaction reference (UTR / RRN), usually 12 digits. Optional.
 export const utrSchema = z
