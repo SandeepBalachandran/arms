@@ -851,7 +851,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "auth_role_in":
+            "assert_checkin_hours":
+{ Args: { "p_gym_id": string }; Returns: undefined
+                           },
+"auth_role_in":
 { Args: { "p_gym_id": string }; Returns: Database["public"]['Enums']["gym_role"]
                            },
 "book_class":
@@ -906,6 +909,9 @@ isOneToOne: false
                            },
 "find_user_id":
 { Args: { "p_email"?: string,"p_phone"?: string }; Returns: string
+                           },
+"gym_open_now":
+{ Args: { "p_early_min"?: number,"p_gym_id": string }; Returns: boolean
                            },
 "gym_today":
 { Args: { "p_gym_id": string }; Returns: string
