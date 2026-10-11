@@ -57,7 +57,7 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
   ].filter((n): n is { href: string; text: string } => Boolean(n));
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-border bg-surface/90 px-4 backdrop-blur md:px-8">
+    <header className="sticky top-0 z-20 flex h-14 print:hidden items-center justify-between gap-3 border-b border-border bg-surface/90 px-4 backdrop-blur md:px-8">
       <Link href={`/admin/${gym.slug}`} className="flex min-w-0 items-center gap-2.5 font-semibold">
         {gym.logo_url && (
           // eslint-disable-next-line @next/next/no-img-element -- user upload on Supabase Storage

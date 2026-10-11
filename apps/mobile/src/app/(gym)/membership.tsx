@@ -2,8 +2,8 @@ import { formatDuration, formatMoney, formatReceipt, PAYMENT_METHOD_LABELS } fro
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { CalendarRange, ReceiptText, Sparkles } from 'lucide-react-native';
-import { RefreshControl, ScrollView, View } from 'react-native';
+import { CalendarRange, ChevronRight, ReceiptText, Sparkles } from 'lucide-react-native';
+import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MembershipCard } from '@/components/membership-card';
@@ -105,9 +105,12 @@ export default function MembershipScreen() {
             <SectionHeader title="Receipts" count={payments.data.length} />
             <Card style={{ gap: 0, paddingVertical: Spacing.one }}>
               {payments.data.map((p, i) => (
-                <View
+                <Pressable
                   key={p.id}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderTopWidth: i ? 1 : 0, borderColor: theme.border }}>
+                  onPress={() => router.push({ pathname: '/receipt/[id]', params: { id: p.id } })}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Receipt ${formatReceipt(gym?.receipt_prefix ?? '', p.receipt_no)}, ${formatMoney(p.amount_paise, currency)}`}
+                  style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderTopWidth: i ? 1 : 0, borderColor: theme.border, opacity: pressed ? 0.6 : 1 })}>
                   <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: theme.tints.green.bg, alignItems: 'center', justifyContent: 'center' }}>
                     <ReceiptText size={18} color={theme.tints.green.fg} />
                   </View>
@@ -120,7 +123,8 @@ export default function MembershipScreen() {
                     </Text>
                   </View>
                   <Text style={{ fontWeight: '700' }}>{formatMoney(p.amount_paise, currency)}</Text>
-                </View>
+                  <ChevronRight size={18} color={theme.textSecondary} />
+                </Pressable>
               ))}
             </Card>
           </>

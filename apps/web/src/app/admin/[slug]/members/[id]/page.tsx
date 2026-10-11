@@ -381,7 +381,11 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
                                   </p>
                                 </td>
                                 <td className="py-2 text-right font-mono text-xs">
-                                  {p.status === "paid" ? formatReceipt(gym.receipt_prefix, p.receipt_no)
+                                  {p.status === "paid" ? (
+                                    <Link href={`/admin/${slug}/payments/${p.id}`} className="text-brand hover:underline" title="Open receipt">
+                                      {formatReceipt(gym.receipt_prefix, p.receipt_no)}
+                                    </Link>
+                                  )
                                     : p.status === "created" ? <Badge tone="warn">Waiting</Badge>
                                     : <Badge tone="bad">{p.status === "failed" ? "Rejected" : p.status}</Badge>}
                                 </td>

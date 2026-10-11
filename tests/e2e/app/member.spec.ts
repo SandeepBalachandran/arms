@@ -82,6 +82,20 @@ test("set up nutrition and log breakfast", async ({ page }) => {
   noErrors();
 });
 
+test("open a receipt from Membership", async ({ page }) => {
+  const noErrors = watchErrors(page);
+  await openApp(page);
+  await page.getByRole("tab", { name: "Membership" }).click();
+  // The PT package sold at the desk during setup.
+  await page.getByRole("button", { name: /^Receipt #\d+, ₹6,000$/ }).click();
+  await expect(page.getByText("Personal training: 12 PT sessions").filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText("12 sessions").filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText(fx.users.member.name).filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Print or save as PDF" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Send on WhatsApp" })).toBeVisible();
+  noErrors();
+});
+
 test("every tab opens without errors", async ({ page }) => {
   const noErrors = watchErrors(page);
   await openApp(page);

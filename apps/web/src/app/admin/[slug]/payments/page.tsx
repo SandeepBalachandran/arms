@@ -81,7 +81,7 @@ export default async function PaymentsPage({ params, searchParams }: PageProps<"
         <table className="w-full text-sm">
           <thead className="border-b border-border text-left text-muted">
             <tr>
-              <th className="hidden p-3 font-medium sm:table-cell">Receipt</th>
+              <th className="p-3 font-medium">Receipt</th>
               <th className="p-3 font-medium">Date</th>
               <th className="p-3 font-medium">Member</th>
               <th className="p-3 font-medium">Amount</th>
@@ -92,7 +92,11 @@ export default async function PaymentsPage({ params, searchParams }: PageProps<"
           <tbody>
             {payments.map((p) => (
               <tr key={p.id} className="border-b border-border last:border-0">
-                <td className="hidden p-3 font-mono sm:table-cell">{formatReceipt(gym.receipt_prefix, p.receipt_no)}</td>
+                <td className="p-3 font-mono">
+                  <Link href={`/admin/${slug}/payments/${p.id}`} className="text-brand hover:underline" title="Open receipt">
+                    {formatReceipt(gym.receipt_prefix, p.receipt_no)}
+                  </Link>
+                </td>
                 <td className="p-3 text-muted">
                   {new Date(p.paid_at!).toLocaleString("en-IN", { timeZone: gym.timezone, dateStyle: "medium", timeStyle: "short" })}
                 </td>

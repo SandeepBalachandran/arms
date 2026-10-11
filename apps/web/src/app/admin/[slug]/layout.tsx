@@ -19,7 +19,7 @@ export default async function AdminLayout({ children, params }: LayoutProps<"/ad
   return (
     <div className="flex min-h-screen">
       {/* Sidebar from tablet width up; phones get the bottom bar instead. */}
-      <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-border bg-surface md:flex">
+      <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-border bg-surface md:flex print:hidden">
         <p className="flex h-14 items-center border-b border-border px-5 text-lg font-bold">
           G<span className="text-brand">OS</span>
         </p>
@@ -29,9 +29,11 @@ export default async function AdminLayout({ children, params }: LayoutProps<"/ad
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <AdminHeader membership={membership} user={user} />
-        <main className="flex-1 p-4 pb-[calc(5rem+env(safe-area-inset-bottom))] md:p-8">{children}</main>
+        <main className="flex-1 p-4 pb-[calc(5rem+env(safe-area-inset-bottom))] md:p-8 print:p-0">{children}</main>
       </div>
-      <BottomNav {...navProps} />
+      <div className="print:hidden">
+        <BottomNav {...navProps} />
+      </div>
     </div>
   );
 }

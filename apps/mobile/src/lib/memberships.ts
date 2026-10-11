@@ -1,4 +1,4 @@
-import { membershipState, todayIn } from '@gymos/shared';
+import { membershipState, receiptView, todayIn } from '@gymos/shared';
 import { useQuery } from '@tanstack/react-query';
 
 import { useActiveGym } from '@/lib/gyms';
@@ -86,6 +86,40 @@ export function usePaymentClaims() {
         pending: data.find((p) => p.status === 'created') ?? null,
         rejected: data.filter((p) => p.status === 'failed'),
       };
+    },
+  });
+}
+
+// One paid payment with what it was for, laid out as a receipt.
+export function useReceipt(paymentId: string) {
+  const membership = useActiveGym();
+  return useQuery({
+    queryKey: ['receipt', paymentId],
+    enabled: !!membership,
+    queryFn: async () => {
+      const [payment, profile] = await Promise.all([
+        supabase
+          .from('payments')
+          .select('receipt_no, paid_at, amount_paise, method, utr, subscriptions(plan_name, starts_on, ends_on), pt_subscriptions(package_name, starts_on, ends_on, sessions_total)')
+          .eq('id', paymentId)
+          .eq('status', 'paid')
+          .single(),
+        supabase.auth.getUser().then(({ data }) => supabase.from('profiles').select('full_name').eq('id', data.user!.id).single()),
+      ]);
+      if (payment.error) throw payment.error;
+      const p = payment.data;
+      const pt = p.pt_subscriptions;
+      const sub = p.subscriptions;
+      return receiptView({
+        gym: membership!.gym,
+        memberName: profile.data?.full_name ?? '',
+        payment: p,
+        item: pt
+          ? { kind: 'pt', name: pt.package_name, starts_on: pt.starts_on, ends_on: pt.ends_on, sessions: pt.sessions_total }
+          : sub
+            ? { kind: 'plan', name: sub.plan_name, starts_on: sub.starts_on, ends_on: sub.ends_on }
+            : null,
+      });
     },
   });
 }
