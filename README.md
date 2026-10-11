@@ -46,6 +46,29 @@ npm run lint
 
 After adding a migration: `npm run db:push`, then `npm run db:types`.
 
+## Tests
+
+```bash
+npm test            # everything
+npm run test:unit   # shared logic: hours, money, dates, UPI, import, nutrition (seconds, no network)
+npm run test:db     # database rules and permissions, per role (about 1.5 minutes)
+```
+
+- **Logic tests** (`tests/unit`) check the pure functions in `packages/shared` and the member import.
+- **Database tests** (`tests/db`) sign in as an owner, admin, staff, trainer, two members and an outsider, then check what each can see and do:
+  - members and payments, UPI and roles
+  - check-in rules (hours, poster, location)
+  - classes, personal training and workouts
+  - nutrition privacy
+  - settings saves
+  - deleting and restoring a gym
+- **Where they run:** against the Supabase project in `apps/web/.env.local`.
+  - **What they create:** a throwaway gym (`test-…`) and fresh `t….@gymos.test` accounts.
+  - **What they never touch:** any other gym or account.
+  - **Clean-up:** everything is deleted afterwards, and leftovers from a crashed run are removed on the next one.
+  - **What they need:** `SUPABASE_SECRET_KEY`, to create the test accounts.
+- **Once real gyms use the project,** point the database tests at a separate test project instead.
+
 ## Join links
 
 - Web: `https://<domain>/join/<slug>` shows the gym and a Play Store button
