@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Apple, Printer } from "lucide-react";
 import {
+  CHECKIN_EARLY_MIN,
   CURRENCIES,
   GYM_DEFAULTS,
   MANUAL_PAYMENT_METHODS,
@@ -144,13 +145,19 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
           </Field>
         </SettingsCard>
 
-        <SettingsCard slug={slug} section="checkin" title="Check-in" description="Optional. Nobody is ever turned away; expired memberships are only flagged.">
+        <SettingsCard slug={slug} section="checkin" title="Check-in" description="Optional. Expired memberships are only flagged, never turned away.">
           <Toggle name="checkin_enabled" label="Use check-in" defaultChecked={g.checkin_enabled} />
           <Toggle
             name="checkin_self_allowed"
             label="Members can check themselves in"
             hint="Off: only staff can check members in (QR scan or by name)."
             defaultChecked={g.checkin_self_allowed}
+          />
+          <Toggle
+            name="checkin_only_when_open"
+            label="Only during opening hours"
+            hint={`Members can't check themselves in (button or poster) while the gym is closed, from ${CHECKIN_EARLY_MIN} minutes before opening. Staff can always check members in.`}
+            defaultChecked={g.checkin_only_when_open ?? true}
           />
           <Field label="Count repeat check-ins within (hours) as one visit" hint={`0 counts every check-in. Default ${GYM_DEFAULTS.checkin_dedupe_hours}`}>
             <Input name="checkin_dedupe_hours" type="number" min={0} max={24} defaultValue={g.checkin_dedupe_hours} required />

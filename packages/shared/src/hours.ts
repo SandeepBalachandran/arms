@@ -91,3 +91,14 @@ export function describeOpenStatus(status: OpenStatus) {
 export function todayHoursDay(timezone: string, now = new Date()) {
   return localNow(timezone, now).day;
 }
+
+// Minutes before a session when members may already check in (matches the
+// database's gym_open_now).
+export const CHECKIN_EARLY_MIN = 15;
+
+// Can members check themselves in now? Mirrors the database rule: open, or a
+// session starts within CHECKIN_EARLY_MIN minutes. No hours set → always.
+export function checkinOpenNow(hours: OpeningHours, timezone: string, now = new Date()) {
+  if (!HOURS_DAYS.some((d) => ranges(hours[d]).length)) return true;
+  return openStatus(hours, timezone, new Date(now.getTime() + CHECKIN_EARLY_MIN * 60_000)).open || openStatus(hours, timezone, now).open;
+}

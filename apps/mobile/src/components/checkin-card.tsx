@@ -1,5 +1,7 @@
+import { checkinOpenNow, describeOpenStatus, openStatus, parseOpeningHours } from '@gymos/shared';
 import { useRouter } from 'expo-router';
-import { CircleCheck, QrCode, ScanLine } from 'lucide-react-native';
+import { CircleCheck, Moon, QrCode, ScanLine } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { IconButton, Text } from '@/components/ui';
@@ -15,7 +17,18 @@ export function CheckinCard() {
   const gym = useActiveGym()?.gym;
   const visits = useMyVisits();
   const checkIn = useSelfCheckIn();
+  // Re-check opening hours every minute while Home is open.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
   if (!gym?.checkin_enabled) return null;
+
+  const hours = parseOpeningHours(gym.opening_hours);
+  // The gym only takes member check-ins during opening hours (staff still can).
+  const closed = gym.checkin_only_when_open && !checkinOpenNow(hours, gym.timezone);
+  const canSelf = !visits.todayVisit && !closed;
 
   const time = (iso: string) =>
     new Date(iso).toLocaleTimeString('en-IN', { timeZone: gym.timezone, hour: 'numeric', minute: '2-digit' });
@@ -29,6 +42,11 @@ export function CheckinCard() {
               <CircleCheck size={18} color={theme.brand} />
               <Text style={{ fontWeight: '700' }}>Checked in at {time(visits.todayVisit.checked_in_at)}</Text>
             </View>
+          ) : closed && (gym.checkin_self_allowed || gym.checkin_poster_enabled) ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Moon size={16} color={theme.textSecondary} />
+              <Text style={{ fontWeight: '700', flexShrink: 1 }}>{describeOpenStatus(openStatus(hours, gym.timezone))}</Text>
+            </View>
           ) : (
             <Text style={{ fontWeight: '700' }}>
               {gym.checkin_self_allowed || gym.checkin_poster_enabled ? 'At the gym?' : 'Check in at the desk'}
@@ -38,7 +56,7 @@ export function CheckinCard() {
             {visits.thisMonth} {visits.thisMonth === 1 ? 'visit' : 'visits'} this month
           </Text>
         </View>
-        {!visits.todayVisit && gym.checkin_poster_enabled && (
+        {canSelf && gym.checkin_poster_enabled && (
           <Pressable
             onPress={() => router.push('/checkin-scan')}
             accessibilityRole="button"
@@ -48,7 +66,7 @@ export function CheckinCard() {
             <Text style={{ color: theme.accentText, fontWeight: '700' }}>Scan</Text>
           </Pressable>
         )}
-        {!visits.todayVisit && gym.checkin_self_allowed && !gym.checkin_poster_enabled && (
+        {canSelf && gym.checkin_self_allowed && !gym.checkin_poster_enabled && (
           <Pressable
             onPress={() => checkIn.mutate()}
             disabled={checkIn.isPending}

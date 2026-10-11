@@ -70,6 +70,7 @@ export const membershipSettingsSchema = z.object({
 export const checkinSettingsSchema = z.object({
   checkin_enabled: bool,
   checkin_self_allowed: bool,
+  checkin_only_when_open: bool,
   checkin_dedupe_hours: int(0, 24),
 });
 
