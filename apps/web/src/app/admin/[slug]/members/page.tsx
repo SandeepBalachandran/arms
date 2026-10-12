@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Upload } from "lucide-react";
+import clsx from "clsx";
+import { Download, Upload } from "lucide-react";
 import { membershipState, todayIn, type Subscription } from "@gymos/shared";
 import { ActionForm } from "@/components/action-form";
 import { Avatar } from "@/components/avatar";
@@ -88,6 +89,12 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
         actions={
           canManage && (
             <div className="flex gap-2">
+              <a
+                href={`/admin/${slug}/export/members`}
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-border/40"
+              >
+                <Download className="size-4" /> Export
+              </a>
               <Link
                 href={`/admin/${slug}/members/import`}
                 className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-border/40"
@@ -137,27 +144,44 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
           </ul>
         </Card>
       )}
-      <form className="mb-4 flex flex-wrap gap-2">
-        <input
-          name="q"
-          defaultValue={query}
-          placeholder="Search by name"
-          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm sm:w-64"
-        />
-        <select name="show" defaultValue={filter} className="rounded-lg border border-border bg-surface px-3 py-2 text-sm">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <nav aria-label="Filter members" className="flex flex-wrap gap-1.5">
           {Object.entries({
             all: "Everyone",
             member: "Members",
-            active: "Active membership",
-            expiring: `Expiring in ${gym.expiry_warning_days} days`,
+            active: "Active",
+            expiring: "Ending soon",
             expired: "Expired / no plan",
             team: "Team",
-          } satisfies Record<Filter, string>).map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
-          ))}
-        </select>
-        <button className="rounded-lg border border-border px-3 py-2 text-sm">Filter</button>
-      </form>
+          } satisfies Record<Filter, string>).map(([value, label]) => {
+            const on = filter === value;
+            const qs = new URLSearchParams({ ...(value !== "all" && { show: value }), ...(query && { q: query }) }).toString();
+            return (
+              <Link
+                key={value}
+                href={`/admin/${slug}/members${qs ? `?${qs}` : ""}`}
+                aria-current={on ? "page" : undefined}
+                className={clsx(
+                  "rounded-full border px-3 py-1.5 text-sm font-medium",
+                  on ? "border-foreground bg-foreground text-background" : "border-border bg-surface hover:bg-border/40",
+                )}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+        <form className="w-full sm:w-64">
+          {filter !== "all" && <input type="hidden" name="show" value={filter} />}
+          <input
+            name="q"
+            defaultValue={query}
+            placeholder="Search by name"
+            aria-label="Search by name"
+            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+          />
+        </form>
+      </div>
 
       <Card className="overflow-x-auto p-0">
         <table className="w-full text-sm">

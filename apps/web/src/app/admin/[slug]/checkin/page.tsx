@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { todayIn } from "@gymos/shared";
+import { QrCode } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES } from "@/lib/auth";
@@ -57,7 +58,16 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
   return (
     <>
       <LiveRefresh gymId={gym.id} />
-      <PageHeader title="Check-in" />
+      <PageHeader
+        title="Check-in"
+        actions={
+          gym.checkin_poster_enabled && (
+            <Link href={`/admin/${slug}/checkin/poster`} className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium hover:bg-border/40">
+              <QrCode className="size-4" /> QR poster
+            </Link>
+          )
+        }
+      />
       <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
         <div className="space-y-6">
           <Card>

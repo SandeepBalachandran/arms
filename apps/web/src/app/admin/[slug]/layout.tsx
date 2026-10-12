@@ -1,6 +1,17 @@
-import { requireGym, TEAM_ROLES } from "@/lib/auth";
+import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { AdminHeader } from "./admin-header";
 import { AdminNav, BottomNav } from "./admin-nav";
+
+// People waiting to join and UPI payments to confirm, for the sidebar.
+async function waitingCounts(gymId: string) {
+  const supabase = await createClient();
+  const [joins, upi] = await Promise.all([
+    supabase.from("gym_members").select("id", { count: "exact", head: true }).eq("gym_id", gymId).eq("status", "pending"),
+    supabase.from("payments").select("id", { count: "exact", head: true }).eq("gym_id", gymId).eq("status", "created"),
+  ]);
+  return { members: joins.count ?? 0, payments: upi.count ?? 0 };
+}
 
 export default async function AdminLayout({ children, params }: LayoutProps<"/admin/[slug]">) {
   const { slug } = await params;
@@ -14,6 +25,8 @@ export default async function AdminLayout({ children, params }: LayoutProps<"/ad
     workoutsEnabled: gym.workouts_enabled,
     ptEnabled: gym.pt_enabled,
     nutritionEnabled: gym.nutrition_enabled ?? false,
+    posterEnabled: gym.checkin_enabled && gym.checkin_poster_enabled,
+    counts: STAFF_ROLES.includes(role) ? await waitingCounts(gym.id) : undefined,
   };
 
   return (

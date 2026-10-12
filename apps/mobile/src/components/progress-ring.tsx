@@ -7,7 +7,7 @@ import { useTheme } from '@/hooks/use-theme';
 
 // Dark disc with a lime arc for `value` (0–1) that sweeps in on mount, and a
 // short label in the middle.
-export function ProgressRing({ value, label, size = 64, warn }: { value: number; label: string; size?: number; warn?: boolean }) {
+export function ProgressRing({ value, label, caption, size = 64, warn }: { value: number; label: string; caption?: string; size?: number; warn?: boolean }) {
   const theme = useTheme();
   const stroke = 5;
   const r = (size - stroke) / 2;
@@ -32,7 +32,8 @@ export function ProgressRing({ value, label, size = 64, warn }: { value: number;
           />
         )}
       </Svg>
-      <Text style={{ color: theme.heroText, fontWeight: '800', fontSize: size / 4.4 }}>{label}</Text>
+      <Text style={{ color: theme.heroText, fontWeight: '800', fontSize: caption ? size / 3.6 : size / 4.4, lineHeight: caption ? size / 3 : undefined }}>{label}</Text>
+      {caption && <Text style={{ color: theme.heroMuted, fontSize: 11 }}>{caption}</Text>}
     </View>
   );
 }

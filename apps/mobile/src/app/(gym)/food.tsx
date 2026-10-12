@@ -1,6 +1,6 @@
 import { addDays, calorieBalance, dayTotals, MEAL_LABELS, MEALS, onTarget, type MealSlot } from '@gymos/shared';
 import { Redirect, useRouter } from 'expo-router';
-import { Droplets, MessageCircle, Minus, Plus, Salad, X } from 'lucide-react-native';
+import { Droplets, MessageCircle, Plus, Salad, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -188,33 +188,30 @@ function WaterRow({ day }: { day: string }) {
   const setWater = useSetWater();
   const glasses = water.data ?? 0;
   const tint = theme.tints.blue;
+  // Tap a glass to fill up to it; tap the last full one to empty it.
+  const tap = (i: number) => setWater.mutate({ day, glasses: glasses === i + 1 ? i : i + 1 });
   return (
-    <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-      <View style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: tint.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <Droplets size={20} color={tint.fg} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontWeight: '700' }}>Water</Text>
-        <View style={{ flexDirection: 'row', gap: 3, marginTop: 4 }} accessible accessibilityLabel={`${glasses} of ${WATER_GOAL} glasses`}>
-          {Array.from({ length: WATER_GOAL }, (_, i) => (
-            <View key={i} style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: i < glasses ? tint.fg : theme.surfaceMuted }} />
-          ))}
+    <Card style={{ gap: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Droplets size={18} color={tint.fg} />
+          <Text style={{ fontWeight: '700' }}>Water</Text>
         </View>
+        <Text variant="small">{glasses} of {WATER_GOAL} glasses</Text>
       </View>
-      <Pressable
-        onPress={() => setWater.mutate({ day, glasses: glasses - 1 })}
-        disabled={glasses === 0}
-        accessibilityLabel="One glass less"
-        style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: theme.surfaceMuted, alignItems: 'center', justifyContent: 'center', opacity: glasses ? 1 : 0.4 }}>
-        <Minus size={16} color={theme.text} />
-      </Pressable>
-      <Text style={{ fontWeight: '800', minWidth: 20, textAlign: 'center' }}>{glasses}</Text>
-      <Pressable
-        onPress={() => setWater.mutate({ day, glasses: glasses + 1 })}
-        accessibilityLabel="One more glass"
-        style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: tint.fg, alignItems: 'center', justifyContent: 'center' }}>
-        <Plus size={16} color="#ffffff" />
-      </Pressable>
+      <View style={{ flexDirection: 'row', gap: 6 }}>
+        {Array.from({ length: WATER_GOAL }, (_, i) => (
+          <Pressable
+            key={i}
+            onPress={() => tap(i)}
+            accessibilityRole="button"
+            accessibilityLabel={i < glasses ? `Glass ${i + 1}, drunk` : `Glass ${i + 1}`}
+            hitSlop={4}
+            style={{ flex: 1, maxWidth: 34, height: 38, borderRadius: 9, borderWidth: 1.5, borderColor: '#93c5fd', overflow: 'hidden', justifyContent: 'flex-end' }}>
+            <View style={{ height: i < glasses ? '100%' : 0, backgroundColor: '#60a5fa' }} />
+          </Pressable>
+        ))}
+      </View>
     </Card>
   );
 }

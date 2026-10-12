@@ -2,7 +2,7 @@ import { formatDuration, formatMoney, formatReceipt, PAYMENT_METHOD_LABELS } fro
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { CalendarRange, ChevronRight, ReceiptText, Sparkles } from 'lucide-react-native';
+import { ChevronRight, ReceiptText, Sparkles } from 'lucide-react-native';
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -147,36 +147,43 @@ function PlanCard({ plan, currency, best, tint, onPay, payDisabled }: {
   payDisabled: boolean;
 }) {
   const theme = useTheme();
-  const colors = theme.tints[tint];
   const months = Math.round(plan.duration_days / 30);
+  const price = formatMoney(plan.price_paise, currency);
+  // Compact row: what and how long on the left, price and Pay on the right.
   return (
-    <Card style={[{ padding: 18, gap: 12 }, best && { borderColor: theme.brand, borderWidth: 1.5 }]}>
+    <Card style={[{ padding: 16, gap: 6 }, best && { borderColor: theme.brand, borderWidth: 1.5 }]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <View style={{ width: 46, height: 46, borderRadius: 16, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }}>
-          <CalendarRange size={22} color={colors.fg} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 18, fontWeight: '700' }}>{plan.name}</Text>
+        <View style={{ flex: 1, gap: 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <Text style={{ fontSize: 16, fontWeight: '700' }}>{plan.name}</Text>
+            {best && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: theme.accent }}>
+                <Sparkles size={10} color={theme.accentText} />
+                <Text style={{ fontSize: 10.5, fontWeight: '800', color: theme.accentText }}>Best value</Text>
+              </View>
+            )}
+          </View>
           <Text variant="small">
             {formatDuration(plan.duration_days)}
             {plan.class_credits != null ? ` · ${plan.class_credits} classes` : ''}
+            {months > 1 ? ` · ≈ ${formatMoney(Math.round(plan.price_paise / months / 100) * 100, currency)}/month` : ''}
           </Text>
         </View>
-        {best && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: theme.accent }}>
-            <Sparkles size={12} color={theme.accentText} />
-            <Text style={{ fontSize: 12, fontWeight: '700', color: theme.accentText }}>Best value</Text>
-          </View>
-        )}
+        <View style={{ alignItems: 'flex-end', gap: 6 }}>
+          <Text style={{ fontSize: 17, fontWeight: '800' }}>{price}</Text>
+          {onPay && (
+            <Pressable
+              onPress={onPay}
+              disabled={payDisabled}
+              accessibilityRole="button"
+              accessibilityLabel={`Pay ${price} with UPI`}
+              style={({ pressed }) => ({ backgroundColor: theme.accent, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, opacity: pressed || payDisabled ? 0.5 : 1 })}>
+              <Text style={{ color: theme.accentText, fontWeight: '800', fontSize: 13 }}>Pay with UPI</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
-        <Text style={{ fontSize: 28, fontWeight: '800', letterSpacing: -0.5 }}>{formatMoney(plan.price_paise, currency)}</Text>
-        {months > 1 && (
-          <Text variant="small">≈ {formatMoney(Math.round(plan.price_paise / months / 100) * 100, currency)} / month</Text>
-        )}
-      </View>
-      {plan.description && <Text variant="muted">{plan.description}</Text>}
-      {onPay && <Button title={`Pay ${formatMoney(plan.price_paise, currency)} with UPI`} disabled={payDisabled} onPress={onPay} />}
+      {plan.description && <Text variant="small">{plan.description}</Text>}
     </Card>
   );
 }

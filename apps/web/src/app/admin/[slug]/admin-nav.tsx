@@ -12,6 +12,7 @@ import {
   HeartHandshake,
   LayoutDashboard,
   MoreHorizontal,
+  QrCode,
   ReceiptText,
   ScanLine,
   Settings,
@@ -28,14 +29,15 @@ const ITEMS = [
   { href: "/classes", label: "Classes", short: "Classes", icon: CalendarDays, roles: null, needs: "classes" },
   { href: "/workouts", label: "Workouts", short: "Workouts", icon: Dumbbell, roles: null, needs: "workouts" },
   { href: "/pt", label: "Personal training", short: "PT", icon: HeartHandshake, roles: null, needs: "pt" },
-  { href: "/foods", label: "Foods", short: "Foods", icon: Apple, roles: null, needs: "nutrition" },
+  { href: "/foods", label: "Nutrition", short: "Food", icon: Apple, roles: null, needs: "nutrition" },
   { href: "/plans", label: "Plans", short: "Plans", icon: CreditCard, roles: null },
   { href: "/payments", label: "Payments", short: "Payments", icon: ReceiptText, roles: ["owner", "admin", "staff"] },
-  { href: "/settings", label: "Settings", short: "Settings", icon: Settings, roles: ["owner", "admin"] },
+  { href: "/settings", label: "Settings", short: "Settings", icon: Settings, roles: ["owner", "admin"], group: "gym" },
+  { href: "/checkin/poster", label: "QR poster", short: "Poster", icon: QrCode, roles: ["owner", "admin", "staff"], needs: "poster", group: "gym" },
 ] as const;
 
 // Order for the phone bottom bar: the first four that apply get a tab, the rest go under "More".
-const BOTTOM_PRIORITY = ["", "/members", "/checkin", "/payments", "/classes", "/plans", "/pt", "/workouts", "/foods", "/settings"];
+const BOTTOM_PRIORITY = ["", "/members", "/checkin", "/payments", "/classes", "/plans", "/pt", "/workouts", "/foods", "/settings", "/checkin/poster"];
 
 type NavProps = {
   slug: string;
@@ -45,40 +47,64 @@ type NavProps = {
   workoutsEnabled: boolean;
   ptEnabled: boolean;
   nutritionEnabled: boolean;
+  posterEnabled: boolean;
+  // Red counts beside Members (people waiting to join) and Payments (UPI to confirm).
+  counts?: { members: number; payments: number };
 };
 
 type Item = (typeof ITEMS)[number];
 
-function useNav({ slug, role, checkinEnabled, classesEnabled, workoutsEnabled, ptEnabled, nutritionEnabled }: NavProps) {
+function useNav({ slug, role, checkinEnabled, classesEnabled, workoutsEnabled, ptEnabled, nutritionEnabled, posterEnabled }: NavProps) {
   const pathname = usePathname();
   const base = `/admin/${slug}`;
-  const enabled = { checkin: checkinEnabled, classes: classesEnabled, workouts: workoutsEnabled, pt: ptEnabled, nutrition: nutritionEnabled };
+  const enabled = { checkin: checkinEnabled, classes: classesEnabled, workouts: workoutsEnabled, pt: ptEnabled, nutrition: nutritionEnabled, poster: posterEnabled };
   const items = ITEMS.filter(
     (i) => (!i.roles || (i.roles as readonly GymRole[]).includes(role)) && (!("needs" in i) || enabled[i.needs]),
   );
-  const isActive = (i: Item) => (i.href ? pathname.startsWith(base + i.href) : pathname === base);
+  // The longest matching link wins, so the poster page doesn't also light up Check-in.
+  const active = items
+    .filter((i) => (i.href ? pathname.startsWith(base + i.href) : pathname === base))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+  const isActive = (i: Item) => i === active;
   return { items, base, isActive };
+}
+
+function countFor(i: Item, counts: NavProps["counts"]) {
+  return i.href === "/members" ? counts?.members : i.href === "/payments" ? counts?.payments : 0;
 }
 
 // Sidebar (tablet and desktop).
 export function AdminNav(props: NavProps) {
   const { items, base, isActive } = useNav(props);
+  const link = (i: Item) => {
+    const count = countFor(i, props.counts);
+    return (
+      <Link
+        key={i.label}
+        href={base + i.href}
+        aria-current={isActive(i) ? "page" : undefined}
+        className={clsx(
+          "flex items-center gap-2 rounded-lg px-3 py-2 text-sm",
+          isActive(i) ? "bg-brand/15 font-medium text-foreground" : "text-muted hover:bg-border/40",
+        )}
+      >
+        <i.icon className="size-4" />
+        {i.label}
+        {!!count && (
+          <span className="ml-auto rounded-full bg-danger px-1.5 text-[10.5px] font-bold text-white" aria-label={`${count} waiting`}>
+            {count}
+          </span>
+        )}
+      </Link>
+    );
+  };
+  const main = items.filter((i) => !("group" in i));
+  const gym = items.filter((i) => "group" in i);
   return (
     <nav className="flex flex-col gap-1 px-2" aria-label="Admin">
-      {items.map((i) => (
-        <Link
-          key={i.label}
-          href={base + i.href}
-          aria-current={isActive(i) ? "page" : undefined}
-          className={clsx(
-            "flex items-center gap-2 rounded-lg px-3 py-2 text-sm",
-            isActive(i) ? "bg-brand/15 font-medium text-foreground" : "text-muted hover:bg-border/40",
-          )}
-        >
-          <i.icon className="size-4" />
-          {i.label}
-        </Link>
-      ))}
+      {main.map(link)}
+      {gym.length > 0 && <p className="px-3 pt-4 pb-1 text-[10.5px] font-medium tracking-widest text-muted uppercase">Gym</p>}
+      {gym.map(link)}
     </nav>
   );
 }

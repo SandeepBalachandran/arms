@@ -98,46 +98,48 @@ export function MembershipProgress() {
   const { state } = useMembership();
   if (!state || !gym) return null;
 
-  let title = 'No active plan';
-  let sub = 'See plans and prices →';
-  let ring: ReactNode = null;
+  let kicker = 'Membership pass';
+  let title = 'No plan yet';
+  let sub = 'Choose a plan to start';
+  let ring: ReactNode = <ProgressRing value={0} label="0" caption="days left" size={92} warn />;
+  let renew = true;
   if (state.kind === 'active') {
     const end = state.next?.ends_on ?? state.current.ends_on;
     const total = daysBetween(state.current.starts_on, end) + 1;
     const warn = !state.next && state.daysLeft <= gym.expiry_warning_days;
-    title = warn ? 'Renew soon!' : 'Membership active';
-    sub = `${state.current.plan_name} · till ${formatDate(end)}`;
-    ring = <ProgressRing value={state.daysLeft / total} label={`${state.daysLeft}d`} warn={warn} />;
+    title = state.current.plan_name;
+    sub = state.next ? `Renewed · next starts ${formatDate(state.next.starts_on)}` : `Ends ${formatDate(state.current.ends_on)}`;
+    ring = <ProgressRing value={state.daysLeft / total} label={String(state.daysLeft)} caption={state.daysLeft === 1 ? 'day left' : 'days left'} size={92} warn={warn} />;
+    renew = warn;
   } else if (state.kind === 'upcoming') {
-    title = 'Membership starts soon';
-    sub = `${state.next.plan_name} · from ${formatDate(state.next.starts_on)}`;
-    ring = <ProgressRing value={0} label={`${state.startsIn}d`} />;
+    kicker = 'Starts soon';
+    title = state.next.plan_name;
+    sub = `From ${formatDate(state.next.starts_on)}`;
+    ring = <ProgressRing value={0} label={String(state.startsIn)} caption="days to go" size={92} />;
+    renew = false;
   } else if (state.kind === 'expired') {
-    title = 'Membership expired';
-    sub = `Ended ${formatDate(state.last.ends_on)} · Renew →`;
-    ring = <ProgressRing value={0} label="0d" warn />;
+    title = 'Expired';
+    sub = `Ended ${formatDate(state.last.ends_on)}`;
   }
 
   return (
     <PressableScale
       onPress={() => router.push('/membership')}
       accessibilityRole="button"
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: Spacing.three,
-        backgroundColor: theme.progress,
-        borderRadius: 20,
-        padding: Spacing.three,
-        paddingVertical: 14,
-      }}>
-      <View style={{ flex: 1, gap: 2 }}>
-        <Text style={{ fontSize: 18, fontWeight: '700' }}>{title}</Text>
-        <Text variant="muted" style={{ fontSize: 14 }}>
-          {sub}
-        </Text>
-      </View>
+      accessibilityLabel={`${title}. ${sub}`}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: theme.hero, borderRadius: 24, padding: 18, overflow: 'hidden' }}>
+      <View style={{ position: 'absolute', left: -40, top: -50, width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(200,240,75,0.12)' }} />
       {ring}
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={{ color: theme.heroMuted, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase' }}>{kicker}</Text>
+        <Text style={{ color: theme.heroText, fontSize: 21, fontWeight: '800' }} numberOfLines={1}>{title}</Text>
+        <Text style={{ color: theme.heroMuted, fontSize: 12.5 }}>{sub}</Text>
+        {renew && (
+          <View style={{ alignSelf: 'flex-start', marginTop: 8, backgroundColor: theme.accent, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 }}>
+            <Text style={{ color: theme.accentText, fontWeight: '800', fontSize: 13 }}>{state.kind === 'none' ? 'See plans' : 'Renew with UPI'}</Text>
+          </View>
+        )}
+      </View>
     </PressableScale>
   );
 }

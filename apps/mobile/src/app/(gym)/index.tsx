@@ -5,7 +5,7 @@ import { CheckinCard } from '@/components/checkin-card';
 import { ExploreTiles, HomeHeader, MembershipProgress, TodayHero } from '@/components/home-cards';
 import { HoursCard } from '@/components/hours-card';
 import { Appear } from '@/components/motion';
-import { Screen, SectionHeader, Text } from '@/components/ui';
+import { Screen, Text } from '@/components/ui';
 import { useProfile } from '@/lib/profile';
 
 export default function HomeScreen() {
@@ -30,17 +30,15 @@ export default function HomeScreen() {
         <CheckinCard />
       </Appear>
       <Appear index={3}>
-        <ActivityCard />
-      </Appear>
-
-      <Appear index={4} style={{ gap: 16 }}>
-        <SectionHeader title="Today" />
         <TodayHero />
       </Appear>
 
-      <Appear index={5} style={{ gap: 16 }}>
-        <SectionHeader title="Explore" />
+      <Appear index={4}>
         <ExploreTiles />
+      </Appear>
+
+      <Appear index={5}>
+        <ActivityCard />
       </Appear>
 
       <Appear index={6}>

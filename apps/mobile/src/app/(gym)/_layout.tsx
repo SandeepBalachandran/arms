@@ -5,12 +5,13 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Text } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
 import { useActiveGym } from '@/lib/gyms';
 import { useNutritionAccess } from '@/lib/nutrition';
 import { saveSplashBrand } from '@/lib/splash-brand';
 
-// Floating dark tab bar with icon buttons; the current tab is a lime circle.
+// Tab bar along the bottom: icon and label, the current tab's icon on a lime pill.
 // Optional features (classes, workouts, nutrition) hide their tab.
 export default function GymTabs() {
   const theme = useTheme();
@@ -26,7 +27,7 @@ export default function GymTabs() {
     { name: 'classes', href: '/classes', label: 'Classes', icon: CalendarDays, shown: !!gym?.classes_enabled },
     { name: 'workouts', href: '/workouts', label: 'Workouts', icon: Dumbbell, shown: !!gym?.workouts_enabled },
     { name: 'food', href: '/food', label: 'Food', icon: Apple, shown: nutrition.available },
-    { name: 'membership', href: '/membership', label: 'Membership', icon: CreditCard, shown: true },
+    { name: 'membership', href: '/membership', label: 'Pass', a11y: 'Membership pass', icon: CreditCard, shown: true },
     { name: 'profile', href: '/profile', label: 'Profile', icon: User, shown: true },
   ] as const;
 
@@ -44,10 +45,10 @@ export default function GymTabs() {
         }
       />
       {/* Must stay a direct child of Tabs: expo-router reads the triggers from it. */}
-      <TabList style={[styles.bar, { backgroundColor: theme.hero, marginBottom: Math.max(insets.bottom, 12) }]}>
+      <TabList style={[styles.bar, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: Math.max(insets.bottom, 10) }]}>
         {tabs.map((t) => (
           <TabTrigger key={t.name} name={t.name} href={t.href} asChild style={t.shown ? undefined : styles.hidden}>
-            <TabButton label={t.label} icon={t.icon} />
+            <TabButton label={t.label} a11y={'a11y' in t ? t.a11y : t.label} icon={t.icon} />
           </TabTrigger>
         ))}
       </TabList>
@@ -55,10 +56,10 @@ export default function GymTabs() {
   );
 }
 
-function TabButton({ label, icon: Icon, isFocused, style, ...props }: TabTriggerSlotProps & { label: string; icon: LucideIcon }) {
+function TabButton({ label, a11y, icon: Icon, isFocused, style, ...props }: TabTriggerSlotProps & { label: string; a11y: string; icon: LucideIcon }) {
   const theme = useTheme();
   const reduced = useReducedMotion();
-  // The lime circle springs in on the newly selected tab.
+  // The lime pill springs in on the newly selected tab.
   const scale = useSharedValue(isFocused ? 1 : 0);
   useEffect(() => {
     scale.set(reduced ? (isFocused ? 1 : 0) : withSpring(isFocused ? 1 : 0, { damping: 14, stiffness: 180 }));
@@ -68,16 +69,19 @@ function TabButton({ label, icon: Icon, isFocused, style, ...props }: TabTrigger
     <Pressable
       {...props}
       accessibilityRole="tab"
-      accessibilityLabel={label}
+      accessibilityLabel={a11y}
       accessibilityState={{ selected: isFocused }}
       style={(state) => [styles.tab, typeof style === 'function' ? style(state) : style]}>
-      <View style={styles.circle}>
-        <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: 24, backgroundColor: theme.accent }, blob]} />
-        {/* zIndex keeps the icon above the (positioned) animated circle. */}
+      <View style={styles.pill}>
+        <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: 999, backgroundColor: theme.accent }, blob]} />
+        {/* zIndex keeps the icon above the (positioned) animated pill. */}
         <View style={{ zIndex: 1 }}>
-          <Icon size={22} color={isFocused ? theme.accentText : theme.heroMuted} strokeWidth={isFocused ? 2.4 : 2} />
+          <Icon size={21} color={isFocused ? theme.accentText : theme.textSecondary} strokeWidth={isFocused ? 2.4 : 2} />
         </View>
       </View>
+      <Text numberOfLines={1} style={{ fontSize: 10.5, fontWeight: '700', color: isFocused ? theme.text : theme.textSecondary }}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -87,13 +91,11 @@ const styles = StyleSheet.create({
   hidden: { display: 'none' },
   bar: {
     flexDirection: 'row',
-    borderRadius: 999,
-    marginHorizontal: 20,
-    marginTop: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 8,
+    paddingHorizontal: 4,
     justifyContent: 'space-around',
   },
-  tab: { flex: 1, alignItems: 'center' },
-  circle: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  tab: { flex: 1, alignItems: 'center', gap: 3 },
+  pill: { width: 50, height: 30, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
 });
