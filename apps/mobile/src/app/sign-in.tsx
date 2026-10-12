@@ -5,6 +5,7 @@ import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
+import { InstallBanner } from '@/components/install-banner';
 import { Button, Input, PasswordInput, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -177,6 +178,7 @@ export default function SignInScreen() {
             </Animated.View>
 
             <View style={{ flex: 1 }} />
+            <InstallBanner />
             <Text variant="small" style={{ textAlign: 'center' }}>
               {step === 'password'
                 ? 'Forgot your password? Use Email code instead.'
