@@ -1,0 +1,1506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GOS Demo</title>
+<meta name="description" content="Clickable demo of GOS: the gym admin and the member app, with sample data. Nothing is saved.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* GOS demo: one file, no server. The admin (left) and the member app (right)
+   share one in-memory state, so an action on one side shows up on the other. */
+:root {
+  --page: #eef0e8; --bg: #f7f8f3; --surface: #ffffff; --border: #e4e7dc; --text: #18181b; --muted: #6b7068;
+  --brand: #65a30d; --brand-fg: #ffffff; --accent: #c8f04b; --accent-fg: #1a2e05; --hero: #1f2a10; --hero-text: #fff; --hero-muted: #c3cdb2;
+  --danger: #dc2626; --good: #15803d; --good-bg: #dcfce7; --warn: #b45309; --warn-bg: #fef3c7; --bad-bg: #fee2e2;
+  --usp: #f59e0b; --usp-bg: #fff7e0; --usp-fg: #7a4a00;
+  --t-blue-bg: #e2f3fb; --t-blue: #3d84a8; --t-green-bg: #e7f7e3; --t-green: #4f9a57; --t-pink-bg: #f9e4f1; --t-pink: #b85d98; --t-yellow-bg: #fbf5d8; --t-yellow: #a08a1c;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: Poppins, system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--page); color: var(--text); font-size: 14px; -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 0; background: none; padding: 0; }
+svg.i { width: 1em; height: 1em; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.125em; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Top bar --------------------------------------------------------------- */
+.top { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 10px 20px; background: var(--hero); color: #fff; }
+.top .logo { font-weight: 800; font-size: 20px; letter-spacing: -0.5px; }
+.top .logo b { color: var(--accent); }
+.top .tag { color: var(--hero-muted); font-size: 12.5px; flex: 1; min-width: 200px; }
+.seg { display: inline-flex; background: rgba(255,255,255,.1); border-radius: 999px; padding: 3px; }
+.seg button { padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: #e6ecd9; }
+.seg button.on { background: var(--accent); color: var(--accent-fg); }
+.tbtn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: rgba(255,255,255,.1); color: #fff; }
+.tbtn:hover { background: rgba(255,255,255,.18); }
+.tbtn.usp-btn { background: var(--usp); color: #3b2500; }
+.switch-usp { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: #fff; }
+
+/* Stage ------------------------------------------------------------------ */
+.stage { display: flex; gap: 24px; justify-content: center; align-items: flex-start; padding: 20px 16px 120px; flex-wrap: wrap; }
+body[data-view="admin"] .phone-wrap, body[data-view="app"] .col { display: none; }
+.browser { flex: 1 1 760px; max-width: 1180px; min-width: 0; background: var(--surface); border-radius: 14px; box-shadow: 0 20px 50px -20px rgba(31,42,16,.35), 0 0 0 1px rgba(0,0,0,.06); overflow: hidden; position: relative; }
+.chrome { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: #eceee6; border-bottom: 1px solid var(--border); }
+.dots { display: flex; gap: 6px; } .dots i { width: 11px; height: 11px; border-radius: 50%; background: #d4d7cc; display: block; }
+.dots i:nth-child(1) { background: #f87171; } .dots i:nth-child(2) { background: #fbbf24; } .dots i:nth-child(3) { background: #4ade80; }
+.url { flex: 1; background: #fff; border-radius: 8px; padding: 5px 12px; font-size: 12px; color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.url b { color: var(--text); font-weight: 500; }
+#admin { height: min(820px, calc(100vh - 120px)); min-height: 620px; position: relative; }
+.phone-wrap { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.phone-label, .browser-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.col { display: flex; flex-direction: column; gap: 10px; flex: 1 1 760px; max-width: 1180px; min-width: 0; }
+.col .browser { flex: none; max-width: none; }
+.phone { width: 390px; height: 820px; border-radius: 52px; background: #111; padding: 12px; box-shadow: 0 30px 60px -25px rgba(0,0,0,.5); position: relative; }
+.phone .notch { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 110px; height: 30px; background: #000; border-radius: 20px; z-index: 30; }
+#app { width: 100%; height: 100%; border-radius: 41px; overflow: hidden; position: relative; background: var(--p-bg); color: var(--p-text); display: flex; flex-direction: column; }
+@media (max-width: 440px) { .phone { width: calc(100vw - 24px); height: 760px; border-radius: 40px; padding: 8px; } #app { border-radius: 33px; } }
+
+/* USP marks -------------------------------------------------------------- */
+.usp { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 800; letter-spacing: .3px; color: var(--usp-fg); background: var(--usp-bg); border: 1px solid #fcd581; border-radius: 999px; padding: 1px 7px 1px 6px; white-space: nowrap; vertical-align: middle; cursor: help; text-transform: uppercase; }
+.usp svg.i { width: 10px; height: 10px; fill: var(--usp); stroke: var(--usp); }
+body.usp-on .uz { outline: 2.5px dashed var(--usp); outline-offset: 3px; border-radius: 14px; animation: glow 2.4s ease-in-out infinite; }
+@keyframes glow { 50% { outline-color: #fbbf24aa; } }
+@media (prefers-reduced-motion: reduce) { body.usp-on .uz { animation: none; } }
+.flash { animation: flash 1.6s ease-out 1; }
+@keyframes flash { 0%, 40% { box-shadow: 0 0 0 4px var(--usp); } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+/* USP drawer + guide ------------------------------------------------------ */
+.drawer { position: fixed; right: 16px; top: 64px; width: 380px; max-width: calc(100vw - 32px); max-height: calc(100vh - 90px); overflow: auto; background: #fff; border-radius: 18px; box-shadow: 0 24px 60px -20px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.06); z-index: 60; padding: 18px; display: none; }
+.drawer.open { display: block; }
+.drawer h3 { margin: 0 0 4px; font-size: 17px; }
+.drawer p.sub { margin: 0 0 14px; color: var(--muted); font-size: 12.5px; }
+.usp-item { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 12px 0; border-top: 1px solid var(--border); }
+.usp-item .n { width: 28px; height: 28px; border-radius: 50%; background: var(--usp-bg); color: var(--usp-fg); font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 13px; border: 1px solid #fcd581; }
+.usp-item b { display: block; font-size: 13.5px; }
+.usp-item span { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.usp-item .vs { font-size: 11.5px; margin-top: 4px; color: #8a5a00; }
+.usp-item button { margin-top: 6px; font-size: 12px; font-weight: 600; color: var(--brand); display: inline-flex; align-items: center; gap: 4px; }
+.pitch { background: var(--hero); color: #fff; border-radius: 14px; padding: 12px 14px; font-size: 12.5px; margin-bottom: 8px; }
+.pitch b { color: var(--accent); }
+.guide { position: fixed; left: 16px; bottom: 16px; z-index: 55; width: auto; max-width: calc(100vw - 32px); background: #fff; border-radius: 18px; box-shadow: 0 24px 60px -20px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.06); }
+.guide.open { width: 330px; }
+.guide header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; font-weight: 700; cursor: pointer; }
+.guide ol { margin: 0; padding: 0 14px 12px; list-style: none; counter-reset: s; display: none; }
+.guide.open ol { display: block; }
+.guide li { counter-increment: s; }
+.guide li button { display: flex; gap: 10px; align-items: flex-start; text-align: left; width: 100%; padding: 8px; border-radius: 10px; font-size: 12.5px; }
+.guide li button:hover { background: var(--bg); }
+.guide li button::before { content: counter(s); flex: 0 0 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-fg); font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.guide li small { display: block; color: var(--muted); }
+
+/* Toasts ------------------------------------------------------------------ */
+#toasts { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+.toast { background: #18181b; color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 13px; box-shadow: 0 10px 30px -10px rgba(0,0,0,.5); display: flex; gap: 8px; align-items: center; animation: tin .25s ease-out; max-width: 90vw; }
+.toast .i { color: var(--accent); }
+.toast.from-app::before, .toast.from-admin::before { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; }
+.toast.from-app::before { content: "APP"; background: var(--accent); color: var(--accent-fg); }
+.toast.from-admin::before { content: "ADMIN"; background: #e5e7eb; color: #111; }
+@keyframes tin { from { opacity: 0; transform: translateY(8px); } }
+
+/* ===================== ADMIN ===================== */
+.a-app { display: flex; height: 100%; background: var(--bg); }
+.a-side { width: 214px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 14px 10px; gap: 2px; overflow: auto; }
+.a-side .brand { font-weight: 800; font-size: 18px; padding: 4px 10px 14px; }
+.a-side .brand b { color: var(--brand); }
+.a-nav { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; color: #3f3f46; font-size: 13.5px; width: 100%; text-align: left; }
+.a-nav:hover { background: #f1f3eb; }
+.a-nav.on { background: #e8f2d6; color: #1a2e05; font-weight: 600; }
+.a-nav .cnt { margin-left: auto; background: var(--danger); color: #fff; font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 1px 6px; }
+.a-nav .off { margin-left: auto; font-size: 10px; color: var(--muted); }
+.a-side .sep { font-size: 10.5px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 12px 10px 4px; }
+.a-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.a-head { height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 22px; background: rgba(255,255,255,.9); border-bottom: 1px solid var(--border); }
+.a-head .gym { display: flex; align-items: center; gap: 10px; font-weight: 600; flex: 1; min-width: 0; }
+.gym-logo { width: 32px; height: 32px; border-radius: 9px; background: var(--hero); color: var(--accent); font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.a-icon-btn { position: relative; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 19px; }
+.a-icon-btn:hover { background: #f1f3eb; }
+.a-icon-btn .badge { position: absolute; top: 2px; right: 2px; min-width: 16px; height: 16px; border-radius: 8px; background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+.a-user { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; padding: 4px 8px 4px 4px; border-radius: 999px; }
+.a-user:hover { background: #f1f3eb; }
+.a-content { flex: 1; overflow: auto; padding: 22px 26px 40px; }
+.a-pop { position: absolute; top: 52px; right: 70px; width: 320px; background: #fff; border-radius: 14px; border: 1px solid var(--border); box-shadow: 0 20px 40px -15px rgba(0,0,0,.3); z-index: 20; padding: 8px; }
+.a-pop .row { display: flex; gap: 10px; padding: 10px; border-radius: 10px; font-size: 13px; width: 100%; text-align: left; align-items: center; }
+.a-pop .row:hover { background: var(--bg); }
+.a-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.a-title h1 { font-size: 22px; margin: 0; letter-spacing: -.3px; display: flex; align-items: center; gap: 10px; }
+.a-title p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.a-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
+.a-card h2 { font-size: 15px; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+.a-card .hint { color: var(--muted); font-size: 12.5px; margin: 0 0 12px; }
+.grid { display: grid; gap: 14px; }
+.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.g-main { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+@media (max-width: 1100px) { .g4 { grid-template-columns: repeat(2, minmax(0,1fr)); } .g-main, .g3 { grid-template-columns: minmax(0,1fr); } }
+.stat .lbl { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.stat .val { font-size: 26px; font-weight: 700; margin-top: 4px; letter-spacing: -.5px; }
+.stat .sub { font-size: 12px; color: var(--muted); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; background: var(--brand); color: var(--brand-fg); white-space: nowrap; }
+.btn:hover { filter: brightness(.95); }
+.btn.sec { background: #fff; color: var(--text); border: 1px solid var(--border); }
+.btn.sec:hover { background: #f4f5ef; filter: none; }
+.btn.ghost { background: transparent; color: var(--text); }
+.btn.ghost:hover { background: #f1f3eb; }
+.btn.danger { background: var(--danger); color: #fff; }
+.btn.wa { background: #25d366; color: #073b1c; }
+.btn.sm { padding: 5px 10px; font-size: 12px; border-radius: 8px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.row-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.inp, .sel, textarea.inp { width: 100%; border: 1px solid var(--border); background: #fff; border-radius: 10px; padding: 8px 11px; font-size: 13px; outline: none; }
+.inp:focus, .sel:focus { border-color: var(--brand); box-shadow: 0 0 0 3px #65a30d22; }
+label.f { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 10px; }
+label.f > span { display: block; margin-bottom: 4px; }
+label.f small { color: var(--muted); font-weight: 400; }
+.b { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 2px 9px; background: #f1f2ec; color: #52525b; white-space: nowrap; }
+.b.good { background: var(--good-bg); color: var(--good); } .b.warn { background: var(--warn-bg); color: var(--warn); } .b.bad { background: var(--bad-bg); color: var(--danger); } .b.info { background: var(--t-blue-bg); color: var(--t-blue); }
+table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.t th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+table.t td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+table.t tr:last-child td { border-bottom: 0; }
+table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #fafbf7; }
+.who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.who b { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.who small { color: var(--muted); display: block; font-size: 12px; }
+.av { border-radius: 50%; overflow: hidden; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; background: var(--brand); color: #fff; position: relative; }
+.av img, .av svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { padding: 6px 12px; border-radius: 999px; font-size: 12.5px; border: 1px solid var(--border); background: #fff; font-weight: 500; }
+.chip.on { background: var(--hero); color: #fff; border-color: var(--hero); }
+.list > * + * { border-top: 1px solid var(--border); }
+.li { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.li .grow { flex: 1; min-width: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.tabnum { font-variant-numeric: tabular-nums; }
+.empty { text-align: center; color: var(--muted); padding: 20px; font-size: 13px; }
+.banner { border-radius: 14px; padding: 14px; display: flex; gap: 14px; align-items: center; }
+.banner.ok { background: #ecfccb; border: 1px solid #bef264; }
+.banner.warn { background: var(--warn-bg); border: 1px solid #fcd34d; }
+.banner.bad { background: var(--bad-bg); border: 1px solid #fca5a5; }
+.scan-box { aspect-ratio: 16/10; background: #0b0d08; border-radius: 14px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 12.5px; }
+.scan-box .frame { position: absolute; width: 46%; aspect-ratio: 1; border: 3px solid var(--accent); border-radius: 18px; box-shadow: 0 0 0 999px rgba(0,0,0,.35); }
+.scan-box .line { position: absolute; width: 42%; height: 2px; background: var(--accent); animation: scan 2s ease-in-out infinite alternate; }
+@keyframes scan { from { transform: translateY(-60px); } to { transform: translateY(60px); } }
+.toggle { position: relative; width: 40px; height: 23px; flex-shrink: 0; }
+.toggle input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 1; margin: 0; }
+.toggle span { position: absolute; inset: 0; border-radius: 999px; background: #d4d7cc; transition: .15s; }
+.toggle span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 17px; height: 17px; border-radius: 50%; background: #fff; transition: .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.toggle input:checked + span { background: var(--brand); }
+.toggle input:checked + span::after { transform: translateX(17px); }
+.set-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-top: 1px solid var(--border); }
+.set-row:first-of-type { border-top: 0; }
+.set-row .grow { flex: 1; }
+.set-row b { font-weight: 600; font-size: 13.5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.set-row small { color: var(--muted); display: block; font-size: 12px; }
+.progress { height: 8px; border-radius: 999px; background: #eef0e6; overflow: hidden; }
+.progress > i { display: block; height: 100%; border-radius: 999px; background: var(--brand); }
+.a-modal-back { position: absolute; inset: 0; background: rgba(15,20,8,.45); display: flex; align-items: flex-start; justify-content: center; padding: 50px 16px; z-index: 40; overflow: auto; }
+.a-modal { background: #fff; border-radius: 18px; width: min(540px, 100%); box-shadow: 0 30px 60px -20px rgba(0,0,0,.4); animation: tin .2s ease-out; }
+.a-modal header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--border); font-weight: 700; }
+.a-modal .body { padding: 18px; }
+.bars { position: relative; display: flex; gap: 6px; align-items: flex-end; margin-bottom: 22px; }
+.bar-col { flex: 1; height: 100%; display: flex; align-items: flex-end; justify-content: center; position: relative; }
+.bar-col .bar { width: 64%; max-width: 26px; min-height: 2px; border-radius: 4px 4px 0 0; transition: filter .15s; }
+.bar-col:hover .bar { filter: brightness(.85); }
+.bar-col span { position: absolute; bottom: -19px; font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+.bar-col .tip { position: absolute; bottom: calc(100% + 4px); background: #18181b; color: #fff; font-size: 11px; border-radius: 6px; padding: 3px 7px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .1s; z-index: 2; }
+.bar-col:hover .tip { opacity: 1; }
+.bars .target { position: absolute; left: 0; right: 0; border-top: 1.5px dashed #9ca3af; pointer-events: none; }
+.bars .target b { position: absolute; right: 0; top: -16px; font-size: 10px; color: var(--muted); font-weight: 500; }
+.poster { background: var(--hero); color: #fff; border-radius: 22px; padding: 26px; text-align: center; max-width: 360px; margin: 0 auto; }
+.poster .qr { background: #fff; border-radius: 16px; padding: 14px; display: inline-block; margin: 14px 0; }
+.receipt { max-width: 460px; margin: 0 auto; }
+.receipt dl { margin: 12px 0 0; }
+.receipt dl div { display: grid; grid-template-columns: 130px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+.receipt dl div:first-child { border-top: 0; }
+.receipt dt { color: var(--muted); }
+.receipt dd { margin: 0; }
+.receipt .amt { display: flex; justify-content: space-between; align-items: baseline; border-top: 2px solid var(--text); margin-top: 10px; padding-top: 12px; font-weight: 600; }
+.receipt .amt strong { font-size: 24px; }
+.wa-preview { background: #e7ffdb; border-radius: 12px; padding: 12px; font-size: 12.5px; white-space: pre-wrap; border: 1px solid #c4f1a8; }
+.plan-day { border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+.plan-day h4 { margin: 0 0 8px; font-size: 13.5px; display: flex; justify-content: space-between; align-items: center; }
+.ex-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-top: 1px dashed var(--border); }
+.import-prev td.badrow { color: var(--danger); }
+
+/* ===================== MEMBER APP ===================== */
+#app { --p-bg: #f6f7f2; --p-surface: #ffffff; --p-muted: #f1f3ea; --p-text: #18181b; --p-sec: #6b7068; --p-border: #e7e9df; --p-accent: #c8f04b; --p-accent-fg: #141a04; --p-hero: #1f2a10; --p-brand: #65a30d; --p-danger: #dc2626; }
+#app.dark { --p-bg: #0b0d08; --p-surface: #15180f; --p-muted: #1c2015; --p-text: #fafafa; --p-sec: #a1a1aa; --p-border: #2a2f22; --p-hero: #1f2b0d; --p-brand: #a3e635; --p-danger: #f87171;
+  --t-blue-bg: #13283a; --t-green-bg: #15291a; --t-pink-bg: #2d1626; --t-yellow-bg: #2a2510; }
+.p-status { height: 46px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 30px 6px; font-size: 13px; font-weight: 600; }
+.p-status .r { display: flex; gap: 5px; align-items: center; }
+.p-status .batt { width: 22px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; }
+.p-status .batt::after { content: ""; position: absolute; inset: 1.5px; right: 5px; background: currentColor; border-radius: 1px; }
+.p-body { flex: 1; overflow: auto; padding: 8px 16px 20px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
+.p-body::-webkit-scrollbar { display: none; }
+.p-body > * { flex-shrink: 0; }
+.p-bar { display: flex; align-items: center; gap: 10px; padding: 4px 12px 8px; flex-shrink: 0; font-weight: 700; font-size: 16px; border-bottom: 1px solid var(--p-border); }
+.p-bar button { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.p-tabs { flex-shrink: 0; display: flex; justify-content: space-around; padding: 8px 6px 22px; background: var(--p-surface); border-top: 1px solid var(--p-border); }
+.p-tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 600; color: var(--p-sec); flex: 1; padding: 4px 0; border-radius: 12px; }
+.p-tab .i { font-size: 21px; }
+.p-tab.on { color: var(--p-text); }
+.p-tab.on .ico { background: var(--p-accent); color: var(--p-accent-fg); }
+.p-tab .ico { width: 46px; height: 28px; border-radius: 999px; display: flex; align-items: center; justify-content: center; }
+.p-card { background: var(--p-surface); border: 1px solid var(--p-border); border-radius: 22px; padding: 16px; }
+.p-hero { background: var(--p-hero); color: #fff; border-radius: 24px; padding: 18px; position: relative; overflow: hidden; }
+.p-hero .blob { position: absolute; border-radius: 50%; }
+.p-hero .k { color: #c3cdb2; font-size: 12px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+.p-hero h3 { margin: 4px 0 2px; font-size: 21px; font-weight: 800; letter-spacing: -.3px; }
+.p-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; }
+.p-btn { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border-radius: 999px; font-weight: 800; font-size: 14.5px; background: var(--p-accent); color: var(--p-accent-fg); width: 100%; padding: 0 16px; }
+.p-btn.sec { background: var(--p-muted); color: var(--p-text); }
+.p-btn.dark { background: var(--p-hero); color: #fff; }
+.p-btn.danger { background: var(--p-danger); color: #fff; }
+.p-btn.sm { min-height: 36px; font-size: 13px; width: auto; padding: 0 14px; }
+.p-btn:disabled { opacity: .5; }
+.p-h { font-size: 17px; font-weight: 800; margin: 4px 0 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.p-sec { color: var(--p-sec); font-size: 12.5px; }
+.p-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.p-tile { border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 6px; text-align: left; min-height: 104px; }
+.p-tile .ic { width: 34px; height: 34px; border-radius: 12px; background: var(--p-surface); display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.p-tile b { font-size: 13px; } .p-tile small { font-size: 11px; opacity: .8; }
+.tint-blue { background: var(--t-blue-bg); } .tint-blue .fg { color: var(--t-blue); }
+.tint-green { background: var(--t-green-bg); } .tint-green .fg { color: var(--t-green); }
+.tint-pink { background: var(--t-pink-bg); } .tint-pink .fg { color: var(--t-pink); }
+.tint-yellow { background: var(--t-yellow-bg); } .tint-yellow .fg { color: var(--t-yellow); }
+.p-row { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 16px; width: 100%; text-align: left; }
+.p-row:hover { background: var(--p-muted); }
+.p-row .ic { width: 40px; height: 40px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.p-row .grow { flex: 1; min-width: 0; }
+.p-row b { font-weight: 700; display: block; font-size: 14px; }
+.p-row small { color: var(--p-sec); font-size: 12px; display: block; }
+.p-list > * + * { border-top: 1px solid var(--p-border); }
+.p-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.p-chips button { flex-shrink: 0; border-radius: 16px; padding: 8px 12px; background: var(--p-surface); border: 1px solid var(--p-border); font-size: 12px; font-weight: 600; text-align: center; min-width: 52px; }
+.p-chips button b { display: block; font-size: 16px; }
+.p-chips button.on { background: var(--p-hero); color: #fff; border-color: var(--p-hero); }
+.p-sheet-back { position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 25; display: flex; align-items: flex-end; animation: fade .15s; }
+@keyframes fade { from { opacity: 0; } }
+.p-sheet { background: var(--p-surface); width: 100%; border-radius: 28px 28px 0 0; padding: 10px 18px 30px; max-height: 88%; overflow: auto; animation: up .25s ease-out; }
+@keyframes up { from { transform: translateY(40px); opacity: .5; } }
+.p-sheet .grab { width: 40px; height: 4px; border-radius: 2px; background: var(--p-border); margin: 0 auto 12px; }
+.p-sheet h3 { margin: 0 0 4px; font-size: 18px; }
+.p-inp { width: 100%; border: 1px solid var(--p-border); background: var(--p-muted); color: var(--p-text); border-radius: 14px; padding: 12px 14px; font-size: 14px; outline: none; }
+.p-inp:focus { border-color: var(--p-brand); }
+.ring-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+.ring-wrap .c { position: absolute; text-align: center; line-height: 1.1; }
+.ring-wrap .c b { font-size: 22px; font-weight: 800; display: block; }
+.ring-wrap .c small { font-size: 11px; opacity: .75; }
+.water { display: flex; gap: 6px; }
+.water button { width: 30px; height: 36px; border-radius: 9px; border: 1.5px solid #93c5fd; display: flex; align-items: flex-end; overflow: hidden; }
+.water button i { display: block; width: 100%; background: #60a5fa; height: 0; transition: height .2s; }
+.water button.on i { height: 100%; }
+.week { display: flex; justify-content: space-between; }
+.week div { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--p-sec); }
+.week i { width: 30px; height: 30px; border-radius: 50%; background: var(--p-muted); display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 13px; }
+.week i.on { background: var(--p-accent); color: var(--p-accent-fg); }
+.week i.today { outline: 2px solid var(--p-brand); outline-offset: 2px; }
+.set-grid { display: grid; grid-template-columns: 34px 1fr 62px 56px 38px; gap: 6px; align-items: center; font-size: 12.5px; }
+.set-grid .h { font-size: 10px; font-weight: 700; color: var(--p-sec); letter-spacing: .5px; }
+.set-grid input { width: 100%; text-align: center; border: 1px solid var(--p-border); border-radius: 10px; padding: 7px 2px; background: var(--p-muted); color: var(--p-text); font-weight: 700; }
+.set-grid .tick { width: 34px; height: 34px; border-radius: 10px; background: var(--p-muted); display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--p-sec); }
+.set-grid .tick.on { background: var(--p-accent); color: var(--p-accent-fg); }
+.set-grid .done input { background: color-mix(in srgb, var(--p-accent) 25%, var(--p-surface)); }
+.restbar { position: sticky; bottom: 0; background: var(--p-hero); color: #fff; border-radius: 18px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+.dots-row { display: flex; gap: 5px; flex-wrap: wrap; }
+.dots-row i { width: 14px; height: 14px; border-radius: 50%; background: var(--p-surface); display: block; }
+.dots-row i.on { background: var(--t-blue); }
+.food-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; font-size: 13px; }
+.food-item small { color: var(--p-sec); display: block; font-size: 11.5px; }
+.ml { color: var(--p-sec); font-size: 11.5px; }
+.stepper { display: flex; align-items: center; gap: 10px; }
+.stepper button { width: 34px; height: 34px; border-radius: 50%; background: var(--p-muted); font-size: 18px; font-weight: 700; }
+.pbar { height: 10px; border-radius: 99px; background: var(--p-muted); overflow: hidden; }
+.pbar i { display: block; height: 100%; border-radius: 99px; }
+.p-badge { font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 999px; background: var(--p-accent); color: var(--p-accent-fg); }
+.unread-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--p-brand); flex-shrink: 0; }
+.p-signed { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 30px; text-align: center; }
+@media (max-width: 760px) {
+  .top { position: static; padding: 10px 12px; gap: 8px; }
+  .top .tag { display: none; }
+  .stage { padding: 12px 8px 90px; }
+  .a-app { flex-direction: column; }
+  .a-side { width: auto; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border); padding: 6px; }
+  .a-side .brand, .a-side .sep { display: none; }
+  .a-nav { width: auto; white-space: nowrap; flex-shrink: 0; }
+  .a-head { padding: 0 12px; }
+  .a-head .a-user span { display: none; }
+  .a-content { padding: 14px 12px 30px; }
+  .g2, .g4 { grid-template-columns: minmax(0, 1fr); }
+  .grid[style*="grid-template-columns"] { grid-template-columns: minmax(0, 1fr) !important; }
+  .chrome .url { font-size: 11px; }
+}
+</style>
+</head>
+<body data-view="both">
+
+<div class="top">
+  <div class="logo">G<b>OS</b></div>
+  <div class="tag">Gym Operating System · <b style="color:#fff">clickable demo</b> with sample data. Nothing is saved; try anything.</div>
+  <div class="seg" role="group" aria-label="What to show">
+    <button data-a="view" data-v="both" class="on">Both</button>
+    <button data-a="view" data-v="admin">Gym admin</button>
+    <button data-a="view" data-v="app">Member app</button>
+  </div>
+  <label class="switch-usp"><span class="toggle"><input type="checkbox" id="usp-toggle" data-change="uspHighlight"><span></span></span> Highlight USPs</label>
+  <button class="tbtn usp-btn" data-a="drawer"><svg class="i" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2 2 9.3l6.9-1z"/></svg> Why GOS (8 USPs)</button>
+  <button class="tbtn" data-a="reset">Reset demo</button>
+</div>
+
+<div class="stage">
+  <div class="col">
+    <div class="browser-label">Gym admin · web (owner, front desk, trainers)</div>
+    <div class="browser">
+      <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="url" id="url"></div></div>
+      <div id="admin"></div>
+    </div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone-label">Member app · Android &amp; iPhone</div>
+    <div class="phone"><div class="notch"></div><div id="app"></div></div>
+  </div>
+</div>
+
+<aside class="drawer" id="drawer" aria-label="Why GOS"></aside>
+<section class="guide" id="guide"></section>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ---------------------------------------------------------------------------
+   Helpers
+--------------------------------------------------------------------------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const inr = (paise) => "₹" + Math.round(paise / 100).toLocaleString("en-IN");
+const z2 = (n) => String(n).padStart(2, "0");
+const ymd = (d) => `${d.getFullYear()}-${z2(d.getMonth() + 1)}-${z2(d.getDate())}`;
+const NOW = new Date();
+const TODAY = ymd(NOW);
+const addDays = (s, n) => { const d = new Date(s + "T00:00:00"); d.setDate(d.getDate() + n); return ymd(d); };
+const daysBetween = (a, b) => Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 864e5);
+const fmtDate = (s) => new Date(s + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+const fmtShort = (s) => new Date(s + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+const fmtTime = (d) => new Date(d).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
+const fmtDT = (d) => `${fmtShort(ymd(new Date(d)))}, ${fmtTime(d)}`;
+const dayName = (s) => new Date(s + "T00:00:00").toLocaleDateString("en-IN", { weekday: "short" });
+const relDay = (s) => s === TODAY ? "Today" : s === addDays(TODAY, 1) ? "Tomorrow" : s === addDays(TODAY, -1) ? "Yesterday" : fmtShort(s);
+const at = (dayOffset, h, m = 0) => { const d = new Date(NOW); d.setDate(d.getDate() + dayOffset); d.setHours(h, m, 0, 0); return d; };
+const minsAgo = (n) => { const d = new Date(NOW.getTime() - n * 60000); return ymd(d) === TODAY ? d : at(0, 0, 5 + n % 50); };
+let seq = 1000; const uid = (p = "x") => p + ++seq;
+const hash = (s) => { let h = 7; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); };
+const timeAgo = (d) => { const m = Math.floor((Date.now() - new Date(d)) / 60000); return m < 1 ? "Just now" : m < 60 ? m + "m" : m < 1440 ? Math.floor(m / 60) + "h" : Math.floor(m / 1440) + "d"; };
+const firstName = (n) => String(n).split(" ")[0];
+const initials = (n) => { const p = String(n).trim().split(/\s+/); return ((p[0] || "?")[0] + (p.length > 1 ? p[p.length - 1][0] : (p[0] || "?")[1] || "")).toUpperCase(); };
+
+/* Icons (stroke paths, 24×24) */
+const P = {
+  home: "M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z", users: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
+  cal: "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z", dumb: "M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11",
+  apple: "M12 7c-1.5-1-4-1.2-5.5.3C4.6 9.2 5 13.5 7 16.5c1.2 1.8 2.6 3.5 4 3 .6-.2.9-.4 1-.4s.4.2 1 .4c1.4.5 2.8-1.2 4-3 2-3 2.4-7.3.5-9.2C16 5.8 13.5 6 12 7zM12 7c0-2 1-3.5 3-4",
+  card: "M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zM2 10h20", receipt: "M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2zM9 7h6M9 11h6M9 15h4",
+  sliders: "M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6", scan: "M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10",
+  bell: "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0", heart: "M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z",
+  chart: "M3 3v18h18M7 16v-4M12 16V8M17 16v-7", plus: "M12 5v14M5 12h14", check: "M20 6 9 17l-5-5", x: "M18 6 6 18M6 6l12 12", right: "m9 18 6-6-6-6", left: "m15 18-6-6 6-6", down: "m6 9 6 6 6-6",
+  search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3", camera: "M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+  upload: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12", download: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3",
+  msg: "M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 1 1 21 11.5z", clock: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2",
+  moon: "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z", sun: "M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4",
+  flame: "M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3.3.3 1.3 1 2.6 2.5 2.8z",
+  trophy: "M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.7V17c0 .6-.5 1-1 1.2C7.8 18.8 7 20.2 7 22M14 14.7V17c0 .6.5 1 1 1.2 1.2.6 2 2 2 3.8M18 2H6v7a6 6 0 0 0 12 0z",
+  logout: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9", trash: "M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
+  qr: "M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM20 14v.01M14 20h.01M17 17h4v4h-4", play: "M6 3l14 9-14 9z",
+  drop: "M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5S12.5 5.5 12 3c-.5 2.5-2 4.9-4 6.5S5 13 5 15a7 7 0 0 0 7 7z", user: "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+  pin: "M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0zM12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z", printer: "M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z",
+  share: "M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13", star: "m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2 2 9.3l6.9-1z",
+  alert: "M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z", image: "M3 3h18v18H3zM9 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM21 15l-5-5L5 21",
+  edit: "M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z", link: "M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7",
+  file: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h5", building: "M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18M2 22h20M9 6h.01M15 6h.01M9 10h.01M15 10h.01M9 14h.01M15 14h.01M10 22v-4h4v4",
+  timer: "M10 2h4M12 14l3-3M12 22a8 8 0 1 0 0-16 8 8 0 0 0 0 16z", handshake: "M11 17l2 2a1 1 0 0 0 3-3M14 14l2.5 2.5a1 1 0 0 0 3-3l-3.9-3.9a3 3 0 0 0-4.2 0l-.9.9a1 1 0 0 1-3-3l2.8-2.8a5.8 5.8 0 0 1 7 .9L21 7.4M21 3l1 11h-2M3 3 2 14l6.5 6.5a1 1 0 0 0 3-3M3 4h8",
+  layers: "M12 2 2 7l10 5 10-5zM2 17l10 5 10-5M2 12l10 5 10-5", sparkles: "M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2zM19 3v4M21 5h-4",
+};
+const ic = (n, cls = "") => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[n] || ""}"/></svg>`;
+
+/* ---------------------------------------------------------------------------
+   USPs (from docs/MARKET.md)
+--------------------------------------------------------------------------- */
+const USPS = [
+  { n: 1, t: "WhatsApp join link", d: "The owner shares one link in the gym's WhatsApp group; members install and join themselves.", vs: "Others: staff type in every member by hand.", go: { admin: "members", app: "join" } },
+  { n: 2, t: "UPI payments, no gateway", d: "Members pay the gym's own UPI ID in the app; staff tap Confirm. No gateway fee, no KYC, no 2% cut.", vs: "Others: a payment gateway with fees, or cash noted by hand.", go: { admin: "payments", app: "membership" } },
+  { n: 3, t: "Check-in without a biometric machine", d: "Members scan a printed QR poster (with an optional location check) or show their QR at the desk. The desk sees their photo.", vs: "Others: a ₹8,000–20,000 fingerprint device.", go: { admin: "checkin", app: "home" } },
+  { n: 4, t: "Switch from a register or Excel in minutes", d: "Paste members from a spreadsheet; GOS understands \"paid 01/10, valid till 31/10\" and shows a checked preview.", vs: "Others: manual entry, or the vendor imports for you.", go: { admin: "members", modal: "import" } },
+  { n: 5, t: "Only the features a gym uses", d: "Classes, PT, workouts, nutrition and check-in are switches. Off means hidden everywhere, so the app stays simple.", vs: "Others: every feature visible, so the software feels complicated.", go: { admin: "settings" } },
+  { n: 6, t: "A modern member app", d: "Streaks, workout logging, progress, a membership pass, receipts and notifications, with the gym's own logo.", vs: "Others: dated apps, or the member app only on expensive plans.", go: { app: "workouts" } },
+  { n: 7, t: "Nutrition coaching with Kerala foods", d: "PT clients log puttu, appam, fish curry… in home portions. The trainer sets calories and protein, sees the log and comments.", vs: "Others: a diet-chart PDF, with no idea what the member ate.", go: { admin: "member:m1", app: "food" } },
+  { n: 8, t: "Kerala-local", d: "Setup, visits and support in person and in Malayalam. Prices in ₹, built for how Kerala gyms run.", vs: "Others: remote sales and support from other states.", go: {} },
+];
+const usp = (n) => { const u = USPS[n - 1]; return `<span class="usp" title="USP ${n}: ${esc(u.t)}. ${esc(u.d)} ${esc(u.vs)}">${ic("star")}USP</span>`; };
+
+/* ---------------------------------------------------------------------------
+   Faces (sample "photos") and QR codes, drawn in SVG
+--------------------------------------------------------------------------- */
+const SKIN = ["#f1c7a3", "#d9a37e", "#b97f57", "#8d5a3b", "#e8b896"];
+const HAIR = ["#1f1a17", "#3b2a20", "#5a3a24", "#2b2b2b", "#6b4423"];
+const BG = ["#dbeafe", "#fce7f3", "#dcfce7", "#fef3c7", "#ede9fe", "#ffedd5", "#cffafe"];
+const SHIRT = ["#65a30d", "#2563eb", "#db2777", "#0891b2", "#7c3aed", "#ea580c"];
+function face(seed, female) {
+  const h = hash(seed), skin = SKIN[h % 5], hair = HAIR[(h >> 3) % 5], bg = BG[(h >> 5) % 7], shirt = SHIRT[(h >> 7) % 6];
+  return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" fill="${bg}"/>${female ? `<path d="M15 44c0-17 6-28 17-28s17 11 17 28v6H15z" fill="${hair}"/>` : ""}<path d="M9 64c2-12 11-18 23-18s21 6 23 18z" fill="${shirt}"/><rect x="27" y="38" width="10" height="9" rx="3" fill="${skin}"/><circle cx="32" cy="29" r="12" fill="${skin}"/>${female ? `<path d="M19 30c0-10 6-15 13-15s13 5 13 15c-3-5-8-8-13-8s-10 3-13 8z" fill="${hair}"/>` : `<path d="M20 27c0-8 5-12 12-12s12 4 12 12c-2-4-6-6-12-6s-10 2-12 6z" fill="${hair}"/>`}<circle cx="27.5" cy="30" r="1.4" fill="#1f1a17"/><circle cx="36.5" cy="30" r="1.4" fill="#1f1a17"/><path d="M28.5 35c2 1.6 5 1.6 7 0" stroke="#7a4a32" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>`;
+}
+function av(m, size = 36, extra = "") {
+  const fs = Math.round(size * 0.36);
+  if (!m) return `<span class="av" style="width:${size}px;height:${size}px;font-size:${fs}px">?</span>`;
+  let inner = esc(initials(m.name));
+  if (m.photo === "face") inner = face(m.id, m.f);
+  else if (m.photo) inner = `<img src="${m.photo}" alt="">`;
+  return `<span class="av" style="width:${size}px;height:${size}px;font-size:${fs}px;${m.photo ? "" : "background:" + (m.team ? "#1f2a10;color:#c8f04b" : "var(--brand)")}${extra}" aria-hidden="true">${inner}</span>`;
+}
+function qr(seed, px = 170) {
+  let h = hash(seed) | 1; const N = 25;
+  const rnd = () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return (h >>> 0) / 4294967296; };
+  const inF = (x, y) => (x < 8 && y < 8) || (x > N - 9 && y < 8) || (x < 8 && y > N - 9);
+  let r = "";
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (!inF(x, y) && rnd() < 0.5) r += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+  const fd = (x, y) => `<rect x="${x}" y="${y}" width="7" height="7"/><rect x="${x + 1}" y="${y + 1}" width="5" height="5" fill="#fff"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3"/>`;
+  return `<svg viewBox="-1 -1 ${N + 2} ${N + 2}" width="${px}" height="${px}" shape-rendering="crispEdges" style="background:#fff;display:block" role="img" aria-label="QR code"><g fill="#141a04">${r}${fd(0, 0)}${fd(N - 7, 0)}${fd(0, N - 7)}</g></svg>`;
+}
+function ring(frac, size, stroke, color, track) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r, f = Math.max(0, Math.min(1, frac));
+  return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg)"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${track}" stroke-width="${stroke}"/><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - f)}"/></svg>`;
+}
+/* One series of bars; the last bar (today) full colour, the rest lighter. */
+function bars(values, labels, { h = 140, color = "#65a30d", fmt = (v) => v, target } = {}) {
+  const max = Math.max(...values, target || 0) * 1.15 || 1, n = values.length;
+  return `<div class="bars" style="height:${h}px" role="img" aria-label="${esc(labels.map((l, i) => l + " " + fmt(values[i])).join(", "))}">${values.map((v, i) => `<div class="bar-col"><div class="tip">${esc(labels[i])}: ${esc(fmt(v))}</div><div class="bar" style="height:${(v / max) * 100}%;background:${i === n - 1 ? color : color + "73"}"></div><span>${esc(labels[i])}</span></div>`).join("")}${target ? `<div class="target" style="bottom:${(target / max) * 100}%"><b>Target ${esc(fmt(target))}</b></div>` : ""}</div>`;
+}
+
+/* ---------------------------------------------------------------------------
+   Sample data
+--------------------------------------------------------------------------- */
+const ME = "m1";
+const EXERCISES = ["Bench press", "Incline dumbbell press", "Shoulder press", "Lateral raise", "Triceps pushdown", "Deadlift", "Lat pulldown", "Seated row", "Biceps curl", "Face pull", "Squat", "Leg press", "Romanian deadlift", "Leg curl", "Calf raise", "Plank", "Goblet squat", "Push-ups", "Kettlebell swing", "Burpees"];
+const FOODS = [
+  ["Puttu", "പുട്ട്", "1 piece", 220, 4, "Breakfast"], ["Kadala curry", "കടല കറി", "1 katori", 180, 9, "Curry"], ["Appam", "അപ്പം", "1 appam", 120, 2, "Breakfast"],
+  ["Idiyappam", "ഇടിയപ്പം", "3 pieces", 180, 3, "Breakfast"], ["Egg curry", "മുട്ട കറി", "1 egg + gravy", 150, 7, "Curry"], ["Dosa", "ദോശ", "1 dosa", 130, 3, "Breakfast"],
+  ["Idli", "ഇഡ്ഡലി", "2 idlis", 140, 4, "Breakfast"], ["Sambar", "സാമ്പാർ", "1 katori", 90, 4, "Curry"], ["Rice (matta)", "ചോറ്", "1 cup", 200, 4, "Meal"],
+  ["Fish curry", "മീൻ കറി", "1 katori", 190, 20, "Curry"], ["Fish fry", "മീൻ വറുത്തത്", "1 piece", 180, 18, "Side"], ["Chicken curry", "ചിക്കൻ കറി", "1 katori", 240, 22, "Curry"],
+  ["Beef fry", "ബീഫ് ഫ്രൈ", "1 katori", 290, 26, "Side"], ["Avial", "അവിയൽ", "1 katori", 150, 3, "Side"], ["Thoran", "തോരൻ", "1 katori", 100, 3, "Side"],
+  ["Payar (green gram)", "പയർ", "1 katori", 160, 10, "Curry"], ["Kanji", "കഞ്ഞി", "1 bowl", 200, 4, "Meal"], ["Porotta", "പൊറോട്ട", "1 porotta", 300, 5, "Meal"],
+  ["Tapioca (kappa)", "കപ്പ", "1 cup", 250, 2, "Meal"], ["Chapati", "ചപ്പാത്തി", "1 chapati", 110, 3, "Meal"], ["Banana (nendran)", "ഏത്തപ്പഴം", "1 banana", 130, 1, "Fruit"],
+  ["Boiled egg", "പുഴുങ്ങിയ മുട്ട", "1 egg", 78, 6, "Protein"], ["Milk", "പാൽ", "1 glass", 150, 8, "Drink"], ["Chai", "ചായ", "1 cup", 90, 2, "Drink"],
+  ["Whey protein", "", "1 scoop", 120, 24, "Protein"], ["Paneer", "പനീർ", "100 g", 265, 18, "Protein"], ["Curd", "തൈര്", "1 katori", 100, 6, "Side"],
+  ["Oats", "ഓട്സ്", "1 bowl", 150, 5, "Breakfast"], ["Peanuts", "കപ്പലണ്ടി", "1 handful", 170, 7, "Snack"], ["Pazham pori", "പഴംപൊരി", "1 piece", 210, 2, "Snack"],
+].map(([name, ml, serving, kcal, p, cat], i) => ({ id: "f" + i, name, ml, serving, kcal, p, cat }));
+const MEALS = [["early", "Early morning"], ["breakfast", "Breakfast"], ["lunch", "Lunch"], ["snack", "Evening snack"], ["dinner", "Dinner"]];
+
+function initState() {
+  const team = [
+    { id: "t1", name: "Ravi Kumar", role: "owner", phone: "98470 12345", photo: "face", f: false },
+    { id: "t2", name: "Tara Mathew", role: "trainer", phone: "98950 22110", photo: "face", f: true },
+    { id: "t3", name: "Sana Ali", role: "staff", phone: "97440 33001", photo: "face", f: true },
+    { id: "t4", name: "Deepak Menon", role: "trainer", phone: "90370 55120", photo: null, f: false },
+  ].map((t) => ({ ...t, team: true, status: "active", joined: addDays(TODAY, -400) }));
+  const mem = [
+    ["m1", "Anjali Menon", true, "face", "94470 11223"], ["m2", "Rahul Nair", false, "face", "98471 22334"], ["m3", "Fathima Rasheed", true, "face", "95620 33445"],
+    ["m4", "Arjun Pillai", false, null, "97450 44556"], ["m5", "Sneha Thomas", true, "face", "99460 55667"], ["m6", "Vishnu Prasad", false, null, "90480 66778"],
+    ["m7", "Meera Krishnan", true, "face", "98460 77889"], ["m8", "Joel Varghese", false, null, "94950 88990"], ["m9", "Aisha Khan", true, "face", "97780 99001"],
+    ["m10", "Nikhil Das", false, null, "96330 10112"], ["m11", "Divya Suresh", true, null, "98950 21223"], ["m12", "Kiran Joseph", false, "face", "94460 32334"],
+  ].map(([id, name, f, photo, phone], i) => ({ id, name, f, photo, phone, role: "member", status: "active", joined: addDays(TODAY, -30 - i * 23), notes: [] }));
+  const pending = [
+    { id: "p1", name: "Adithya Rajan", f: false, photo: null, phone: "95440 76543", role: "member", status: "pending", joined: TODAY, notes: [] },
+    { id: "p2", name: "Gopika Nambiar", f: true, photo: "face", phone: "98950 67890", role: "member", status: "pending", joined: TODAY, notes: [] },
+  ];
+  const plans = [
+    { id: "pl1", name: "Monthly", days: 30, price: 150000, active: true },
+    { id: "pl2", name: "Quarterly", days: 90, price: 400000, active: true },
+    { id: "pl3", name: "Half-yearly", days: 180, price: 750000, active: true },
+    { id: "pl4", name: "Annual", days: 365, price: 1300000, active: true },
+  ];
+  // [member, plan, ends in N days]
+  const subsSeed = [["m1", "pl2", 6], ["m2", "pl1", 18], ["m3", "pl4", 200], ["m4", "pl1", -5], ["m5", "pl1", 3], ["m6", "pl2", 45], ["m7", "pl3", 120], ["m8", "pl1", -20], ["m9", "pl1", 25], ["m11", "pl4", 300], ["m12", "pl1", 1]];
+  const subs = [];
+  for (const [mid, pid, ends] of subsSeed) {
+    const p = plans.find((x) => x.id === pid), end = addDays(TODAY, ends), start = addDays(end, -(p.days - 1));
+    subs.push({ id: uid("s"), memberId: mid, plan: p.name, planId: pid, start, end, price: p.price });
+  }
+  subs.push({ id: uid("s"), memberId: "m1", plan: "Monthly", planId: "pl1", start: addDays(TODAY, -113), end: addDays(TODAY, -84), price: 150000 });
+  const ptPackages = [
+    { id: "k1", name: "12 PT sessions", sessions: 12, days: 60, price: 600000 },
+    { id: "k2", name: "24 PT sessions", sessions: 24, days: 90, price: 1100000 },
+    { id: "k3", name: "Diet coaching (1 month)", sessions: null, days: 30, price: 200000 },
+  ];
+  const pt = [
+    { id: "pt1", memberId: "m1", pkg: "12 PT sessions", trainer: "t2", total: 12, used: 5, start: addDays(TODAY, -20), end: addDays(TODAY, 40), price: 600000 },
+    { id: "pt2", memberId: "m7", pkg: "24 PT sessions", trainer: "t4", total: 24, used: 21, start: addDays(TODAY, -70), end: addDays(TODAY, 20), price: 1100000 },
+    { id: "pt3", memberId: "m3", pkg: "12 PT sessions", trainer: "t2", total: 12, used: 2, start: addDays(TODAY, -6), end: addDays(TODAY, 54), price: 600000 },
+  ];
+  // Paid payments for every started subscription and PT package, in date order.
+  const pays = [];
+  for (const s of subs) if (s.start <= TODAY) pays.push({ memberId: s.memberId, amount: s.price, what: s.plan, kind: "plan", day: s.start, method: ["upi", "cash", "upi", "card"][hash(s.id) % 4] });
+  for (const p of pt) pays.push({ memberId: p.memberId, amount: p.price, what: p.pkg, kind: "pt", day: p.start, method: "upi" });
+  pays.sort((a, b) => (a.day < b.day ? -1 : 1));
+  let receiptSeq = 0;
+  const payments = pays.map((p) => ({ id: uid("pay"), ...p, status: "paid", receipt: ++receiptSeq, at: new Date(p.day + "T" + z2(7 + (hash(p.what + p.memberId) % 12)) + ":15:00"), utr: p.method === "upi" ? String(400000000000 + hash(p.memberId + p.day) % 99999999999) : "" })).reverse();
+  // A UPI payment waiting for the desk: Kiran renews (his plan ends tomorrow).
+  payments.unshift({ id: uid("pay"), memberId: "m12", amount: 150000, what: "Monthly", planId: "pl1", kind: "plan", status: "created", method: "upi", at: minsAgo(42), utr: "412398765432" });
+
+  const checkins = [["m2", 190, "scan"], ["m3", 150, "self"], ["m9", 112, "poster"], ["m6", 75, "manual"], ["m5", 33, "poster"]].map(([memberId, m, method]) => ({ id: uid("c"), memberId, at: minsAgo(m), method }));
+  const visitHistory = [38, 42, 35, 47, 51, 44, 29, 40, 45, 39, 48, 52, 36];
+
+  // Classes for the next 7 days.
+  const types = [
+    { name: "Yoga", h: 6, m: 30, dur: 60, cap: 15, trainer: "t2", room: "Studio" },
+    { name: "HIIT", h: 7, m: 30, dur: 45, cap: 12, trainer: "t4", room: "Main floor" },
+    { name: "Zumba", h: 18, m: 30, dur: 50, cap: 20, trainer: "t2", room: "Studio" },
+    { name: "Strength 101", h: 19, m: 30, dur: 60, cap: 8, trainer: "t4", room: "Main floor" },
+  ];
+  const others = mem.map((m) => m.id).filter((id) => id !== ME);
+  const sessions = [];
+  for (let d = 0; d < 7; d++) for (const t of types) {
+    const start = at(d, t.h, t.m);
+    if (d === 0 && start < NOW) continue;
+    const isFullStrength = d === 1 && t.name === "Strength 101";
+    const n = isFullStrength ? t.cap : Math.min(others.length, 2 + (hash(t.name + d) % Math.min(t.cap - 1, 10)));
+    sessions.push({ id: uid("cls"), name: t.name, trainer: t.trainer, start, dur: t.dur, cap: t.cap, room: t.room, status: "scheduled", reason: "", booked: others.slice(0, n), waitlist: [], attended: [] });
+  }
+  const yogaTomorrow = sessions.find((s) => s.name === "Yoga" && ymd(s.start) === addDays(TODAY, 1));
+  if (yogaTomorrow) yogaTomorrow.booked.push(ME);
+
+  const wplans = [
+    { id: "w1", name: "Push Pull Legs", by: "t2", days: [
+      { label: "Day 1 · Push", items: [["Bench press", 4, "8"], ["Shoulder press", 3, "10"], ["Incline dumbbell press", 3, "10"], ["Lateral raise", 3, "15"], ["Triceps pushdown", 3, "12"]] },
+      { label: "Day 2 · Pull", items: [["Deadlift", 3, "5"], ["Lat pulldown", 4, "10"], ["Seated row", 3, "12"], ["Face pull", 3, "15"], ["Biceps curl", 3, "12"]] },
+      { label: "Day 3 · Legs", items: [["Squat", 4, "8"], ["Leg press", 3, "12"], ["Romanian deadlift", 3, "10"], ["Leg curl", 3, "12"], ["Calf raise", 4, "15"]] },
+    ], assigned: ["m1", "m2", "m6"] },
+    { id: "w2", name: "Fat loss starter", by: "t4", days: [
+      { label: "Full body A", items: [["Goblet squat", 3, "12"], ["Push-ups", 3, "10"], ["Kettlebell swing", 3, "15"], ["Plank", 3, "40s"]] },
+      { label: "Full body B", items: [["Leg press", 3, "12"], ["Lat pulldown", 3, "12"], ["Burpees", 3, "10"], ["Plank", 3, "45s"]] },
+    ], assigned: ["m5", "m9"] },
+    { id: "w3", name: "Beginner strength", by: "t4", days: [{ label: "Workout", items: [["Squat", 3, "5"], ["Bench press", 3, "5"], ["Seated row", 3, "8"]] }], assigned: [] },
+  ];
+  const lastKg = { "Bench press": [32.5, 8], "Shoulder press": [17.5, 10], "Incline dumbbell press": [10, 10], "Lateral raise": [5, 15], "Triceps pushdown": [15, 12], "Deadlift": [70, 5], "Lat pulldown": [35, 10], "Seated row": [30, 12], "Face pull": [12.5, 15], "Biceps curl": [7.5, 12], "Squat": [50, 8], "Leg press": [90, 12] };
+  const history = [
+    { id: uid("wl"), day: addDays(TODAY, -2), label: "Day 1 · Push", sets: 16, vol: 3260, mins: 52 },
+    { id: uid("wl"), day: addDays(TODAY, -4), label: "Day 3 · Legs", sets: 17, vol: 5890, mins: 58 },
+    { id: uid("wl"), day: addDays(TODAY, -6), label: "Day 2 · Pull", sets: 16, vol: 4410, mins: 49 },
+    { id: uid("wl"), day: addDays(TODAY, -9), label: "Day 1 · Push", sets: 15, vol: 3050, mins: 47 },
+  ];
+  const f = (name) => FOODS.find((x) => x.name === name);
+  const log = (meal, name, servings = 1) => ({ id: uid("fl"), meal, name, kcal: f(name).kcal * servings, p: f(name).p * servings, servings });
+  const foodLog = [log("early", "Chai"), log("breakfast", "Puttu"), log("breakfast", "Kadala curry"), log("lunch", "Rice (matta)"), log("lunch", "Fish curry"), log("lunch", "Thoran")];
+
+  return {
+    gym: { name: "Arms Fitness", short: "AF", slug: "arms-fitness", address: "2nd floor, Pallath Arcade, MG Road, Ernakulam, Kochi 682016", phone: "98470 12345", upi: "armsfitness@okaxis", payee: "Arms Fitness", receiptPrefix: "AF-", receiptSeq, warnDays: 7,
+      hours: [["Mon–Sat", "5:30 am", "10:00 pm"], ["Sunday", "6:00 am", "12:00 pm"]], methods: { cash: true, upi: true, card: true, bank: false },
+      renewal: "Hi {name}, your {plan} membership at {gym} ends on {date}. Renew in the GOS app or at the desk. See you at the gym! 💪",
+      f: { checkin: true, selfCheckin: true, poster: true, onlyOpen: true, location: true, classes: true, workouts: true, pt: true, nutrition: true, nutritionAll: false, approval: true },
+      simulateClosed: false, deleted: false },
+    viewer: "t1",
+    members: [...team, ...mem, ...pending],
+    plans, subs, payments, checkins, visitHistory, sessions, wplans, lastKg, history, ptPackages, pt,
+    gymFoods: [{ id: "g1", name: "Arms protein shake", serving: "1 bottle", kcal: 180, p: 25 }, { id: "g2", name: "Sprouts salad (café)", serving: "1 bowl", kcal: 140, p: 9 }],
+    food: { log: foodLog, target: { kcal: 1800, p: 110, goal: "lose" }, water: 5, week: [1720, 1890, 1650, 1810, 2050, 1760], pref: "egg" },
+    comments: [{ id: uid("nc"), by: "t2", day: addDays(TODAY, -1), body: "Great protein yesterday 👍 Add a boiled egg at breakfast." }],
+    notifs: [
+      { id: uid("n"), kind: "comment", title: "Tara Mathew commented on your food log", body: "Great protein yesterday 👍 Add a boiled egg at breakfast.", link: "food", at: minsAgo(300), unread: true },
+      { id: uid("n"), kind: "plan", title: "New workout plan: Push Pull Legs", body: "From Tara Mathew", link: "workouts", at: new Date(NOW.getTime() - 4 * 864e5), unread: false },
+      { id: uid("n"), kind: "paid", title: "Payment received: ₹6,000", body: "12 PT sessions · Receipt AF-" + (payments.find((p) => p.memberId === "m1" && p.kind === "pt")?.receipt ?? ""), link: "receipt:" + (payments.find((p) => p.memberId === "m1" && p.kind === "pt")?.id ?? ""), at: new Date(NOW.getTime() - 20 * 864e5), unread: false },
+    ],
+    // UI state
+    a: { route: "dashboard", modal: null, pop: null, memFilter: "all", memQuery: "", classDay: 0, planSel: "w1", ciResult: null, ciQuery: "", payTab: "all", importText: "" },
+    p: { route: "home", stack: [], sheet: null, dark: false, classDay: 1, checkedQrAt: null, wk: null, rest: null, foodQuery: "", pick: null, openDay: null, signedOut: false, deleted: false, upiPending: null },
+  };
+}
+let S = initState();
+
+/* ---------------------------------------------------------------------------
+   Derived data
+--------------------------------------------------------------------------- */
+const M = (id) => S.members.find((m) => m.id === id);
+const membersOnly = () => S.members.filter((m) => m.role === "member" && m.status !== "pending");
+const team = () => S.members.filter((m) => m.team);
+function subsOf(id) { return S.subs.filter((s) => s.memberId === id && !s.cancelled).sort((a, b) => (a.start < b.start ? 1 : -1)); }
+function mstate(id) {
+  const subs = subsOf(id);
+  const cur = subs.find((s) => s.start <= TODAY && s.end >= TODAY);
+  if (cur) { const next = subs.find((s) => s.start > cur.end); return { kind: "active", cur, next, left: daysBetween(TODAY, cur.end) }; }
+  const up = subs.find((s) => s.start > TODAY);
+  if (up) return { kind: "upcoming", up };
+  return subs.length ? { kind: "expired", last: subs[0] } : { kind: "none" };
+}
+function stateBadge(id) {
+  const m = M(id);
+  if (m?.status === "deleted") return `<span class="b">Deleted</span>`;
+  if (m?.status === "inactive") return `<span class="b">Removed</span>`;
+  const s = mstate(id);
+  if (s.kind === "active") return !s.next && s.left <= S.gym.warnDays ? `<span class="b warn">Ends ${s.left === 0 ? "today" : s.left === 1 ? "tomorrow" : "in " + s.left + " days"}</span>` : `<span class="b good">Active</span>`;
+  if (s.kind === "upcoming") return `<span class="b info">Starts ${fmtShort(s.up.start)}</span>`;
+  if (s.kind === "expired") return `<span class="b bad">Expired ${fmtShort(s.last.end)}</span>`;
+  return `<span class="b">No plan</span>`;
+}
+const todaysCheckins = () => S.checkins.filter((c) => ymd(new Date(c.at)) === TODAY).sort((a, b) => b.at - a.at);
+const checkedInToday = (id) => todaysCheckins().find((c) => c.memberId === id);
+const myPt = () => S.pt.find((p) => p.memberId === ME && p.end >= TODAY);
+const trainerOf = (id) => S.pt.find((p) => p.memberId === id && p.end >= TODAY)?.trainer;
+const nutritionOn = () => S.gym.f.nutrition && (S.gym.f.nutritionAll || !!myPt());
+const fmtReceipt = (n) => (S.gym.receiptPrefix || "#") + n;
+const pendingUpi = () => S.payments.filter((p) => p.status === "created");
+const pendingJoins = () => S.members.filter((m) => m.status === "pending");
+const expiring = () => membersOnly().filter((m) => { const s = mstate(m.id); return m.status === "active" && s.kind === "active" && !s.next && s.left <= S.gym.warnDays; });
+const foodTotals = () => S.food.log.reduce((t, x) => ({ kcal: t.kcal + x.kcal, p: t.p + x.p }), { kcal: 0, p: 0 });
+const gymOpenNow = () => !S.gym.simulateClosed;
+const nextPlanDay = () => {
+  const plan = S.wplans.find((w) => w.assigned.includes(ME));
+  if (!plan) return null;
+  const last = S.history.find((h) => plan.days.some((d) => d.label === h.label));
+  const idx = last ? (plan.days.findIndex((d) => d.label === last.label) + 1) % plan.days.length : 0;
+  return { plan, day: plan.days[idx], idx };
+};
+
+/* Member notifications (only the app user's are shown). */
+function notify(memberId, n) {
+  if (memberId !== ME || S.p.deleted) return;
+  S.notifs.unshift({ id: uid("n"), at: new Date(), unread: true, ...n });
+  toast(`Notification sent to ${firstName(M(ME).name)}'s phone: ${n.title}`, "from-app", "bell");
+}
+
+/* ---------------------------------------------------------------------------
+   Toasts, modals, sheets
+--------------------------------------------------------------------------- */
+function toast(text, cls = "", icon = "check") {
+  const el = document.createElement("div");
+  el.className = "toast " + cls;
+  el.innerHTML = ic(icon) + `<span>${esc(text)}</span>`;
+  $("#toasts").append(el);
+  setTimeout(() => el.remove(), 3600);
+}
+const aModal = (title, html, wide) => (S.a.modal = { title, html, wide });
+const pSheet = (title, html) => (S.p.sheet = { title, html });
+
+/* ===========================================================================
+   ADMIN
+=========================================================================== */
+const NAV = [
+  ["dashboard", "Dashboard", "home"], ["checkin", "Check-in", "scan", "checkin"], ["members", "Members", "users"], ["classes", "Classes", "cal", "classes"],
+  ["workouts", "Workouts", "dumb", "workouts"], ["pt", "Personal training", "heart", "pt"], ["foods", "Nutrition", "apple", "nutrition"], ["plans", "Plans", "card"], ["payments", "Payments", "receipt"],
+];
+function renderAdmin() {
+  const r = S.a.route, base = r.split(":")[0];
+  const viewer = M(S.viewer);
+  $("#url").innerHTML = `<b>gos.app</b>/admin/${S.gym.slug}/${esc(r.replace(":", "/"))}`;
+  const page = (PAGES[base] || PAGES.dashboard)(r.split(":")[1]);
+  const upiN = pendingUpi().length, joinN = pendingJoins().length;
+  const nav = NAV.map(([k, label, icon, flag]) => {
+    const off = flag && !S.gym.f[flag];
+    const cnt = k === "payments" ? upiN : k === "members" ? joinN : 0;
+    return `<button class="a-nav ${base === k || (k === "members" && base === "member") ? "on" : ""}" data-a="aGo" data-r="${k}">${ic(icon)} ${label}${cnt ? `<span class="cnt">${cnt}</span>` : off ? `<span class="off">Off</span>` : ""}</button>`;
+  }).join("");
+  const notes = [
+    upiN && { r: "payments", t: `${upiN} UPI ${upiN === 1 ? "payment" : "payments"} to confirm`, i: "receipt" },
+    joinN && { r: "members", t: `${joinN} ${joinN === 1 ? "person" : "people"} waiting for approval`, i: "users" },
+    expiring().length && { r: "dashboard", t: `${expiring().length} memberships ending this week`, i: "alert" },
+  ].filter(Boolean);
+  $("#admin").innerHTML = `<div class="a-app">
+    <aside class="a-side"><div class="brand">G<b>OS</b></div>${nav}
+      <div class="sep">Gym</div>
+      <button class="a-nav ${base === "settings" ? "on" : ""}" data-a="aGo" data-r="settings">${ic("sliders")} Settings</button>
+      <button class="a-nav ${base === "poster" ? "on" : ""}" data-a="aGo" data-r="poster">${ic("qr")} QR poster</button>
+    </aside>
+    <div class="a-main">
+      <header class="a-head">
+        <div class="gym"><span class="gym-logo">${S.gym.short}</span><span>${esc(S.gym.name)}</span><span class="b" style="font-weight:500">Kochi</span></div>
+        <button class="a-icon-btn" data-a="aPop" data-p="bell" aria-label="Notifications">${ic("bell")}${notes.length ? `<span class="badge">${notes.length}</span>` : ""}</button>
+        <button class="a-user" data-a="aPop" data-p="user">${av(viewer, 32)} <span>${esc(viewer.name)}</span> ${ic("down")}</button>
+      </header>
+      <main class="a-content" id="a-content">${page}</main>
+    </div>
+    ${S.a.pop === "bell" ? `<div class="a-pop">${notes.length ? notes.map((n) => `<button class="row" data-a="aGo" data-r="${n.r}">${ic(n.i)} ${esc(n.t)}</button>`).join("") : `<div class="empty">You're all caught up</div>`}</div>` : ""}
+    ${S.a.pop === "user" ? `<div class="a-pop" style="right:22px;width:260px">
+        <div class="row" style="cursor:default"><span class="b good">Owner</span> ${esc(S.gym.name)}</div>
+        <button class="row" data-a="aGo" data-r="profile">${ic("user")} My profile</button>
+        <button class="row" data-a="aGo" data-r="settings">${ic("sliders")} Gym settings</button>
+        <div class="row small muted" style="cursor:default">Signed in as owner. Front desk and trainers see fewer pages.</div></div>` : ""}
+    ${S.a.modal ? `<div class="a-modal-back" data-a="aClose" data-self="1"><div class="a-modal" style="${S.a.modal.wide ? "width:min(760px,100%)" : ""}" role="dialog" aria-label="${esc(S.a.modal.title)}"><header>${esc(S.a.modal.title)}<button class="btn ghost sm" data-a="aClose" aria-label="Close">${ic("x")}</button></header><div class="body">${S.a.modal.html}</div></div></div>` : ""}
+  </div>`;
+}
+const title = (t, sub, actions = "", badge = "") => `<div class="a-title"><div><h1>${t} ${badge}</h1>${sub ? `<p>${sub}</p>` : ""}</div><div class="row-actions">${actions}</div></div>`;
+const toggle = (k, on, extra = "") => `<span class="toggle"><input type="checkbox" ${on ? "checked" : ""} data-change="${extra || "flag"}" data-k="${k}" aria-label="${k}"><span></span></span>`;
+
+const PAGES = {
+  dashboard() {
+    const active = membersOnly().filter((m) => m.status === "active" && mstate(m.id).kind === "active").length;
+    const month = TODAY.slice(0, 7);
+    const collected = S.payments.filter((p) => p.status === "paid" && ymd(new Date(p.at)).startsWith(month)).reduce((s, p) => s + p.amount, 0);
+    const visits = [...S.visitHistory, todaysCheckins().length];
+    const labels = visits.map((_, i) => String(new Date(addDays(TODAY, i - 13) + "T00:00").getDate()));
+    const exp = expiring();
+    const upi = pendingUpi(), joins = pendingJoins();
+    return `${title(`Good ${NOW.getHours() < 12 ? "morning" : NOW.getHours() < 17 ? "afternoon" : "evening"}, ${firstName(M(S.viewer).name)}`, `${esc(S.gym.name)} · ${fmtDate(TODAY)}`,
+      `<button class="btn wa uz" data-a="shareJoin">${ic("msg")} Share join link on WhatsApp</button> ${usp(1)}`)}
+    <div class="grid g4">
+      <div class="a-card stat"><div class="lbl">${ic("users")} Active members</div><div class="val tabnum">${active}</div><div class="sub">${membersOnly().length} members in total</div></div>
+      <div class="a-card stat"><div class="lbl">${ic("scan")} Visits today</div><div class="val tabnum">${todaysCheckins().length}</div><div class="sub">Live, as members check in</div></div>
+      <div class="a-card stat"><div class="lbl">${ic("receipt")} Collected this month</div><div class="val tabnum">${inr(collected)}</div><div class="sub">${S.payments.filter((p) => p.status === "paid" && ymd(new Date(p.at)).startsWith(month)).length} payments</div></div>
+      <div class="a-card stat"><div class="lbl">${ic("alert")} Ending in 7 days</div><div class="val tabnum">${exp.length}</div><div class="sub">Send a WhatsApp reminder</div></div>
+    </div>
+    <div class="grid g-main" style="margin-top:14px">
+      <div class="a-card"><h2>Visits, last 14 days</h2><p class="hint">Today updates live when members check in from the app or the poster.</p>${bars(visits, labels, { h: 170, fmt: (v) => v + " visits" })}</div>
+      <div class="a-card"><h2>Needs attention</h2>
+        <div class="list">
+          ${upi.map((p) => `<div class="li">${av(M(p.memberId), 34)}<div class="grow"><b>${esc(M(p.memberId).name)}</b> <span class="small muted">paid ${inr(p.amount)} by UPI</span><div class="small muted">UTR ${esc(p.utr)} · ${timeAgo(p.at)} ago</div></div><button class="btn sm" data-a="aGo" data-r="payments">Review</button></div>`).join("")}
+          ${joins.map((m) => `<div class="li">${av(m, 34)}<div class="grow"><b>${esc(m.name)}</b><div class="small muted">Joined from the WhatsApp link</div></div><button class="btn sm" data-a="approve" data-id="${m.id}">Approve</button></div>`).join("")}
+          ${exp.map((m) => `<div class="li">${av(m, 34)}<div class="grow"><b>${esc(m.name)}</b><div class="small">${stateBadge(m.id)}</div></div><button class="btn wa sm" data-a="remind" data-id="${m.id}">${ic("msg")} Remind</button></div>`).join("")}
+          ${!upi.length && !joins.length && !exp.length ? `<div class="empty">All clear 🎉</div>` : ""}
+        </div></div>
+    </div>
+    <div class="a-card" style="margin-top:14px"><h2>Recent payments</h2>${payTable(S.payments.filter((p) => p.status === "paid").slice(0, 5))}</div>`;
+  },
+
+  checkin() {
+    const res = S.a.ciResult, m = res && M(res.memberId);
+    const banner = m ? `<div class="banner ${res.ok ? "ok" : "warn"}" style="margin-top:12px">${av(m, 84)}<div><div style="font-size:17px;font-weight:700">${esc(m.name)}</div><div class="small">${res.dup ? "Already checked in at " : "Checked in at "}${fmtTime(res.at)}</div><div class="small" style="font-weight:600;margin-top:4px">${res.ok ? "Membership active till " + fmtDate(res.ends) : res.ends ? "Membership expired on " + fmtDate(res.ends) + ". Remind them to renew." : "No membership yet. Remind them to pick a plan."}</div>${m.photo ? `<div class="small muted" style="margin-top:4px">Photo on file: compare with the person at the desk.</div>` : `<div class="small muted">No photo yet. Add one on their member page.</div>`}</div></div>` : "";
+    const list = todaysCheckins();
+    const MLAB = { self: "App", scan: "Desk scan", manual: "Desk", poster: "QR poster" };
+    return `${title("Check-in", "Scan a member's QR, search by name, or let members scan the poster on the wall.", `<button class="btn sec" data-a="aGo" data-r="poster">${ic("qr")} QR poster</button>`)}
+    <div class="grid" style="grid-template-columns:minmax(0,420px) minmax(0,1fr)">
+      <div class="grid">
+        <div class="a-card uz"><h2>Scan member QR ${usp(3)}</h2><p class="hint">Any laptop webcam or phone works. No fingerprint machine.</p>
+          <div class="scan-box"><div class="frame"></div><div class="line"></div><span style="position:absolute;bottom:10px">Camera (demo)</span></div>
+          <div class="row-actions" style="margin-top:10px"><button class="btn" style="flex:1" data-a="simScan">${ic("scan")} Simulate a scan</button><button class="btn sec" data-a="simScan" data-who="m4">Scan an expired member</button></div>
+          ${banner}</div>
+        <div class="a-card"><h2>Check in by name</h2>
+          <input class="inp" placeholder="Member name" data-input="ciSearch" value="${esc(S.a.ciQuery)}" aria-label="Member name">
+          <div id="ci-results" style="margin-top:8px">${ciResults()}</div></div>
+      </div>
+      <div class="a-card" style="align-self:start"><h2>Today · ${list.length} ${list.length === 1 ? "visit" : "visits"}</h2><p class="hint">Updates live. Try "Check in" in the member app →</p>
+        <div class="list">${list.map((c) => { const mm = M(c.memberId); return `<div class="li">${av(mm, 36)}<div class="grow"><b style="cursor:pointer" data-a="aGo" data-r="member:${mm.id}">${esc(mm.name)}</b><div>${stateBadge(mm.id)}</div></div><span class="b ${c.method === "poster" ? "info" : ""}">${MLAB[c.method]}</span><span class="small muted tabnum" style="width:64px;text-align:right">${fmtTime(c.at)}</span></div>`; }).join("") || `<div class="empty">No one yet today.</div>`}</div>
+      </div>
+    </div>`;
+  },
+
+  poster() {
+    return `${title("Check-in QR poster", "Print it and stick it at the entrance. Members scan it with the GOS app to check in.", `<button class="btn" data-a="printPoster">${ic("printer")} Print poster</button>`, usp(3))}
+    <div class="grid g2">
+      <div class="poster uz"><div style="font-size:13px;color:var(--hero-muted);font-weight:600;letter-spacing:1px">SCAN TO CHECK IN</div><div style="font-size:24px;font-weight:800;margin-top:4px">${esc(S.gym.name)}</div><div class="qr">${qr("poster" + S.gym.slug, 200)}</div><div style="font-size:13px">Open the <b style="color:var(--accent)">GOS</b> app → Check in → Scan</div><div style="font-size:12px;color:var(--hero-muted);margin-top:6px">Not a member yet? Ask at the desk.</div></div>
+      <div class="a-card"><h2>How it stays honest</h2>
+        <div class="set-row"><div class="grow"><b>${ic("pin")} Location check</b><small>The phone must be within 150 m of the gym when scanning.</small></div>${toggle("location", S.gym.f.location)}</div>
+        <div class="set-row"><div class="grow"><b>${ic("clock")} Only during opening hours</b><small>Outside hours, the app says the gym is closed.</small></div>${toggle("onlyOpen", S.gym.f.onlyOpen)}</div>
+        <div class="set-row"><div class="grow"><b>${ic("alert")} Change the code</b><small>Made a copy of the poster? Print a new one and old copies stop working.</small></div><button class="btn sec sm" data-a="toastOnly" data-t="New poster code made. Old posters no longer work.">New code</button></div>
+        <div class="set-row"><div class="grow"><b>One check-in per visit</b><small>Scanning twice within 3 hours counts once.</small></div><span class="b good">On</span></div>
+      </div>
+    </div>`;
+  },
+
+  members() {
+    const joins = pendingJoins();
+    const F = [["all", "All"], ["active", "Active"], ["expiring", "Ending soon"], ["expired", "Expired / no plan"], ["team", "Team"]];
+    return `${title("Members", `${membersOnly().length} members · ${team().length} team`, `<button class="btn wa sm uz" data-a="shareJoin">${ic("msg")} Join link</button> <button class="btn sec" data-a="openImport">${ic("upload")} Import ${usp(4)}</button> <button class="btn sec" data-a="exportCsv" data-what="members">${ic("download")} Export</button> <button class="btn" data-a="openAdd">${ic("plus")} Add member</button>`)}
+    ${joins.length ? `<div class="a-card uz" style="margin-bottom:14px;border-color:#fcd581;background:#fffdf5"><h2>${joins.length} waiting for approval ${usp(1)}</h2><p class="hint">They joined themselves from the link you shared in the gym's WhatsApp group. No typing needed.</p><div class="list">${joins.map((m) => `<div class="li">${av(m, 36)}<div class="grow"><b>${esc(m.name)}</b><small class="muted">${esc(m.phone)} · joined ${timeAgo(m.joined === TODAY ? minsAgo(20) : m.joined)} ago</small></div><button class="btn sm" data-a="approve" data-id="${m.id}">Approve</button><button class="btn sec sm" data-a="decline" data-id="${m.id}">Decline</button></div>`).join("")}</div></div>` : ""}
+    <div class="a-card">
+      <div class="row-actions" style="justify-content:space-between;margin-bottom:10px">
+        <div class="chips">${F.map(([k, l]) => `<button class="chip ${S.a.memFilter === k ? "on" : ""}" data-a="memFilter" data-k="${k}">${l}</button>`).join("")}</div>
+        <input class="inp" style="max-width:240px" placeholder="Search by name or phone" data-input="memSearch" value="${esc(S.a.memQuery)}" aria-label="Search members">
+      </div>
+      <div id="mem-list">${memberTable()}</div>
+    </div>`;
+  },
+
+  member(id) {
+    const m = M(id); if (!m) return "Not found";
+    const s = mstate(id), pays = S.payments.filter((p) => p.memberId === id), visits = S.checkins.filter((c) => c.memberId === id);
+    const totalPaid = pays.filter((p) => p.status === "paid").reduce((t, p) => t + p.amount, 0);
+    const pt = S.pt.find((p) => p.memberId === id && p.end >= TODAY);
+    const plans = S.wplans.filter((w) => w.assigned.includes(id));
+    const remind = s.kind === "expired" || (s.kind === "active" && s.left <= S.gym.warnDays);
+    const nut = id === ME && S.gym.f.nutrition;
+    const tot = foodTotals();
+    const week = [...S.food.week, tot.kcal];
+    return `<button class="btn ghost sm" data-a="aGo" data-r="members">${ic("left")} Members</button>
+    <div class="a-card" style="margin-top:10px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      <button data-a="photoAdmin" data-id="${id}" style="position:relative" aria-label="Change photo" title="Front desk can add a member's photo (webcam or upload)">${av(m, 72)}<span style="position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;background:#18181b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;border:2px solid #fff">${ic("camera")}</span></button>
+      <div style="flex:1;min-width:200px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h1 style="margin:0;font-size:22px">${esc(m.name)}</h1>${m.team ? `<span class="b">${m.role}</span>` : stateBadge(id)}${pt ? `<span class="b info">PT · ${esc(M(pt.trainer).name)}</span>` : ""}</div>
+        <div class="small muted" style="margin-top:4px;display:flex;gap:14px;flex-wrap:wrap">${m.phone ? `<span>${ic("msg")} ${esc(m.phone)}</span>` : ""}<span>Member since ${fmtDate(m.joined)}</span></div></div>
+      <div class="row-actions">
+        ${m.phone ? `<button class="btn wa" data-a="remind" data-id="${id}">${ic("msg")} ${remind ? "Send reminder" : "WhatsApp"}</button>` : ""}
+        ${m.status === "active" ? `<button class="btn sec" data-a="deskCheckin" data-id="${id}">${checkedInToday(id) ? "Checked in ✓" : "Check in"}</button><button class="btn" data-a="openPay" data-id="${id}">${ic("receipt")} Record payment</button>` : ""}
+      </div>
+    </div>
+    <div class="grid g4" style="margin-top:14px">
+      <div class="a-card stat"><div class="lbl">Membership</div><div class="val" style="font-size:18px">${s.kind === "active" ? esc(s.cur.plan) : s.kind === "expired" ? "Expired" : s.kind === "upcoming" ? "Starts soon" : "No plan"}</div><div class="sub">${s.kind === "active" ? "till " + fmtDate(s.cur.end) + " · " + s.left + " days left" : s.kind === "expired" ? "ended " + fmtDate(s.last.end) : ""}</div></div>
+      <div class="a-card stat"><div class="lbl">Visits (30 days)</div><div class="val">${visits.length + (hash(id) % 14)}</div><div class="sub">${visits.length ? "Last: " + fmtDT(visits[visits.length - 1].at) : ""}</div></div>
+      <div class="a-card stat"><div class="lbl">Total paid</div><div class="val">${inr(totalPaid)}</div><div class="sub">${pays.length} payments</div></div>
+      <div class="a-card stat"><div class="lbl">Workouts (30 days)</div><div class="val">${id === ME ? S.history.length : hash(id) % 9}</div><div class="sub">${plans.map((p) => esc(p.name)).join(", ") || "No plan assigned"}</div></div>
+    </div>
+    <div class="grid g-main" style="margin-top:14px">
+      <div class="grid">
+        ${nut ? `<div class="a-card uz" style="border-color:#fcd581"><h2>${ic("apple")} Nutrition ${usp(7)}</h2><p class="hint">What ${firstName(m.name)} actually ate, against the target you set. Visible to the trainer and owner only.</p>
+          <div class="grid g2"><div><div class="small muted">Target</div><div style="font-size:18px;font-weight:700">${S.food.target.kcal} kcal · ${S.food.target.p} g protein</div><div class="small muted">Goal: lose fat (−400 kcal)</div></div>
+          <div><div class="small muted">Today so far</div><div style="font-size:18px;font-weight:700">${tot.kcal} kcal · ${tot.p} g</div><div class="small ${tot.p < S.food.target.p * 0.6 ? "" : "muted"}" style="${tot.p < S.food.target.p * 0.6 ? "color:var(--warn)" : ""}">${tot.p < S.food.target.p * 0.6 ? "Protein low so far" : "On track"}</div></div></div>
+          <div style="margin-top:12px">${bars(week, week.map((_, i) => dayName(addDays(TODAY, i - 6))), { h: 110, fmt: (v) => v + " kcal", target: S.food.target.kcal })}</div>
+          <div class="small" style="margin-top:6px">Today: ${S.food.log.map((f) => esc(f.name)).join(", ") || "nothing logged yet"}</div>
+          <form data-submit="comment" class="row-actions" style="margin-top:10px"><input class="inp" name="body" placeholder="Comment on today's food (the member sees it)" style="flex:1" required><button class="btn">Send</button></form>
+          ${S.comments.length ? `<div class="small muted" style="margin-top:8px">Last comment: “${esc(S.comments[0].body)}” · ${esc(M(S.comments[0].by).name)}</div>` : ""}</div>` : ""}
+        ${pt ? `<div class="a-card"><h2>${ic("heart")} Personal training</h2><div class="li"><div class="grow"><b>${esc(pt.pkg)}</b><div class="small muted">Trainer ${esc(M(pt.trainer).name)} · ${fmtDate(pt.start)} – ${fmtDate(pt.end)}</div><div class="progress" style="margin-top:8px"><i style="width:${(pt.used / pt.total) * 100}%"></i></div><div class="small" style="margin-top:4px">${pt.total - pt.used} of ${pt.total} sessions left</div></div><button class="btn sm" data-a="logPt" data-id="${pt.id}">${ic("plus")} Log session</button></div></div>` : ""}
+        <div class="a-card"><h2>Payments</h2>${payTable(pays, true)}</div>
+        <div class="a-card"><h2>Membership history</h2><table class="t"><tr><th>Plan</th><th>From</th><th>To</th><th></th></tr>${subsOf(id).map((x) => `<tr><td>${esc(x.plan)}</td><td>${fmtDate(x.start)}</td><td>${fmtDate(x.end)}</td><td>${x.start <= TODAY && x.end >= TODAY ? `<span class="b good">Current</span>` : x.start > TODAY ? `<span class="b info">Next</span>` : ""}</td></tr>`).join("") || `<tr><td colspan="4" class="empty">No memberships yet</td></tr>`}</table></div>
+      </div>
+      <div class="grid" style="align-self:start">
+        <div class="a-card"><h2>Notes</h2><p class="hint">Only your team sees these.</p>${(m.notes || []).map((n) => `<div class="small" style="padding:6px 0;border-top:1px solid var(--border)">${esc(n.body)}<div class="muted">${esc(n.by)} · ${timeAgo(n.at)} ago</div></div>`).join("")}<form data-submit="note" data-id="${id}" style="margin-top:8px"><textarea class="inp" name="body" rows="2" placeholder="e.g. Knee injury, avoid deep squats" required></textarea><button class="btn sec sm" style="margin-top:6px">Add note</button></form></div>
+        <div class="a-card"><h2>Workout plans</h2>${plans.map((p) => `<div class="small" style="padding:4px 0">${ic("dumb")} ${esc(p.name)}</div>`).join("") || `<div class="small muted">None</div>`}<button class="btn sec sm" style="margin-top:8px" data-a="aGo" data-r="workouts">Assign a plan</button></div>
+        <div class="a-card"><h2>Recent visits</h2>${visits.slice(-5).reverse().map((c) => `<div class="small" style="padding:4px 0">${fmtDT(c.at)}</div>`).join("") || `<div class="small muted">No visits in the last 90 days</div>`}</div>
+      </div>
+    </div>`;
+  },
+
+  classes() {
+    const days = [...Array(7)].map((_, i) => addDays(TODAY, i));
+    const day = days[S.a.classDay];
+    const list = S.sessions.filter((s) => ymd(s.start) === day).sort((a, b) => a.start - b.start);
+    return `${title("Classes", "Members book from the app. Waitlists move up automatically.", `<button class="btn" data-a="openAddClass">${ic("plus")} Add class</button>`)}
+    <div class="chips" style="margin-bottom:12px">${days.map((d, i) => `<button class="chip ${i === S.a.classDay ? "on" : ""}" data-a="classDay" data-i="${i}">${i === 0 ? "Today" : i === 1 ? "Tomorrow" : dayName(d) + " " + new Date(d + "T00:00").getDate()}</button>`).join("")}</div>
+    <div class="grid g2">${list.map((c) => `<div class="a-card" style="${c.status === "cancelled" ? "opacity:.6" : ""}">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><h2 style="margin:0">${esc(c.name)}</h2><div class="small muted">${fmtTime(c.start)} · ${c.dur} min · ${esc(c.room)} · ${esc(M(c.trainer).name)}</div></div>${c.status === "cancelled" ? `<span class="b bad">Cancelled</span>` : c.booked.length >= c.cap ? `<span class="b warn">Full${c.waitlist.length ? " · " + c.waitlist.length + " waiting" : ""}</span>` : `<span class="b good">${c.cap - c.booked.length} spots left</span>`}</div>
+        <div class="progress" style="margin:12px 0 6px"><i style="width:${(c.booked.length / c.cap) * 100}%"></i></div>
+        <div class="small muted">${c.booked.length} of ${c.cap} booked</div>
+        ${c.status !== "cancelled" ? `<div class="row-actions" style="margin-top:10px"><button class="btn sec sm" data-a="attendees" data-id="${c.id}">${ic("users")} Attendees</button><button class="btn ghost sm" data-a="openCancelClass" data-id="${c.id}" style="color:var(--danger)">Cancel class</button></div>` : `<div class="small" style="margin-top:8px">${esc(c.reason)}</div>`}
+      </div>`).join("") || `<div class="a-card empty">No classes on this day.</div>`}</div>`;
+  },
+
+  workouts() {
+    const plan = S.wplans.find((w) => w.id === S.a.planSel) || S.wplans[0];
+    const opts = membersOnly().filter((m) => m.status === "active" && !plan.assigned.includes(m.id)).map((m) => `<option value="${m.id}">${esc(m.name)}</option>`).join("");
+    return `${title("Workout plans", "Trainers build plans once and assign them. Members follow them in the app and log every set.", `<button class="btn" data-a="newPlan">${ic("plus")} New plan</button>`)}
+    <div class="grid" style="grid-template-columns:240px minmax(0,1fr)">
+      <div class="a-card" style="padding:8px;align-self:start">${S.wplans.map((w) => `<button class="a-nav ${w.id === plan.id ? "on" : ""}" data-a="planSel" data-id="${w.id}">${ic("dumb")} <span style="flex:1">${esc(w.name)}<small class="muted" style="display:block;font-weight:400;font-size:11px">${w.assigned.length} assigned · by ${esc(firstName(M(w.by).name))}</small></span></button>`).join("")}</div>
+      <div class="grid">
+        <div class="a-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">${esc(plan.name)}</h2><form data-submit="assign" class="row-actions"><select class="sel" name="member" style="width:200px" aria-label="Member">${opts || "<option>Everyone is assigned</option>"}</select><button class="btn sm" ${opts ? "" : "disabled"}>Assign</button></form></div>
+          <div class="chips" style="margin-top:10px">${plan.assigned.map((id) => `<span class="chip" style="display:inline-flex;gap:6px;align-items:center">${av(M(id), 20)} ${esc(M(id).name)}</span>`).join("") || `<span class="small muted">Not assigned yet</span>`}</div></div>
+        <div class="grid g3">${plan.days.map((d, di) => `<div class="plan-day"><h4>${esc(d.label)}<span class="b">${d.items.length}</span></h4>${d.items.map(([n, s, r]) => `<div class="ex-row"><span>${esc(n)}</span><span class="muted tabnum">${s} × ${esc(r)}</span></div>`).join("")}
+          <form data-submit="addEx" data-d="${di}" class="row-actions" style="margin-top:8px"><select class="sel" name="ex" style="flex:1" aria-label="Exercise">${EXERCISES.map((e) => `<option>${e}</option>`).join("")}</select><button class="btn sec sm">${ic("plus")}</button></form></div>`).join("")}</div>
+      </div>
+    </div>`;
+  },
+
+  pt() {
+    const clients = S.pt.filter((p) => p.end >= TODAY);
+    return `${title("Personal training", "Sell PT packages, track sessions, and coach nutrition.", `<button class="btn" data-a="openSellPt">${ic("plus")} Sell a package</button>`)}
+    <div class="grid g3">${S.ptPackages.map((k) => `<div class="a-card"><h2>${esc(k.name)}</h2><div style="font-size:22px;font-weight:700">${inr(k.price)}</div><div class="small muted">${k.sessions ? k.sessions + " sessions · " : ""}valid ${k.days} days</div></div>`).join("")}</div>
+    <div class="a-card" style="margin-top:14px"><h2>Clients</h2><table class="t"><tr><th>Client</th><th>Package</th><th>Trainer</th><th>Sessions</th><th>Nutrition</th><th></th></tr>
+    ${clients.map((p) => { const m = M(p.memberId); const left = p.total - p.used; return `<tr class="click" data-a="aGo" data-r="member:${m.id}"><td><div class="who">${av(m, 30)}<b>${esc(m.name)}</b></div></td><td>${esc(p.pkg)}</td><td>${esc(M(p.trainer).name)}</td><td>${left <= 3 ? `<span class="b warn">${left} left</span>` : `<span class="tabnum">${left} of ${p.total} left</span>`}</td><td>${m.id === ME ? `<span class="b good">Logging · 86% on target</span>` : m.id === "m7" ? `<span class="b warn">Not logged 2 days</span>` : `<span class="b">Not started</span>`}</td><td><button class="btn sec sm" data-a="logPt" data-id="${p.id}">Log session</button></td></tr>`; }).join("")}</table></div>`;
+  },
+
+  foods() {
+    return `${title("Nutrition", "Members log meals from a Kerala & Indian food list in home portions. Trainers set targets and comment.", "", usp(7))}
+    <div class="grid g2">
+      <div class="a-card uz"><h2>Built-in food list · ${FOODS.length}+ foods</h2><p class="hint">Malayalam names, home portions (piece, katori, cup). Values are approximate (≈), from Indian food composition tables.</p>
+        <table class="t"><tr><th>Food</th><th>Portion</th><th>kcal</th><th>Protein</th></tr>${FOODS.slice(0, 12).map((f) => `<tr><td>${esc(f.name)} <span class="ml">${esc(f.ml)}</span></td><td>${esc(f.serving)}</td><td class="tabnum">≈${f.kcal}</td><td class="tabnum">≈${f.p} g</td></tr>`).join("")}</table><div class="small muted" style="margin-top:6px">…and ${FOODS.length - 12} more in this demo.</div></div>
+      <div class="grid" style="align-self:start">
+        <div class="a-card"><h2>Your gym's foods</h2><p class="hint">Add what your café or juice bar sells.</p><table class="t">${S.gymFoods.map((f) => `<tr><td>${esc(f.name)}</td><td>${esc(f.serving)}</td><td>${f.kcal} kcal</td><td>${f.p} g</td></tr>`).join("")}</table>
+          <form data-submit="addFood" class="grid g2" style="margin-top:10px"><input class="inp" name="name" placeholder="Name" required><input class="inp" name="serving" placeholder="Portion, e.g. 1 glass" required><input class="inp" name="kcal" type="number" placeholder="kcal" required><input class="inp" name="p" type="number" placeholder="Protein g" required><button class="btn" style="grid-column:1/-1">Add food</button></form></div>
+        <div class="a-card"><h2>Who can see food logs</h2><p class="hint" style="margin:0">Food logs are health data. Only the member, their PT trainer and the owner see them. Front-desk staff can't.</p></div>
+      </div>
+    </div>`;
+  },
+
+  plans() {
+    return `${title("Membership plans", "Members see these in the app and can pay by UPI.", "")}
+    <div class="grid g4">${S.plans.map((p) => `<div class="a-card"><div style="display:flex;justify-content:space-between"><h2>${esc(p.name)}</h2>${toggle(p.id, p.active, "planActive")}</div><label class="f"><span>Price (₹)</span><input class="inp" type="number" value="${p.price / 100}" data-change="planPrice" data-k="${p.id}"></label><div class="small muted">${p.days} days · ${inr(Math.round(p.price / (p.days / 30)))}/month</div></div>`).join("")}</div>
+    <div class="a-card" style="margin-top:14px;max-width:520px"><h2>Add a plan</h2><form data-submit="addPlan" class="grid g3"><input class="inp" name="name" placeholder="Name, e.g. Student monthly" required><input class="inp" name="price" type="number" placeholder="Price ₹" required><input class="inp" name="days" type="number" placeholder="Days" required><button class="btn" style="grid-column:1/-1">Add plan</button></form></div>`;
+  },
+
+  payments() {
+    const upi = pendingUpi();
+    const month = TODAY.slice(0, 7);
+    const paid = S.payments.filter((p) => p.status === "paid");
+    return `${title("Payments", `${inr(paid.filter((p) => ymd(new Date(p.at)).startsWith(month)).reduce((t, p) => t + p.amount, 0))} collected this month`, `<button class="btn sec" data-a="exportCsv" data-what="payments">${ic("download")} Export CSV</button>`)}
+    <div class="a-card uz" style="margin-bottom:14px;${upi.length ? "border-color:#fcd581;background:#fffdf5" : ""}"><h2>UPI payments to confirm ${usp(2)}</h2><p class="hint">Members pay your UPI ID (${esc(S.gym.upi)}) straight from the app. Check your bank app, then confirm. No gateway, no fees.</p>
+      ${upi.length ? `<div class="list">${upi.map((p) => `<div class="li">${av(M(p.memberId), 38)}<div class="grow"><b>${esc(M(p.memberId).name)}</b> · ${esc(p.what)}<div class="small muted">UTR <b class="tabnum" style="display:inline;color:var(--text)">${esc(p.utr)}</b> · ${timeAgo(p.at)} ago</div></div><div style="font-size:18px;font-weight:700">${inr(p.amount)}</div><button class="btn" data-a="confirmUpi" data-id="${p.id}">${ic("check")} Confirm</button><button class="btn sec" data-a="openReject" data-id="${p.id}">Reject</button></div>`).join("")}</div>` : `<div class="empty">Nothing to confirm. Try paying from the member app → Membership.</div>`}
+    </div>
+    <div class="a-card"><h2>All payments</h2>${payTable(S.payments.filter((p) => p.status !== "created"))}</div>`;
+  },
+
+  settings() {
+    const f = S.gym.f;
+    const row = (k, t, d, u) => `<div class="set-row"><div class="grow"><b>${t} ${u ? usp(u) : ""}</b><small>${d}</small></div>${toggle(k, f[k])}</div>`;
+    return `${title("Settings", "Everything here changes the member app straight away. Try switching a feature off →")}
+    <div class="grid g2">
+      <div class="a-card uz"><h2>Features ${usp(5)}</h2><p class="hint">Off means hidden everywhere: admin and member app. The app stays as simple as your gym.</p>
+        ${row("checkin", "Check-in", "QR codes, the poster, the visit log.")}
+        ${row("classes", "Classes", "Timetable, booking, waitlists.")}
+        ${row("workouts", "Workouts", "Plans from trainers, set logging, progress.")}
+        ${row("pt", "Personal training", "PT packages and sessions.")}
+        ${row("nutrition", "Nutrition", "Food logging and targets for PT clients.", 7)}
+        ${row("nutritionAll", "Nutrition for all members", "Not just PT clients.")}
+      </div>
+      <div class="a-card"><h2>Gym profile</h2>
+        <div class="li" style="padding-top:0"><span class="gym-logo" style="width:56px;height:56px;font-size:18px;border-radius:14px">${S.gym.short}</span><div class="grow small muted">Your logo shows in the member app, on receipts and on the join page.</div><button class="btn sec sm" data-a="toastOnly" data-t="Logo upload works in the real app.">${ic("image")} Change</button></div>
+        <label class="f"><span>Gym name</span><input class="inp" value="${esc(S.gym.name)}" data-change="gymField" data-k="name"></label>
+        <label class="f"><span>Address</span><input class="inp" value="${esc(S.gym.address)}" data-change="gymField" data-k="address"></label>
+        <label class="f"><span>Phone</span><input class="inp" value="${esc(S.gym.phone)}" data-change="gymField" data-k="phone"></label>
+      </div>
+      <div class="a-card"><h2>Check-in rules ${usp(3)}</h2>
+        ${row("selfCheckin", "Members check in from the app", "One tap when they arrive.")}
+        ${row("poster", "QR poster at the entrance", "No fingerprint machine needed.")}
+        ${row("location", "Location check", "Phone must be within 150 m of the gym.")}
+        ${row("onlyOpen", "Only during opening hours", "Outside hours the app says the gym is closed.")}
+        <div class="set-row"><div class="grow"><b>Demo: pretend the gym is closed now</b><small>See what members see with "only during opening hours" on.</small></div><span class="toggle"><input type="checkbox" ${S.gym.simulateClosed ? "checked" : ""} data-change="simClosed" aria-label="Pretend closed"><span></span></span></div>
+      </div>
+      <div class="a-card"><h2>Opening hours</h2><table class="t">${S.gym.hours.map(([d, o, c]) => `<tr><td>${d}</td><td>${o} – ${c}</td></tr>`).join("")}</table><div class="small muted" style="margin-top:8px">Shown in the app; members can check in 15 minutes before opening.</div></div>
+      <div class="a-card uz"><h2>Payments ${usp(2)}</h2>
+        <label class="f"><span>Your UPI ID <small>members pay this directly</small></span><input class="inp" value="${esc(S.gym.upi)}" data-change="gymField" data-k="upi"></label>
+        <div class="small muted" style="margin-bottom:8px">Methods the desk can record:</div>
+        <div class="chips">${Object.entries({ cash: "Cash", upi: "UPI", card: "Card", bank: "Bank transfer" }).map(([k, l]) => `<label class="chip" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" ${S.gym.methods[k] ? "checked" : ""} data-change="method" data-k="${k}"> ${l}</label>`).join("")}</div>
+        <label class="f" style="margin-top:10px"><span>Receipt numbers start with</span><input class="inp" value="${esc(S.gym.receiptPrefix)}" data-change="gymField" data-k="receiptPrefix" style="max-width:120px"></label>
+      </div>
+      <div class="a-card uz"><h2>Joining &amp; reminders ${usp(1)}</h2>
+        ${row("approval", "Approve new joiners", "People who use the join link wait for your OK.")}
+        <label class="f" style="margin-top:8px"><span>Renewal reminder (WhatsApp) <small>{name} {plan} {date} {gym}</small></span><textarea class="inp" rows="3" data-change="gymField" data-k="renewal">${esc(S.gym.renewal)}</textarea></label>
+        <div class="wa-preview">${esc(renderMsg(M("m5")))}</div>
+      </div>
+      <div class="a-card"><h2>Team</h2><p class="hint">Owner, admin, front desk and trainers see different pages.</p>${team().map((t) => `<div class="li">${av(t, 32)}<div class="grow"><b>${esc(t.name)}</b></div><select class="sel" style="width:130px" data-change="role" data-k="${t.id}" ${t.role === "owner" ? "disabled" : ""}>${["owner", "admin", "staff", "trainer"].map((r) => `<option value="${r}" ${t.role === r ? "selected" : ""}>${r === "staff" ? "Front desk" : r[0].toUpperCase() + r.slice(1)}</option>`).join("")}</select></div>`).join("")}</div>
+      <div class="a-card" style="border-color:#fca5a5"><h2 style="color:var(--danger)">Delete gym</h2><p class="hint">Closes the gym for everyone. Owners can restore it for 30 days. Download members and payments (CSV) first.</p><button class="btn danger" data-a="toastOnly" data-t="Demo: in the real app this asks you to type the gym code to confirm.">${ic("trash")} Delete this gym</button></div>
+    </div>`;
+  },
+
+  profile() {
+    const me = M(S.viewer);
+    return `${title("My profile")}
+    <div class="grid g2"><div class="a-card" style="display:flex;gap:16px;align-items:center">${av(me, 72)}<div><div style="font-size:20px;font-weight:700">${esc(me.name)}</div><div class="small muted">ravi@armsfitness.in</div><div style="margin-top:6px"><span class="b good">Owner · ${esc(S.gym.name)}</span></div></div></div>
+    <div class="a-card"><h2>Sign-in &amp; security</h2><p class="hint">Email code or password. "Sign out everywhere" for lost phones.</p><button class="btn sec sm" data-a="toastOnly" data-t="Signed out on every other device (demo).">Sign out everywhere</button></div>
+    <div class="a-card"><h2>Delete account</h2><p class="hint">Deletes your sign-in and personal details. Gyms keep payment records as "Deleted member". Owners delete their gym first.</p><button class="btn danger sm" data-a="toastOnly" data-t="You own Arms Fitness. Delete the gym in Settings first, then delete your account.">Delete my account</button></div></div>`;
+  },
+};
+
+function memberTable() {
+  const q = S.a.memQuery.trim().toLowerCase();
+  let list = S.a.memFilter === "team" ? team() : membersOnly();
+  list = list.filter((m) => {
+    const s = mstate(m.id);
+    if (S.a.memFilter === "active") return s.kind === "active" || s.kind === "upcoming";
+    if (S.a.memFilter === "expiring") return s.kind === "active" && !s.next && s.left <= S.gym.warnDays;
+    if (S.a.memFilter === "expired") return s.kind === "expired" || s.kind === "none";
+    return true;
+  }).filter((m) => !q || m.name.toLowerCase().includes(q) || (m.phone || "").replace(/\s/g, "").includes(q.replace(/\s/g, "")));
+  return `<table class="t"><tr><th>Member</th><th>Phone</th><th>Status</th><th>Plan ends</th><th></th></tr>${list.map((m) => { const s = mstate(m.id); return `<tr class="click" data-a="aGo" data-r="member:${m.id}"><td><div class="who">${av(m, 34)}<div><b>${esc(m.name)}</b>${S.pt.some((p) => p.memberId === m.id && p.end >= TODAY) ? `<small>PT client</small>` : ""}</div></div></td><td class="muted tabnum">${esc(m.phone || "—")}</td><td>${m.team ? `<span class="b">${m.role === "staff" ? "front desk" : m.role}</span>` : stateBadge(m.id)}</td><td class="muted">${s.kind === "active" ? fmtDate((s.next || s.cur).end) : s.kind === "expired" ? fmtDate(s.last.end) : "—"}</td><td style="text-align:right">${ic("right")}</td></tr>`; }).join("") || `<tr><td colspan="5" class="empty">No one matches.</td></tr>`}</table>`;
+}
+function ciResults() {
+  const q = S.a.ciQuery.trim().toLowerCase();
+  if (!q) return `<div class="small muted">Type a name, e.g. "an" or "joel".</div>`;
+  const list = membersOnly().filter((m) => m.status === "active" && m.name.toLowerCase().includes(q)).slice(0, 6);
+  return list.map((m) => `<div class="li">${av(m, 40)}<div class="grow"><b>${esc(m.name)}</b><div>${stateBadge(m.id)}</div></div><button class="btn sec sm" data-a="deskCheckin" data-id="${m.id}" data-banner="1">${checkedInToday(m.id) ? "Checked in ✓" : "Check in"}</button></div>`).join("") || `<div class="small muted">No member found.</div>`;
+}
+function payTable(list, compact) {
+  const MET = { cash: "Cash", upi: "UPI", card: "Card", bank: "Bank" };
+  return `<table class="t"><tr><th>Date</th>${compact ? "" : "<th>Member</th>"}<th>For</th><th>Method</th><th style="text-align:right">Amount</th><th>Receipt</th></tr>${list.map((p) => `<tr><td class="muted">${fmtDT(p.at)}</td>${compact ? "" : `<td><div class="who">${av(M(p.memberId), 26)}<b>${esc(M(p.memberId).name)}</b></div></td>`}<td>${esc(p.what)}</td><td>${MET[p.method]}${p.status === "failed" ? ` <span class="b bad">Rejected</span>` : p.status === "created" ? ` <span class="b warn">To confirm</span>` : ""}</td><td style="text-align:right" class="tabnum">${inr(p.amount)}</td><td>${p.status === "paid" ? `<button class="btn ghost sm" style="color:var(--brand)" data-a="receipt" data-id="${p.id}">${fmtReceipt(p.receipt)}</button>` : "—"}</td></tr>`).join("") || `<tr><td colspan="6" class="empty">No payments yet.</td></tr>`}</table>`;
+}
+function renderMsg(m) {
+  const s = mstate(m.id);
+  const sub = s.kind === "active" ? s.cur : s.last;
+  return S.gym.renewal.replaceAll("{name}", firstName(m.name)).replaceAll("{plan}", sub?.plan || "").replaceAll("{gym}", S.gym.name).replaceAll("{date}", sub ? fmtDate(sub.end) : "");
+}
+function receiptView(p) {
+  const m = M(p.memberId), sub = p.subId ? S.subs.find((s) => s.id === p.subId) : S.subs.find((s) => s.memberId === p.memberId && s.plan === p.what && ymd(new Date(p.at)) >= addDays(s.start, -1));
+  const ptp = p.kind === "pt" ? S.pt.find((x) => x.memberId === p.memberId && x.pkg === p.what) : null;
+  return { number: fmtReceipt(p.receipt), date: fmtDate(ymd(new Date(p.at))), name: m.name, what: (p.kind === "pt" ? "Personal training: " : "Membership: ") + p.what, period: ptp ? `${fmtDate(ptp.start)} – ${fmtDate(ptp.end)}` : sub ? `${fmtDate(sub.start)} – ${fmtDate(sub.end)}` : "", sessions: ptp ? ptp.total + " sessions" : "", method: { cash: "Cash", upi: "UPI", card: "Card", bank: "Bank transfer" }[p.method], ref: p.utr, amount: inr(p.amount) };
+}
+function receiptHTML(p, standalone) {
+  const v = receiptView(p);
+  const rows = [["Date", v.date], ["Received from", v.name], ["For", v.what], ["Valid", v.period], ["Sessions", v.sessions], ["Paid by", v.method], ["Reference", v.ref]].filter((r) => r[1]);
+  const inner = `<div class="receipt"><div style="display:flex;gap:12px;align-items:center"><span class="gym-logo" style="width:46px;height:46px;font-size:15px">${S.gym.short}</span><div><div style="font-weight:700;font-size:17px">${esc(S.gym.name)}</div><div class="small muted">${esc(S.gym.address)}</div><div class="small muted">+91 ${esc(S.gym.phone)}</div></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><b style="letter-spacing:2px;font-size:12px;color:var(--muted)">RECEIPT ${esc(v.number)}</b><span class="b good">Paid</span></div>
+    <dl>${rows.map(([k, val]) => `<div><dt>${k}</dt><dd>${esc(val)}</dd></div>`).join("")}</dl>
+    <div class="amt"><span>Amount paid</span><strong>${esc(v.amount)}</strong></div><p style="text-align:center;color:var(--muted);font-size:13px">Thank you!</p></div>`;
+  if (!standalone) return inner;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Receipt ${esc(v.number)}</title><style>body{font-family:Poppins,system-ui,sans-serif;padding:30px;color:#18181b}:root{--muted:#6b7068;--border:#e4e7dc;--text:#18181b}.gym-logo{background:#1f2a10;color:#c8f04b;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800}.small{font-size:12px}.muted{color:#6b7068}.b{font-size:11px;font-weight:700;border-radius:99px;padding:2px 9px;background:#dcfce7;color:#15803d}.receipt{max-width:460px;margin:0 auto}dl div{display:grid;grid-template-columns:130px 1fr;gap:10px;padding:8px 0;border-top:1px solid #e4e7dc;font-size:13px}dt{color:#6b7068}dd{margin:0}.amt{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid #18181b;margin-top:10px;padding-top:12px;font-weight:600}.amt strong{font-size:24px}</style></head><body>${inner}<script>onload=()=>print()<\/script></body></html>`;
+}
+function receiptText(p) {
+  const v = receiptView(p);
+  return `*${S.gym.name}* · Receipt ${v.number}\nReceived from ${v.name} on ${v.date}\n${v.what}${v.period ? "\nValid " + v.period : ""}\nAmount: ${v.amount} (${v.method}${v.ref ? ", ref " + v.ref : ""})\nThank you!`;
+}
+
+/* ===========================================================================
+   MEMBER APP
+=========================================================================== */
+const TABS = [["home", "Home", "home"], ["classes", "Classes", "cal", "classes"], ["workouts", "Workouts", "dumb", "workouts"], ["food", "Food", "apple", "nutrition"], ["membership", "Pass", "card"], ["profile", "Me", "user"]];
+function renderApp() {
+  const app = $("#app");
+  app.classList.toggle("dark", S.p.dark);
+  const r = S.p.route, base = r.split(":")[0];
+  const status = `<div class="p-status"><span>${fmtTime(new Date()).replace(/\s?[ap]m/i, "")}</span><span class="r">${ic("chart")}<span class="batt"></span></span></div>`;
+  if (S.p.signedOut || S.p.deleted) { app.innerHTML = status + SCREENS.signedout(); return; }
+  if (base === "join") { app.innerHTML = status + SCREENS.join(); return; }
+  const stack = { notifications: "Notifications", receipt: "Receipt", log: "Log workout", wkdone: "Workout saved", progress: "Progress" };
+  const tabs = TABS.filter(([k, , , flag]) => (k === "food" ? nutritionOn() : !flag || S.gym.f[flag]));
+  if (!tabs.some(([k]) => k === base) && !stack[base]) S.p.route = "home";
+  const route = S.p.route, b2 = route.split(":")[0];
+  const body = (SCREENS[b2] || SCREENS.home)(route.split(":")[1]);
+  app.innerHTML = `${status}
+    ${stack[b2] ? `<div class="p-bar"><button data-a="pBack" aria-label="Back">${ic("left")}</button>${stack[b2]}</div>` : ""}
+    <div class="p-body" id="p-body">${body}</div>
+    ${stack[b2] ? "" : `<nav class="p-tabs">${tabs.map(([k, l, i]) => `<button class="p-tab ${b2 === k ? "on" : ""}" data-a="pGo" data-r="${k}" aria-label="${l}"><span class="ico">${ic(i)}</span>${l}</button>`).join("")}</nav>`}
+    ${S.p.sheet ? `<div class="p-sheet-back" data-a="pClose" data-self="1"><div class="p-sheet" role="dialog" aria-label="${esc(S.p.sheet.title)}"><div class="grab"></div><h3>${esc(S.p.sheet.title)}</h3>${S.p.sheet.html}</div></div>` : ""}`;
+}
+function reminders() {
+  const out = [], s = mstate(ME);
+  if (s.kind === "expired") out.push({ t: "Your membership has ended", b: `It ended on ${fmtDate(s.last.end)}. Renew to keep checking in.`, link: "membership", bad: 1 });
+  else if (s.kind === "active" && !s.next && s.left <= S.gym.warnDays) out.push({ t: `Your membership ends ${s.left === 0 ? "today" : s.left === 1 ? "tomorrow" : "in " + s.left + " days"}`, b: `${s.cur.plan} · ends ${fmtDate(s.cur.end)}`, link: "membership", bad: 1 });
+  else if (s.kind === "none") out.push({ t: "Choose a membership plan", b: "Pick a plan to start using the gym.", link: "membership" });
+  const p = S.payments.find((x) => x.memberId === ME && x.status === "created");
+  if (p) out.push({ t: `UPI payment of ${inr(p.amount)} waiting`, b: "The gym will confirm it once they see the money.", link: "membership" });
+  if (S.gym.f.classes) for (const c of S.sessions) if (c.status === "scheduled" && c.booked.includes(ME) && c.start > NOW && c.start - NOW < 864e5 * 1.5) out.push({ t: `${c.name} ${relDay(ymd(c.start)).toLowerCase()} at ${fmtTime(c.start)}`, b: `${M(c.trainer).name} · ${c.room}`, link: "classes" });
+  return out;
+}
+const pRow = (iconName, tint, b, small, action, extra = "") => `<button class="p-row" ${action}><span class="ic tint-${tint}"><span class="fg">${ic(iconName)}</span></span><span class="grow"><b>${b}</b>${small ? `<small>${small}</small>` : ""}</span>${extra}${ic("right")}</button>`;
+
+const SCREENS = {
+  home() {
+    const me = M(ME), s = mstate(ME), ci = checkedInToday(ME);
+    const unread = S.notifs.filter((n) => n.unread).length, rem = reminders();
+    const dot = unread || rem.some((r) => r.bad);
+    const nextClass = S.gym.f.classes && S.sessions.filter((c) => c.status === "scheduled" && c.booked.includes(ME) && c.start > NOW).sort((a, b) => a.start - b.start)[0];
+    const next = S.gym.f.workouts && nextPlanDay();
+    const tot = foodTotals(), pt = myPt();
+    const hour = NOW.getHours();
+    const frac = s.kind === "active" ? s.left / daysBetween(s.cur.start, s.cur.end) : 0;
+    const weekDays = [...Array(7)].map((_, i) => addDays(TODAY, i - ((new Date().getDay() + 6) % 7)));
+    const visited = new Set([...S.history.map((h) => h.day), ...S.checkins.filter((c) => c.memberId === ME).map((c) => ymd(new Date(c.at))), addDays(TODAY, -1), addDays(TODAY, -3)]);
+    const closed = S.gym.f.onlyOpen && !gymOpenNow();
+    return `<div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px"><span class="gym-logo">${S.gym.short}</span><b style="font-size:14px">${esc(S.gym.name)}</b></div>
+        <button data-a="pGo" data-r="notifications" style="position:relative;width:42px;height:42px;border-radius:50%;background:var(--p-surface);border:1px solid var(--p-border);display:flex;align-items:center;justify-content:center;font-size:20px" aria-label="Notifications${unread ? ", " + unread + " new" : ""}">${ic("bell")}${dot ? `<span style="position:absolute;top:8px;right:9px;width:9px;height:9px;border-radius:50%;background:var(--p-danger);border:2px solid var(--p-surface)"></span>` : ""}</button></div>
+      <div style="display:flex;align-items:center;gap:12px"><button data-a="pGo" data-r="profile" aria-label="Profile">${av(me, 52)}</button><div><div class="p-sec">${hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening"}</div><div style="font-weight:800;font-size:19px">${esc(firstName(me.name))} 👋</div></div></div>
+      <div class="p-hero uz" style="display:flex;gap:14px;align-items:center"><div class="blob" style="left:-40px;top:-50px;width:140px;height:140px;background:rgba(200,240,75,.12)"></div>
+        <div class="ring-wrap">${ring(frac, 92, 9, "#c8f04b", "rgba(255,255,255,.12)")}<div class="c"><b>${s.kind === "active" ? s.left : 0}</b><small>days left</small></div></div>
+        <div style="flex:1;position:relative"><div class="k">Membership pass ${usp(6)}</div><h3>${s.kind === "active" ? esc(s.cur.plan) : s.kind === "expired" ? "Expired" : "No plan yet"}</h3><div style="font-size:12.5px;color:#c3cdb2">${s.kind === "active" ? (s.next ? "Renewed · next starts " + fmtShort(s.next.start) : "Ends " + fmtDate(s.cur.end)) : "Choose a plan to start"}</div>
+        ${s.kind !== "active" || (!s.next && s.left <= S.gym.warnDays) ? `<button class="p-btn sm" style="margin-top:10px" data-a="pGo" data-r="membership">Renew with UPI</button>` : ""}</div></div>
+      ${S.gym.f.checkin ? `<div class="p-card uz">${ci ? `<div style="display:flex;gap:12px;align-items:center"><span style="width:44px;height:44px;border-radius:50%;background:var(--p-accent);color:var(--p-accent-fg);display:flex;align-items:center;justify-content:center;font-size:22px">${ic("check")}</span><div><b>Checked in at ${fmtTime(ci.at)}</b><div class="p-sec">Have a great workout!</div></div></div>`
+        : closed ? `<div style="display:flex;gap:12px;align-items:center"><span style="width:44px;height:44px;border-radius:50%;background:var(--p-muted);display:flex;align-items:center;justify-content:center;font-size:20px">${ic("moon")}</span><div><b>${esc(S.gym.name)} is closed now</b><div class="p-sec">Opens 5:30 am. Check-in opens 15 min before.</div></div></div>`
+        : `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b>Check in ${usp(3)}</b><span class="p-sec">Open now</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${S.gym.f.poster ? `<button class="p-btn sec" data-a="scanPoster">${ic("scan")} Scan poster</button>` : ""}${S.gym.f.selfCheckin ? `<button class="p-btn" data-a="selfCheckin">${ic("check")} Check in</button>` : ""}</div><button class="p-btn sec sm" style="margin-top:8px;width:100%" data-a="myQr">${ic("qr")} Show my QR at the desk</button>`}</div>` : ""}
+      ${nextClass ? `<button class="p-card" style="text-align:left;display:flex;gap:12px;align-items:center" data-a="pGo" data-r="classes"><span style="width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px" class="tint-blue"><span class="fg">${ic("cal")}</span></span><span style="flex:1"><span class="p-sec">Your next class</span><b style="display:block">${esc(nextClass.name)} · ${relDay(ymd(nextClass.start))} ${fmtTime(nextClass.start)}</b><span class="p-sec">${esc(M(nextClass.trainer).name)} · ${esc(nextClass.room)}</span></span>${ic("right")}</button>` : ""}
+      <div class="p-tiles">
+        ${S.gym.f.workouts ? `<button class="p-tile tint-green" data-a="pGo" data-r="workouts"><span class="ic fg">${ic("dumb")}</span><b>Workout</b><small>${next ? esc(next.day.label.split("·").pop().trim()) + " day" : "Log a workout"}</small></button>` : ""}
+        ${nutritionOn() ? `<button class="p-tile tint-yellow" data-a="pGo" data-r="food"><span class="ic fg">${ic("apple")}</span><b>Food</b><small>${Math.max(0, S.food.target.kcal - tot.kcal)} kcal left</small></button>` : ""}
+        ${S.gym.f.pt && pt ? `<button class="p-tile tint-pink" data-a="pGo" data-r="membership"><span class="ic fg">${ic("heart")}</span><b>PT</b><small>${pt.total - pt.used} sessions left</small></button>` : `<button class="p-tile tint-blue" data-a="pGo" data-r="classes"><span class="ic fg">${ic("cal")}</span><b>Classes</b><small>Book a spot</small></button>`}
+      </div>
+      <div class="p-card"><div class="p-h" style="margin:0 0 12px">This week <span class="p-sec" style="font-weight:600">${ic("flame")} 4-day streak</span></div><div class="week">${weekDays.map((d) => `<div>${dayName(d)[0]}<i class="${visited.has(d) && d <= TODAY ? "on" : ""} ${d === TODAY ? "today" : ""}">${new Date(d + "T00:00").getDate()}</i></div>`).join("")}</div></div>`;
+  },
+
+  classes() {
+    const days = [...Array(7)].map((_, i) => addDays(TODAY, i));
+    const day = days[S.p.classDay];
+    const list = S.sessions.filter((c) => ymd(c.start) === day).sort((a, b) => a.start - b.start);
+    return `<div class="p-h" style="font-size:22px">Classes</div>
+      <div class="p-chips">${days.map((d, i) => `<button class="${i === S.p.classDay ? "on" : ""}" data-a="pClassDay" data-i="${i}">${i === 0 ? "Today" : dayName(d)}<b>${new Date(d + "T00:00").getDate()}</b></button>`).join("")}</div>
+      ${list.map((c) => { const mine = c.booked.includes(ME), wl = c.waitlist.includes(ME), full = c.booked.length >= c.cap, cancelled = c.status === "cancelled"; return `<div class="p-card" style="${cancelled ? "opacity:.6" : ""}">
+        <div style="display:flex;justify-content:space-between;gap:8px"><div><div style="font-size:12px;font-weight:700;color:var(--p-sec)">${fmtTime(c.start)} · ${c.dur} MIN</div><b style="font-size:16px">${esc(c.name)}</b><div class="p-sec" style="display:flex;gap:6px;align-items:center;margin-top:3px">${av(M(c.trainer), 18)} ${esc(M(c.trainer).name)} · ${esc(c.room)}</div></div>${cancelled ? `<span class="p-badge" style="background:var(--p-danger);color:#fff">Cancelled</span>` : mine ? `<span class="p-badge">Booked ✓</span>` : wl ? `<span class="p-badge" style="background:#fde68a">Waitlist #${c.waitlist.indexOf(ME) + 1}</span>` : ""}</div>
+        ${cancelled ? `<div class="p-sec" style="margin-top:8px">${esc(c.reason || "Cancelled by the gym")}</div>` : `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><span class="p-sec">${full ? "Full" + (c.waitlist.length ? " · " + c.waitlist.length + " waiting" : "") : c.cap - c.booked.length + " of " + c.cap + " spots left"}</span>${mine ? `<button class="p-btn sec sm" data-a="pCancelBooking" data-id="${c.id}">Cancel booking</button>` : wl ? `<button class="p-btn sec sm" data-a="pLeaveWait" data-id="${c.id}">Leave waitlist</button>` : full ? `<button class="p-btn sec sm" data-a="pJoinWait" data-id="${c.id}">Join waitlist</button>` : `<button class="p-btn sm" data-a="pBook" data-id="${c.id}">Book a spot</button>`}</div>`}
+      </div>`; }).join("") || `<div class="p-card" style="text-align:center"><b>No classes this day</b><div class="p-sec">Try another day.</div></div>`}`;
+  },
+
+  workouts() {
+    const nx = nextPlanDay();
+    const thisWeek = S.history.filter((h) => daysBetween(h.day, TODAY) < 7);
+    const vol = thisWeek.reduce((t, h) => t + h.vol, 0), mins = thisWeek.reduce((t, h) => t + h.mins, 0);
+    return `<div class="p-h" style="font-size:22px">Workouts</div>
+      <div class="p-hero uz"><div class="blob" style="right:-40px;bottom:-60px;width:160px;height:160px;border:24px solid rgba(255,255,255,.05)"></div>
+        ${nx ? `<div class="k">Up next · ${esc(nx.plan.name)} ${usp(6)}</div><h3>${esc(nx.day.label)}</h3><div style="color:#c3cdb2;font-size:12.5px">${nx.day.items.length} exercises · about ${nx.day.items.length * 10} min · from ${esc(M(nx.plan.by).name)}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin:12px 0">${nx.day.items.slice(0, 4).map(([n]) => `<span class="p-chip">${esc(n)}</span>`).join("")}</div><button class="p-btn" data-a="startWk">${ic("play")} Start workout</button>`
+        : `<div class="k">Free workout</div><h3>Log any workout</h3><button class="p-btn" data-a="startWk" style="margin-top:10px">${ic("play")} Start empty workout</button>`}</div>
+      <div class="p-tiles"><div class="p-tile tint-green"><span class="ic fg">${ic("flame")}</span><b style="font-size:20px">${thisWeek.length}</b><small>this week</small></div><div class="p-tile tint-blue"><span class="ic fg">${ic("dumb")}</span><b style="font-size:20px">${(vol / 1000).toFixed(1)}t</b><small>lifted</small></div><div class="p-tile tint-pink"><span class="ic fg">${ic("clock")}</span><b style="font-size:20px">${mins}</b><small>minutes</small></div></div>
+      ${nx ? `<div class="p-h">${esc(nx.plan.name)}</div><div class="p-card" style="padding:6px">${nx.plan.days.map((d, i) => { const last = S.history.find((h) => h.label === d.label); const open = S.p.openDay === i; return `<button class="p-row" data-a="pOpenDay" data-i="${i}"><span class="ic tint-${i === nx.idx ? "green" : "blue"}"><span class="fg">${ic("dumb")}</span></span><span class="grow"><b>${esc(d.label)}</b><small>${d.items.length} exercises${last ? " · done " + relDay(last.day).toLowerCase() : ""}</small></span>${i === nx.idx ? `<span class="p-badge">Next</span>` : ""}${ic(open ? "down" : "right")}</button>${open ? `<div style="padding:0 12px 10px 64px">${d.items.map(([n, s, r]) => `<div class="food-item"><span>${esc(n)}</span><span class="p-sec">${s} × ${esc(r)}</span></div>`).join("")}</div>` : ""}`; }).join("")}</div>` : ""}
+      <div class="p-h">Personal bests ${ic("trophy")}</div>
+      <div class="p-tiles">${[["Squat", "50 kg"], ["Bench", "32.5 kg"], ["Deadlift", "70 kg"]].map(([n, v]) => `<div class="p-tile tint-yellow" style="min-height:0"><small>${n}</small><b style="font-size:17px">${v}</b></div>`).join("")}</div>
+      <div class="p-h">History</div>
+      <div class="p-card" style="padding:6px">${S.history.map((h) => `<div class="p-row"><span class="ic" style="background:var(--p-muted);flex-direction:column;font-size:10px;font-weight:800;line-height:1.1">${dayName(h.day).toUpperCase()}<b style="font-size:15px;display:block">${new Date(h.day + "T00:00").getDate()}</b></span><span class="grow"><b>${esc(h.label)}</b><small>${h.sets} sets · ${h.vol.toLocaleString("en-IN")} kg · ${h.mins} min</small></span></div>`).join("")}</div>`;
+  },
+
+  log() {
+    const wk = S.p.wk;
+    const done = wk.ex.reduce((t, e) => t + e.sets.filter((s) => s.done).length, 0), total = wk.ex.reduce((t, e) => t + e.sets.length, 0);
+    return `<div class="p-hero" style="display:flex;justify-content:space-between;align-items:center"><div><div class="k">${esc(wk.label)}</div><h3 id="wk-clock" class="tabnum">0:00</h3><div style="color:#c3cdb2;font-size:12px">${done} of ${total} sets done</div></div><div class="ring-wrap">${ring(total ? done / total : 0, 64, 7, "#c8f04b", "rgba(255,255,255,.12)")}<div class="c" style="color:#fff"><b style="font-size:15px">${total ? Math.round((done / total) * 100) : 0}%</b></div></div></div>
+      ${wk.ex.map((e, ei) => `<div class="p-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:15px">${esc(e.name)}</b><span class="p-sec">${e.target}</span></div>
+        <div class="set-grid"><span class="h">SET</span><span class="h">LAST TIME</span><span class="h" style="text-align:center">KG</span><span class="h" style="text-align:center">REPS</span><span class="h"></span>
+        ${e.sets.map((s, si) => `<span style="font-weight:800;text-align:center">${si + 1}</span><span class="p-sec">${e.last ? e.last[0] + " kg × " + e.last[1] : "—"}</span><span class="${s.done ? "done" : ""}"><input inputmode="decimal" value="${s.kg}" data-input="wkSet" data-e="${ei}" data-s="${si}" data-f="kg" aria-label="Set ${si + 1} weight"></span><span class="${s.done ? "done" : ""}"><input inputmode="numeric" value="${s.reps}" data-input="wkSet" data-e="${ei}" data-s="${si}" data-f="reps" aria-label="Set ${si + 1} reps"></span><button class="tick ${s.done ? "on" : ""}" data-a="wkTick" data-e="${ei}" data-s="${si}" aria-label="Set ${si + 1} done">${ic("check")}</button>`).join("")}</div>
+        <button class="p-btn sec sm" style="margin-top:10px" data-a="wkAddSet" data-e="${ei}">${ic("plus")} Add set</button></div>`).join("")}
+      ${S.p.rest ? `<div class="restbar"><span style="font-size:20px">${ic("timer")}</span><div style="flex:1"><div style="font-size:11px;font-weight:700;color:#c3cdb2">REST</div><b id="rest-left" class="tabnum" style="font-size:18px">1:30</b></div><button class="p-btn sm sec" data-a="restAdd">+15 s</button><button class="p-btn sm" data-a="restSkip">Skip</button></div>` : ""}
+      <button class="p-btn dark" data-a="wkFinish" ${done ? "" : "disabled"}>Finish workout · ${done} ${done === 1 ? "set" : "sets"}</button>
+      <button class="p-btn sec" data-a="wkDiscard">Discard</button>`;
+  },
+
+  wkdone() {
+    const h = S.history[0];
+    return `<div class="p-hero" style="text-align:center;padding:30px 18px"><div style="font-size:44px">🎉</div><h3>Workout saved!</h3><div style="color:#c3cdb2">${esc(h.label)}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px">${[[h.sets, "sets"], [h.vol.toLocaleString("en-IN"), "kg lifted"], [h.mins, "minutes"]].map(([v, l]) => `<div style="background:rgba(255,255,255,.08);border-radius:16px;padding:10px"><b style="font-size:20px;display:block">${v}</b><small style="color:#c3cdb2">${l}</small></div>`).join("")}</div></div>
+      <div class="p-card" style="text-align:center"><b>${ic("flame")} ${S.history.filter((x) => daysBetween(x.day, TODAY) < 7).length} workouts this week. Keep it up!</b><div class="p-sec">Your trainer sees this too.</div></div>
+      <button class="p-btn" data-a="pGo" data-r="workouts">Done</button>`;
+  },
+
+  food() {
+    const tot = foodTotals(), tg = S.food.target, left = tg.kcal - tot.kcal, latest = S.comments[0];
+    const week = [...S.food.week, tot.kcal];
+    return `<div class="p-h" style="font-size:22px">Food <span class="p-sec">${fmtShort(TODAY)}</span></div>
+      <div class="p-hero uz"><div class="k" style="display:flex;justify-content:space-between">Today ${usp(7)}<span>Goal: lose fat</span></div>
+        <div style="display:flex;gap:16px;align-items:center;margin-top:10px"><div class="ring-wrap">${ring(tot.kcal / tg.kcal, 112, 11, left < 0 ? "#f87171" : "#c8f04b", "rgba(255,255,255,.12)")}<div class="c" style="color:#fff"><b>${Math.abs(left)}</b><small>${left < 0 ? "kcal over" : "kcal left"}</small></div></div>
+        <div style="flex:1;font-size:12.5px"><div style="display:flex;justify-content:space-between"><span>Eaten</span><b>${tot.kcal} kcal</b></div><div style="display:flex;justify-content:space-between;margin-bottom:10px"><span>Target</span><b>${tg.kcal}</b></div>
+        <div style="display:flex;justify-content:space-between"><span>Protein</span><b>${tot.p} / ${tg.p} g</b></div><div class="pbar" style="background:rgba(255,255,255,.12);margin-top:5px"><i style="width:${Math.min(100, (tot.p / tg.p) * 100)}%;background:#7dd3fc"></i></div></div></div></div>
+      <div class="p-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>${ic("drop")} Water</b><span class="p-sec">${S.food.water} of 8 glasses</span></div><div class="water">${[...Array(8)].map((_, i) => `<button class="${i < S.food.water ? "on" : ""}" data-a="water" data-i="${i}" aria-label="Glass ${i + 1}"><i></i></button>`).join("")}</div></div>
+      ${latest ? `<div class="p-card tint-blue" style="display:flex;gap:10px;border:0">${av(M(latest.by), 34)}<div><b style="font-size:13.5px">${esc(latest.body)}</b><div class="p-sec">${esc(M(latest.by).name)} · your trainer · ${relDay(latest.day)}</div></div></div>` : ""}
+      ${MEALS.map(([k, l]) => { const items = S.food.log.filter((x) => x.meal === k); const kc = items.reduce((t, x) => t + x.kcal, 0); return `<div class="p-card"><div style="display:flex;justify-content:space-between;align-items:center"><div><b>${l}</b>${kc ? `<span class="p-sec"> · ${kc} kcal</span>` : ""}</div><button class="p-btn sm sec" data-a="addFoodSheet" data-m="${k}" aria-label="Add to ${l}">${ic("plus")} Add</button></div>${items.map((x) => `<div class="food-item"><div>${esc(x.name)}<small>${x.servings !== 1 ? x.servings + " × " : ""}≈${x.kcal} kcal · ${x.p} g protein</small></div><button data-a="rmFood" data-id="${x.id}" style="color:var(--p-sec)" aria-label="Remove">${ic("x")}</button></div>`).join("")}</div>`; }).join("")}
+      <div class="p-card"><b>Last 7 days</b><div class="p-sec" style="margin-bottom:8px">Calories against your target</div>${bars(week, week.map((_, i) => dayName(addDays(TODAY, i - 6)).slice(0, 2)), { h: 110, color: "#65a30d", fmt: (v) => v + " kcal", target: tg.kcal })}</div>
+      <div class="p-sec" style="text-align:center">Only you, your trainer and the gym owner see this. Not medical advice.</div>`;
+  },
+
+  membership() {
+    const s = mstate(ME), pend = S.payments.find((p) => p.memberId === ME && p.status === "created"), rej = S.payments.find((p) => p.memberId === ME && p.status === "failed" && !p.seen);
+    const pt = myPt();
+    const receipts = S.payments.filter((p) => p.memberId === ME && p.status === "paid");
+    return `<div class="p-h" style="font-size:22px">Membership</div>
+      <div class="p-hero"><div class="k">${esc(S.gym.name)} · Member pass</div><h3>${esc(M(ME).name)}</h3>
+        ${s.kind === "active" ? `<div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12.5px"><span>${esc(s.cur.plan)}</span><span>${fmtShort(s.cur.start)} – ${fmtShort(s.cur.end)}</span></div><div class="pbar" style="background:rgba(255,255,255,.12);margin-top:6px"><i style="width:${(1 - s.left / daysBetween(s.cur.start, s.cur.end)) * 100}%;background:#c8f04b"></i></div><div style="margin-top:6px;font-size:12.5px;color:#c3cdb2">${s.next ? "Renewed ✓ · next plan starts " + fmtDate(s.next.start) : s.left + " days left"}</div>` : `<div style="color:#fca5a5;margin-top:6px">${s.kind === "expired" ? "Expired on " + fmtDate(s.last.end) : "No membership yet"}</div>`}</div>
+      ${pend ? `<div class="p-card tint-yellow" style="border:0"><b>${ic("clock")} UPI payment of ${inr(pend.amount)} waiting</b><div class="p-sec">${esc(S.gym.name)} will confirm once they see it in their bank. Ref ${esc(pend.utr)}.</div></div>` : ""}
+      ${rej ? `<div class="p-card tint-pink" style="border:0"><b>UPI payment not confirmed</b><div class="p-sec">${esc(rej.reason || "The gym couldn't find this payment.")}</div><button class="p-btn sm sec" style="margin-top:8px" data-a="seenReject" data-id="${rej.id}">OK</button></div>` : ""}
+      <div class="p-h">${s.kind === "active" ? "Renew" : "Choose a plan"} ${usp(2)}</div>
+      <div class="uz" style="display:flex;flex-direction:column;gap:10px;border-radius:22px">${S.plans.filter((p) => p.active).map((p) => `<div class="p-card" style="display:flex;justify-content:space-between;align-items:center"><div><b>${esc(p.name)}</b><div class="p-sec">${p.days} days${p.days >= 90 ? " · save " + inr(150000 * (p.days / 30) - p.price) : ""}</div></div><div style="text-align:right"><b style="font-size:17px">${inr(p.price)}</b><br><button class="p-btn sm" style="margin-top:6px" data-a="payUpi" data-id="${p.id}" ${pend ? "disabled" : ""}>Pay with UPI</button></div></div>`).join("")}</div>
+      <div class="p-sec" style="text-align:center">Or pay at the front desk: cash, card or UPI.</div>
+      ${S.gym.f.pt && pt ? `<div class="p-h">Personal training</div><div class="p-card tint-blue" style="border:0"><div style="display:flex;gap:10px;align-items:center"><span class="ic" style="width:44px;height:44px;border-radius:16px;background:var(--p-surface);display:flex;align-items:center;justify-content:center;font-size:20px"><span class="fg">${ic("heart")}</span></span><div><b>${esc(pt.pkg)}</b><div class="p-sec" style="display:flex;gap:6px;align-items:center">${av(M(pt.trainer), 20)} with ${esc(M(pt.trainer).name)}</div></div></div><div style="font-size:22px;font-weight:800;margin:10px 0 6px" class="fg">${pt.total - pt.used} of ${pt.total} sessions left</div><div class="dots-row">${[...Array(pt.total)].map((_, i) => `<i class="${i < pt.used ? "on" : ""}"></i>`).join("")}</div><div class="p-sec" style="margin-top:6px">Use by ${fmtDate(pt.end)}</div></div>` : ""}
+      <div class="p-h">Receipts</div>
+      <div class="p-card" style="padding:6px">${receipts.map((p) => pRow("receipt", "green", `${fmtReceipt(p.receipt)} · ${inr(p.amount)}`, `${esc(p.what)} · ${fmtDate(ymd(new Date(p.at)))}`, `data-a="pGo" data-r="receipt:${p.id}"`)).join("") || `<div class="p-sec" style="padding:10px">No receipts yet</div>`}</div>`;
+  },
+
+  receipt(id) {
+    const p = S.payments.find((x) => x.id === id); if (!p) return "Not found";
+    const v = receiptView(p);
+    const rows = [["Date", v.date], ["Received from", v.name], ["For", v.what], ["Valid", v.period], ["Sessions", v.sessions], ["Paid by", v.method], ["Reference", v.ref]].filter((r) => r[1]);
+    return `<div class="p-card" style="padding:0;overflow:hidden"><div class="p-hero" style="border-radius:0"><div style="display:flex;gap:10px;align-items:center"><span class="gym-logo" style="width:40px;height:40px">${S.gym.short}</span><div><b>${esc(S.gym.name)}</b><div style="color:#c3cdb2;font-size:12px">+91 ${esc(S.gym.phone)}</div></div></div><div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px"><div><div class="k">Receipt ${esc(v.number)}</div><div style="font-size:30px;font-weight:800">${esc(v.amount)}</div></div><span class="p-badge">PAID</span></div></div>
+      <div style="padding:14px 18px">${rows.map(([k, val], i) => `<div style="display:flex;gap:12px;padding:9px 0;${i ? "border-top:1px solid var(--p-border)" : ""}"><span class="p-sec" style="width:100px;flex-shrink:0">${k}</span><b style="font-size:13px">${esc(val)}</b></div>`).join("")}<div class="p-sec" style="text-align:center;margin-top:10px">Thank you!</div></div></div>
+      <button class="p-btn" data-a="printReceipt" data-id="${p.id}">${ic("share")} Share as PDF</button><button class="p-btn sec" data-a="waReceipt" data-id="${p.id}">${ic("msg")} Send on WhatsApp</button>`;
+  },
+
+  profile() {
+    const me = M(ME);
+    return `<div class="p-hero" style="text-align:center;padding:22px"><button data-a="photoSheet" style="position:relative;display:inline-block" aria-label="Change your photo">${av(me, 86, ";border:3px solid rgba(200,240,75,.45)")}<span style="position:absolute;right:0;bottom:0;width:28px;height:28px;border-radius:50%;background:var(--p-accent);color:var(--p-accent-fg);border:3px solid var(--p-hero);display:flex;align-items:center;justify-content:center;font-size:13px">${ic("camera")}</span></button>
+        <h3>${esc(me.name)}</h3><div style="color:#c3cdb2;font-size:13px">anjali.menon@gmail.com</div><div style="display:flex;gap:6px;justify-content:center;margin-top:8px"><span class="p-chip">${esc(S.gym.name)}</span><span class="p-chip" style="background:var(--p-accent);color:var(--p-accent-fg)">Member</span></div></div>
+      <div class="p-tiles"><div class="p-tile tint-green" style="min-height:0"><b style="font-size:20px">${11 + S.checkins.filter((c) => c.memberId === ME).length}</b><small>days this month</small></div><div class="p-tile tint-yellow" style="min-height:0"><b style="font-size:20px">4</b><small>day streak</small></div><div class="p-tile tint-blue" style="min-height:0"><b style="font-size:20px">${S.history.filter((x) => daysBetween(x.day, TODAY) < 7).length}</b><small>this week</small></div></div>
+      <div class="p-sec" style="font-weight:700;letter-spacing:.5px">PREFERENCES</div>
+      <div class="p-card" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px"><button class="p-btn ${S.p.dark ? "sec" : "dark"}" data-a="dark" data-v="0">${ic("sun")} Light</button><button class="p-btn ${S.p.dark ? "dark" : "sec"}" data-a="dark" data-v="1">${ic("moon")} Dark</button></div>
+      <div class="p-sec" style="font-weight:700;letter-spacing:.5px">ACCOUNT</div>
+      <div class="p-card" style="padding:6px">
+        ${nutritionOn() ? pRow("apple", "yellow", "Nutrition details", "Height, weight, food preference", `data-a="pToast" data-t="Height, weight, birth year, veg/egg/non-veg."`) : ""}
+        ${pRow("bell", "blue", "Notifications", "Payments, classes, trainer messages", `data-a="pGo" data-r="notifications"`)}
+        ${pRow("plus", "green", "Join another gym", "With the gym's code or link", `data-a="pToast" data-t="One account works across gyms. Enter a gym code to join."`)}
+        ${pRow("logout", "pink", "Sign out", "", `data-a="signOut"`)}
+        ${pRow("trash", "pink", "Delete account", "Your account and personal details", `data-a="deleteAccount"`)}
+      </div>`;
+  },
+
+  notifications() {
+    const rem = reminders();
+    const ICN = { paid: "receipt", rejected: "card", cancelled: "cal", comment: "apple", plan: "dumb", pt: "heart" };
+    const TINT = { paid: "green", rejected: "pink", cancelled: "pink", comment: "blue", plan: "blue", pt: "blue" };
+    return `${rem.length ? `<div class="p-h">Needs attention</div>${rem.map((r) => `<button class="p-row ${r.bad ? "tint-pink" : "tint-blue"}" style="border-radius:20px" data-a="pGo" data-r="${r.link}"><span class="ic" style="background:var(--p-surface)"><span class="fg">${ic(r.link === "classes" ? "cal" : "card")}</span></span><span class="grow"><b>${esc(r.t)}</b><small>${esc(r.b)}</small></span>${ic("right")}</button>`).join("")}` : ""}
+      <div class="p-h">Updates</div>
+      <div class="p-card" style="padding:6px">${S.notifs.map((n) => `<button class="p-row" data-a="pGo" data-r="${n.link}"><span class="ic tint-${TINT[n.kind] || "blue"}"><span class="fg">${ic(ICN[n.kind] || "bell")}</span></span><span class="grow"><b style="font-weight:${n.unread ? 800 : 600}">${esc(n.title)}</b><small>${esc(n.body || "")}</small><small>${timeAgo(n.at)}</small></span>${n.unread ? `<span class="unread-dot"></span>` : ""}${ic("right")}</button>`).join("") || `<div style="text-align:center;padding:20px"><b>You're all caught up</b></div>`}</div>`;
+  },
+
+  join() {
+    return `<div class="p-body"><div class="p-hero" style="text-align:center;padding:26px 18px"><div class="k">Link from the gym's WhatsApp group ${usp(1)}</div><span class="gym-logo" style="width:64px;height:64px;font-size:20px;border-radius:18px;margin:14px auto 8px">${S.gym.short}</span><h3>Join ${esc(S.gym.name)}</h3><div style="color:#c3cdb2;font-size:12.5px">${esc(S.gym.address)}</div></div>
+      <div class="p-card"><b>How it works</b><div class="p-sec" style="margin-top:6px">1. The owner shares one link in the gym's WhatsApp group.<br>2. Members install GOS and tap Join.<br>3. The gym approves them. Nobody types member details.</div></div>
+      <div class="p-card"><div class="p-sec" style="margin-bottom:6px">Your name</div><input class="p-inp" id="join-name" value="Adithya Rajan" aria-label="Your name"><div class="p-sec" style="margin:10px 0 6px">Phone</div><input class="p-inp" value="95440 76543" aria-label="Phone"></div>
+      <button class="p-btn" data-a="joinGym">Join ${esc(S.gym.name)}</button><button class="p-btn sec" data-a="pGo" data-r="home">Back to Anjali's app</button></div>`;
+  },
+
+  signedout() {
+    return `<div class="p-signed"><div style="font-size:34px;font-weight:800">G<span style="color:var(--p-brand)">OS</span></div>${S.p.deleted ? `<div class="p-card"><b>Your account has been deleted.</b><div class="p-sec" style="margin-top:4px">Name, phone, photo, workouts and food log are gone. The gym keeps its payment and visit records as "Deleted member". Look at the admin's Members page.</div></div><button class="p-btn" data-a="reset">Reset demo</button>`
+      : `<div class="p-sec">Sign in with an email code or password.</div><input class="p-inp" value="anjali.menon@gmail.com" aria-label="Email"><button class="p-btn" data-a="signIn">Send me a code</button><button class="p-btn sec" data-a="pJoinScreen">I have a gym's join link</button>`}</div>`;
+  },
+};
+
+/* ===========================================================================
+   Actions
+=========================================================================== */
+function recordPayment(memberId, planId, method, extra = {}) {
+  const plan = S.plans.find((p) => p.id === planId);
+  const s = mstate(memberId);
+  const start = s.kind === "active" ? addDays((s.next || s.cur).end, 1) : TODAY;
+  const sub = { id: uid("s"), memberId, plan: plan.name, planId, start, end: addDays(start, plan.days - 1), price: plan.price };
+  S.subs.push(sub);
+  const pay = { id: extra.id || uid("pay"), memberId, amount: plan.price, what: plan.name, kind: "plan", status: "paid", method, receipt: ++S.gym.receiptSeq, at: new Date(), utr: extra.utr || "", subId: sub.id };
+  if (extra.id) Object.assign(S.payments.find((p) => p.id === extra.id), pay);
+  else S.payments.unshift(pay);
+  notify(memberId, { kind: "paid", title: `Payment received: ${inr(plan.price)}`, body: `${plan.name} · Receipt ${fmtReceipt(pay.receipt)}`, link: "receipt:" + pay.id });
+  return pay;
+}
+function doCheckin(memberId, method) {
+  const dup = checkedInToday(memberId);
+  const s = mstate(memberId);
+  const res = { memberId, at: dup ? dup.at : new Date(), dup: !!dup, ok: s.kind === "active", ends: s.kind === "active" ? s.cur.end : s.kind === "expired" ? s.last.end : null };
+  if (!dup) S.checkins.push({ id: uid("c"), memberId, at: res.at, method });
+  return res;
+}
+function download(name, text, type = "text/csv") {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const csv = (rows) => rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+function parseImport(text) {
+  const months = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+  const d = (s) => { s = (s || "").trim(); let m = s.match(/(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?/); if (m) { const y = m[3] ? (m[3].length === 2 ? "20" + m[3] : m[3]) : TODAY.slice(0, 4); return `${y}-${z2(+m[2])}-${z2(+m[1])}`; } m = s.match(/(\d{1,2})\s*([a-z]{3})/i); if (m && months[m[2].toLowerCase()]) return `${TODAY.slice(0, 4)}-${z2(months[m[2].toLowerCase()])}-${z2(+m[1])}`; return null; };
+  return text.split(/\n/).map((l) => l.trim()).filter(Boolean).filter((l) => !/^name/i.test(l)).map((line) => {
+    const c = line.split(/\t|,/).map((x) => x.trim());
+    const phone = (c[1] || "").replace(/\D/g, "").slice(-10);
+    const paid = d(c[2]), till = d(c[3]);
+    const errs = [];
+    if (!c[0]) errs.push("No name");
+    if (phone.length !== 10) errs.push("Phone needs 10 digits");
+    if (!till) errs.push("Couldn't read the end date");
+    return { name: c[0], phone: phone.replace(/(\d{5})(\d{5})/, "$1 $2"), paid, till, plan: c[4] || "Monthly", errs };
+  });
+}
+function importPreview() {
+  const rows = parseImport(S.a.importText);
+  if (!rows.length) return `<div class="small muted">Paste rows above to see the preview.</div>`;
+  const ok = rows.filter((r) => !r.errs.length).length;
+  return `<table class="t import-prev"><tr><th>Name</th><th>Phone</th><th>Paid on</th><th>Valid till</th><th></th></tr>${rows.map((r) => `<tr><td>${esc(r.name)}</td><td class="tabnum">${esc(r.phone)}</td><td>${r.paid ? fmtDate(r.paid) : "—"}</td><td>${r.till ? fmtDate(r.till) : "—"}</td><td class="${r.errs.length ? "badrow" : ""}">${r.errs.length ? esc(r.errs.join(", ")) : `<span class="b good">Ready</span>`}</td></tr>`).join("")}</table><button class="btn" style="margin-top:12px;width:100%" data-a="doImport" ${ok ? "" : "disabled"}>Import ${ok} ${ok === 1 ? "member" : "members"}</button>`;
+}
+function startRestTimer(sec = 90) { S.p.rest = { until: Date.now() + sec * 1000 }; }
+function goUsp(n) {
+  const u = USPS[n - 1].go;
+  if (u.admin) { S.a.route = u.admin; S.a.modal = null; }
+  if (u.app) { S.p.sheet = null; if (u.app === "join") S.p.route = "join"; else { S.p.route = u.app; S.p.signedOut = false; } }
+  if (u.modal === "import") A.openImport();
+  if (!$("#usp-toggle").checked) { $("#usp-toggle").checked = true; document.body.classList.add("usp-on"); }
+  if (innerWidth < 900) document.body.dataset.view = u.app && !u.admin ? "app" : "admin";
+  $("#drawer").classList.remove("open");
+}
+
+const A = {
+  view: (d) => { document.body.dataset.view = d.v; document.querySelectorAll(".seg button").forEach((b) => b.classList.toggle("on", b.dataset.v === d.v)); },
+  drawer: () => $("#drawer").classList.toggle("open"),
+  reset: () => { S = initState(); S.p.deleted = false; toast("Demo reset to the sample data"); },
+  goUsp: (d) => goUsp(+d.n),
+  guide: () => $("#guide").classList.toggle("open"),
+  step: (d) => STEPS[+d.i].go(),
+  toastOnly: (d) => toast(d.t, "from-admin", "sparkles"),
+  pToast: (d) => toast(d.t, "from-app", "sparkles"),
+
+  /* admin navigation */
+  aGo: (d) => { S.a.route = d.r; S.a.pop = null; S.a.modal = null; },
+  aPop: (d) => { S.a.pop = S.a.pop === d.p ? null : d.p; },
+  aClose: (d, el, e) => { if (d.self && e.target !== el) return false; S.a.modal = null; },
+  memFilter: (d) => { S.a.memFilter = d.k; },
+  classDay: (d) => { S.a.classDay = +d.i; },
+  planSel: (d) => { S.a.planSel = d.id; },
+
+  shareJoin: () => aModal("Share your join link", `<p class="small muted" style="margin-top:0">Paste this in your gym's WhatsApp group. Members tap it, install GOS and join. You approve them on the Members page. ${usp(1)}</p><div class="wa-preview">💪 ${esc(S.gym.name)} is now on the GOS app!\nBook classes, check in with your phone, pay by UPI and track workouts.\n\nJoin here 👉 https://gos.app/join/${S.gym.slug}</div><div class="row-actions" style="margin-top:12px"><button class="btn wa" data-a="toastOnly" data-t="Opens WhatsApp to pick the group.">${ic("msg")} Open WhatsApp</button><button class="btn sec" data-a="toastOnly" data-t="Link copied">${ic("link")} Copy link</button><button class="btn sec" data-a="seeJoin">See what members see →</button></div>`),
+  seeJoin: () => { S.a.modal = null; S.p.route = "join"; S.p.signedOut = false; if (document.body.dataset.view === "admin") A.view({ v: "both" }); },
+  approve: (d) => { const m = M(d.id); m.status = "active"; toast(`${m.name} approved. They can use the app now.`, "from-admin"); },
+  decline: (d) => { S.members = S.members.filter((m) => m.id !== d.id); toast("Request declined", "from-admin"); },
+  remind: (d) => { const m = M(d.id); aModal(`WhatsApp ${firstName(m.name)}`, `<p class="small muted" style="margin-top:0">One tap opens WhatsApp with this message to +91 ${esc(m.phone)}. Edit the template in Settings.</p><div class="wa-preview">${esc(renderMsg(m))}</div><div class="row-actions" style="margin-top:12px"><button class="btn wa" data-a="toastOnly" data-t="Opens WhatsApp with the message ready to send.">${ic("msg")} Open WhatsApp</button></div>`); },
+
+  simScan: (d) => {
+    let id = d.who;
+    if (!id) { const pool = membersOnly().filter((m) => m.status === "active" && mstate(m.id).kind === "active" && !checkedInToday(m.id) && m.id !== ME); id = (pool.find((m) => m.photo) || pool[0] || M("m2")).id; }
+    S.a.ciResult = doCheckin(id, "scan");
+  },
+  deskCheckin: (d) => { S.a.ciResult = doCheckin(d.id, "manual"); if (S.a.route.startsWith("member")) toast(`${M(d.id).name} checked in`, "from-admin"); if (d.banner) S.a.route = "checkin"; },
+  printPoster: () => { const w = window.open("", "_blank"); if (!w) return toast("Allow pop-ups to print"); w.document.write(`<html><head><title>Poster</title></head><body style="font-family:Poppins,system-ui,sans-serif;text-align:center;padding:40px;background:#1f2a10;color:#fff"><div style="font-size:14px;letter-spacing:2px">SCAN TO CHECK IN</div><div style="font-size:34px;font-weight:800;margin:8px 0">${esc(S.gym.name)}</div><div style="background:#fff;display:inline-block;padding:20px;border-radius:20px">${qr("poster" + S.gym.slug, 320)}</div><p>Open the GOS app → Check in → Scan</p><script>onload=()=>print()<\/script></body></html>`); w.document.close(); },
+
+  openAdd: () => aModal("Add member", `<form data-submit="addMember"><label class="f"><span>Full name</span><input class="inp" name="name" required></label><label class="f"><span>Phone</span><input class="inp" name="phone" placeholder="98470 12345" required></label><label class="f"><span>Plan <small>(optional, records a payment)</small></span><select class="sel" name="plan"><option value="">No payment yet</option>${S.plans.filter((p) => p.active).map((p) => `<option value="${p.id}">${p.name} · ${inr(p.price)}</option>`).join("")}</select></label><label class="f"><span>Paid by</span><select class="sel" name="method"><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option></select></label><button class="btn" style="width:100%">Add member</button></form>`),
+  addMember: (f) => { const m = { id: uid("m"), name: f.name, phone: f.phone, role: "member", status: "active", joined: TODAY, photo: null, notes: [] }; S.members.push(m); if (f.plan) recordPayment(m.id, f.plan, f.method); S.a.modal = null; S.a.route = "member:" + m.id; toast(`${m.name} added${f.plan ? " with a receipt" : ""}`, "from-admin"); },
+  openImport: () => { S.a.importText = "Name, Phone, Paid on, Valid till, Plan\nShyam Prakash, 9847011111, 01/10, 31/10, Monthly\nLakshmi Varma, 9895022222, 5 Sep, 4 Dec, Quarterly\nThomas Kurian, 98470, 12/09, 11/10, Monthly\nNeha Joseph, 9446033333, 15/08, 14/02/2027, Half-yearly"; aModal("Import members from Excel or a register", `<p class="small muted" style="margin-top:0">Copy rows from Excel or Google Sheets and paste. GOS reads dates the way gyms write them ("01/10", "5 Sep") and checks every row before saving. ${usp(4)}</p><textarea class="inp" rows="6" data-input="importText" aria-label="Rows to import" style="font-family:ui-monospace,monospace;font-size:12px">${esc(S.a.importText)}</textarea><div id="import-prev" style="margin-top:12px">${importPreview()}</div>`, true); },
+  doImport: () => { const rows = parseImport(S.a.importText).filter((r) => !r.errs.length); for (const r of rows) { const m = { id: uid("m"), name: r.name, phone: r.phone, role: "member", status: "active", joined: r.paid || TODAY, photo: null, notes: [] }; S.members.push(m); const plan = S.plans.find((p) => p.name.toLowerCase() === r.plan.toLowerCase()) || S.plans[0]; S.subs.push({ id: uid("s"), memberId: m.id, plan: plan.name, planId: plan.id, start: r.paid || addDays(r.till, -plan.days + 1), end: r.till, price: plan.price }); } S.a.modal = null; S.a.memFilter = "all"; toast(`${rows.length} members imported with their memberships`, "from-admin"); },
+  exportCsv: (d) => { if (d.what === "members") download("members.csv", csv([["Name", "Phone", "Status", "Plan", "Ends"], ...membersOnly().map((m) => { const s = mstate(m.id); return [m.name, m.phone, s.kind, s.cur?.plan || s.last?.plan || "", s.cur?.end || s.last?.end || ""]; })])); else download("payments.csv", csv([["Date", "Member", "For", "Method", "Amount", "Receipt", "UTR"], ...S.payments.filter((p) => p.status === "paid").map((p) => [ymd(new Date(p.at)), M(p.memberId).name, p.what, p.method, p.amount / 100, fmtReceipt(p.receipt), p.utr])])); toast("CSV downloaded", "from-admin", "download"); },
+
+  openPay: (d) => aModal(`Record payment · ${M(d.id).name}`, `<form data-submit="pay" data-id="${d.id}"><label class="f"><span>Plan</span><select class="sel" name="plan">${S.plans.filter((p) => p.active).map((p) => `<option value="${p.id}">${p.name} · ${inr(p.price)}</option>`).join("")}</select></label><label class="f"><span>Paid by</span><select class="sel" name="method">${Object.entries({ cash: "Cash", upi: "UPI", card: "Card", bank: "Bank transfer" }).filter(([k]) => S.gym.methods[k]).map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></label><p class="small muted">${mstate(d.id).kind === "active" ? "The new membership starts the day after the current one ends." : "Starts today."} A numbered receipt is made automatically.</p><button class="btn" style="width:100%">Record payment</button></form>`),
+  pay: (f, el) => { const p = recordPayment(el.dataset.id, f.plan, f.method); S.a.modal = null; toast(`Payment recorded · Receipt ${fmtReceipt(p.receipt)}`, "from-admin", "receipt"); },
+  receipt: (d) => { const p = S.payments.find((x) => x.id === d.id); aModal(`Receipt ${fmtReceipt(p.receipt)}`, `${receiptHTML(p)}<div class="row-actions" style="margin-top:14px;justify-content:center"><button class="btn" data-a="printReceipt" data-id="${p.id}">${ic("printer")} Print / Save PDF</button><button class="btn wa" data-a="waReceipt" data-id="${p.id}">${ic("msg")} Send on WhatsApp</button></div>`); },
+  printReceipt: (d) => { const p = S.payments.find((x) => x.id === d.id); const w = window.open("", "_blank"); if (!w) return toast("Allow pop-ups to print"); w.document.write(receiptHTML(p, true)); w.document.close(); },
+  waReceipt: (d, el) => { const p = S.payments.find((x) => x.id === d.id); const html = `<div class="wa-preview">${esc(receiptText(p))}</div>`; if (el.closest("#app")) pSheet("Send on WhatsApp", html + `<button class="p-btn" style="margin-top:12px" data-a="pClose">Send</button>`); else aModal("WhatsApp receipt", html); },
+  confirmUpi: (d) => { const p = S.payments.find((x) => x.id === d.id); const pay = recordPayment(p.memberId, p.planId, "upi", { id: p.id, utr: p.utr }); toast(`Confirmed. ${M(p.memberId).name}'s membership is extended · ${fmtReceipt(pay.receipt)}`, "from-admin"); },
+  openReject: (d) => aModal("Reject UPI payment", `<form data-submit="reject" data-id="${d.id}"><label class="f"><span>Reason the member sees</span><input class="inp" name="reason" value="Not in our account. Please check the UPI ID and try again." required></label><button class="btn danger" style="width:100%">Reject</button></form>`),
+  reject: (f, el) => { const p = S.payments.find((x) => x.id === el.dataset.id); p.status = "failed"; p.reason = f.reason; S.a.modal = null; notify(p.memberId, { kind: "rejected", title: `UPI payment of ${inr(p.amount)} not confirmed`, body: f.reason, link: "membership" }); toast("Payment rejected", "from-admin"); },
+
+  note: (f, el) => { M(el.dataset.id).notes.unshift({ body: f.body, by: M(S.viewer).name, at: new Date() }); toast("Note added", "from-admin"); },
+  comment: (f) => { S.comments.unshift({ id: uid("nc"), by: "t2", day: TODAY, body: f.body }); notify(ME, { kind: "comment", title: "Tara Mathew commented on your food log", body: f.body, link: "food" }); },
+  logPt: (d) => { const p = S.pt.find((x) => x.id === d.id); if (p.used >= p.total) return toast("No sessions left", "from-admin"); p.used++; notify(p.memberId, { kind: "pt", title: "PT session logged", body: `Today · ${p.total - p.used} sessions left`, link: "membership" }); toast(`Session logged for ${M(p.memberId).name} · ${p.total - p.used} left`, "from-admin"); },
+  openSellPt: () => aModal("Sell a PT package", `<form data-submit="sellPt"><label class="f"><span>Member</span><select class="sel" name="member">${membersOnly().filter((m) => m.status === "active").map((m) => `<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select></label><label class="f"><span>Package</span><select class="sel" name="pkg">${S.ptPackages.map((k) => `<option value="${k.id}">${esc(k.name)} · ${inr(k.price)}</option>`).join("")}</select></label><label class="f"><span>Trainer</span><select class="sel" name="trainer">${team().filter((t) => t.role === "trainer").map((t) => `<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select></label><button class="btn" style="width:100%">Sell and record payment</button></form>`),
+  sellPt: (f) => { const k = S.ptPackages.find((x) => x.id === f.pkg); S.pt.unshift({ id: uid("pt"), memberId: f.member, pkg: k.name, trainer: f.trainer, total: k.sessions || 4, used: 0, start: TODAY, end: addDays(TODAY, k.days), price: k.price }); const pay = { id: uid("pay"), memberId: f.member, amount: k.price, what: k.name, kind: "pt", status: "paid", method: "upi", receipt: ++S.gym.receiptSeq, at: new Date(), utr: "" }; S.payments.unshift(pay); notify(f.member, { kind: "paid", title: `Payment received: ${inr(k.price)}`, body: `${k.name} · Receipt ${fmtReceipt(pay.receipt)}`, link: "receipt:" + pay.id }); S.a.modal = null; toast(`${k.name} sold to ${M(f.member).name}`, "from-admin"); },
+
+  attendees: (d) => { const c = S.sessions.find((x) => x.id === d.id); aModal(`${c.name} · ${relDay(ymd(c.start))} ${fmtTime(c.start)}`, `<div class="list">${c.booked.map((id) => `<div class="li">${av(M(id), 32)}<div class="grow"><b>${esc(M(id).name)}</b></div><button class="btn ${c.attended.includes(id) ? "" : "sec"} sm" data-a="attend" data-c="${c.id}" data-id="${id}">${c.attended.includes(id) ? "Attended ✓" : "Mark attended"}</button></div>`).join("") || `<div class="empty">No bookings yet</div>`}</div>${c.waitlist.length ? `<p class="small muted">Waitlist: ${c.waitlist.map((id) => esc(M(id).name)).join(", ")}</p>` : ""}`); },
+  attend: (d) => { const c = S.sessions.find((x) => x.id === d.c); c.attended = c.attended.includes(d.id) ? c.attended.filter((x) => x !== d.id) : [...c.attended, d.id]; A.attendees({ id: c.id }); },
+  openCancelClass: (d) => aModal("Cancel class", `<form data-submit="cancelClass" data-id="${d.id}"><p class="small muted" style="margin-top:0">Everyone booked gets a notification in the app.</p><label class="f"><span>Reason</span><input class="inp" name="reason" value="Trainer unwell. Sorry!" required></label><button class="btn danger" style="width:100%">Cancel class</button></form>`),
+  cancelClass: (f, el) => { const c = S.sessions.find((x) => x.id === el.dataset.id); c.status = "cancelled"; c.reason = f.reason; if (c.booked.includes(ME) || c.waitlist.includes(ME)) notify(ME, { kind: "cancelled", title: `${c.name} cancelled`, body: `${relDay(ymd(c.start))}, ${fmtTime(c.start)} · ${f.reason}`, link: "classes" }); S.a.modal = null; toast(`${c.name} cancelled. ${c.booked.length} members notified.`, "from-admin"); },
+  openAddClass: () => aModal("Add class", `<form data-submit="addClass"><label class="f"><span>Class</span><input class="inp" name="name" value="Functional training" required></label><div class="grid g2"><label class="f"><span>Day</span><select class="sel" name="day">${[...Array(7)].map((_, i) => `<option value="${i}" ${i === S.a.classDay ? "selected" : ""}>${relDay(addDays(TODAY, i))} · ${dayName(addDays(TODAY, i))}</option>`).join("")}</select></label><label class="f"><span>Time</span><input class="inp" type="time" name="time" value="17:30" required></label><label class="f"><span>Trainer</span><select class="sel" name="trainer">${team().filter((t) => t.role === "trainer").map((t) => `<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select></label><label class="f"><span>Spots</span><input class="inp" type="number" name="cap" value="12" required></label></div><button class="btn" style="width:100%">Add class</button></form>`),
+  addClass: (f) => { const [h, m] = f.time.split(":").map(Number); S.sessions.push({ id: uid("cls"), name: f.name, trainer: f.trainer, start: at(+f.day, h, m), dur: 45, cap: +f.cap, room: "Main floor", status: "scheduled", reason: "", booked: [], waitlist: [], attended: [] }); S.a.classDay = +f.day; S.a.modal = null; toast("Class added. Members can book it in the app now.", "from-admin"); },
+
+  newPlan: () => { const w = { id: uid("w"), name: "New plan " + (S.wplans.length + 1), by: "t2", days: [{ label: "Day 1", items: [] }, { label: "Day 2", items: [] }], assigned: [] }; S.wplans.push(w); S.a.planSel = w.id; },
+  addEx: (f, el) => { const w = S.wplans.find((x) => x.id === S.a.planSel); w.days[+el.dataset.d].items.push([f.ex, 3, "10"]); },
+  assign: (f) => { const w = S.wplans.find((x) => x.id === S.a.planSel); if (!f.member || !M(f.member)) return; w.assigned.push(f.member); notify(f.member, { kind: "plan", title: `New workout plan: ${w.name}`, body: `From ${M(w.by).name}`, link: "workouts" }); toast(`${w.name} assigned to ${M(f.member).name}`, "from-admin"); },
+  addFood: (f) => { S.gymFoods.push({ id: uid("g"), name: f.name, serving: f.serving, kcal: +f.kcal, p: +f.p }); toast("Food added. Members can log it now.", "from-admin"); },
+  addPlan: (f) => { S.plans.push({ id: uid("pl"), name: f.name, price: Math.round(+f.price * 100), days: +f.days, active: true }); toast("Plan added. It shows in the app now.", "from-admin"); },
+
+  photoAdmin: (d) => { const m = M(d.id); aModal("Profile photo", `<div style="text-align:center">${av(m, 140)}<p class="small muted">Helps the front desk recognise ${esc(firstName(m.name))} at check-in. Only the gym's team can see it.</p><div class="row-actions" style="justify-content:center"><label class="btn">${ic("camera")} Take photo<input type="file" accept="image/*" capture="user" class="sr" data-file="photo" data-id="${m.id}"></label><label class="btn sec">${ic("upload")} Upload<input type="file" accept="image/*" class="sr" data-file="photo" data-id="${m.id}"></label><button class="btn sec" data-a="samplePhoto" data-id="${m.id}">Use a sample</button>${m.photo ? `<button class="btn ghost" style="color:var(--danger)" data-a="rmPhoto" data-id="${m.id}">Remove</button>` : ""}</div></div>`); },
+  samplePhoto: (d) => { M(d.id).photo = "face"; S.a.modal = null; S.p.sheet = null; toast("Photo saved", d.id === ME ? "from-app" : "from-admin"); },
+  rmPhoto: (d) => { M(d.id).photo = null; S.a.modal = null; S.p.sheet = null; toast("Photo removed"); },
+
+  /* app */
+  pGo: (d) => { S.p.sheet = null; if (d.r === "notifications") S.p.stack = [S.p.route]; else if (d.r.startsWith("receipt")) S.p.stack = [S.p.route]; S.p.route = d.r; S.p.openDay = null; },
+  pBack: () => { if (S.p.route === "notifications") S.notifs.forEach((n) => (n.unread = false)); if (S.p.route === "log") return A.wkDiscard(); S.p.route = S.p.stack.pop() || "home"; },
+  pClose: (d, el, e) => { if (d.self && e.target !== el) return false; S.p.sheet = null; },
+  pClassDay: (d) => { S.p.classDay = +d.i; },
+  pBook: (d) => { S.sessions.find((x) => x.id === d.id).booked.push(ME); toast("Booked! The gym sees you on the list.", "from-app"); },
+  pCancelBooking: (d) => { const c = S.sessions.find((x) => x.id === d.id); c.booked = c.booked.filter((x) => x !== ME); if (c.waitlist.length) { const moved = c.waitlist.shift(); c.booked.push(moved); toast(`Spot freed: ${M(moved).name} moved up from the waitlist`, "from-app"); } else toast("Booking cancelled", "from-app"); },
+  pJoinWait: (d) => { S.sessions.find((x) => x.id === d.id).waitlist.push(ME); toast("You're on the waitlist. You'll get the spot automatically if someone cancels.", "from-app"); },
+  pLeaveWait: (d) => { const c = S.sessions.find((x) => x.id === d.id); c.waitlist = c.waitlist.filter((x) => x !== ME); },
+  pOpenDay: (d) => { S.p.openDay = S.p.openDay === +d.i ? null : +d.i; },
+  selfCheckin: () => { doCheckin(ME, "self"); toast("Checked in! It shows on the desk's screen right away.", "from-app"); },
+  scanPoster: () => pSheet("Scan the poster", `<div style="background:#000;border-radius:20px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden"><div style="opacity:.85">${qr("poster" + S.gym.slug, 170)}</div><div style="position:absolute;inset:18%;border:3px solid var(--p-accent);border-radius:22px"></div></div><div class="p-sec" style="text-align:center;margin:10px 0">${S.gym.f.location ? ic("pin") + " Location check: you're at " + esc(S.gym.name) + " ✓" : "Point the camera at the poster at the entrance."}</div><button class="p-btn" data-a="posterDone">Simulate scan</button>`),
+  posterDone: () => { doCheckin(ME, "poster"); S.p.sheet = null; toast("Checked in by scanning the poster", "from-app"); },
+  myQr: () => pSheet("Your check-in code", `<div style="text-align:center"><div style="display:inline-block;padding:14px;background:#fff;border-radius:20px">${qr("me" + Math.floor(Date.now() / 50000), 210)}</div><div class="p-sec" style="margin-top:8px">Show this at the desk. It refreshes every minute, so screenshots don't work.</div><button class="p-btn" style="margin-top:12px" data-a="deskScansMe">Simulate the desk scanning it</button></div>`),
+  deskScansMe: () => { S.a.ciResult = doCheckin(ME, "scan"); S.a.route = "checkin"; S.p.sheet = null; toast("Desk scanned Anjali's code. See the admin's Check-in page.", "from-admin"); },
+
+  startWk: () => { const nx = nextPlanDay(); const items = nx ? nx.day.items : [["Squat", 3, "8"], ["Push-ups", 3, "10"]]; S.p.wk = { label: nx ? nx.day.label : "Free workout", start: Date.now(), ex: items.map(([n, s, r]) => ({ name: n, target: `${s} × ${r}`, last: S.lastKg[n] || null, sets: [...Array(s)].map(() => ({ kg: "", reps: "", done: false })) })) }; S.p.route = "log"; S.p.rest = null; },
+  wkTick: (d) => { const e = S.p.wk.ex[+d.e], s = e.sets[+d.s]; s.done = !s.done; if (s.done) { if (s.kg === "" && e.last) s.kg = e.last[0]; if (s.reps === "" && e.last) s.reps = e.last[1]; if (s.reps === "") s.reps = parseInt(e.target.split("×")[1]) || 10; startRestTimer(); } },
+  wkAddSet: (d) => { const e = S.p.wk.ex[+d.e], last = e.sets[e.sets.length - 1]; e.sets.push({ kg: last?.kg ?? "", reps: last?.reps ?? "", done: false }); },
+  restAdd: () => { S.p.rest.until += 15000; },
+  restSkip: () => { S.p.rest = null; },
+  wkFinish: () => { const wk = S.p.wk; let sets = 0, vol = 0; for (const e of wk.ex) for (const s of e.sets) if (s.done) { sets++; vol += (+s.kg || 0) * (+s.reps || 0); } S.history.unshift({ id: uid("wl"), day: TODAY, label: wk.label, sets, vol: Math.round(vol), mins: Math.max(1, Math.round((Date.now() - wk.start) / 60000)) }); S.p.wk = null; S.p.rest = null; S.p.route = "wkdone"; },
+  wkDiscard: () => { S.p.wk = null; S.p.rest = null; S.p.route = "workouts"; },
+
+  water: (d) => { S.food.water = S.food.water === +d.i + 1 ? +d.i : +d.i + 1; },
+  addFoodSheet: (d) => { S.p.foodQuery = ""; S.p.pick = null; S.p.meal = d.m; pSheet(`Add to ${MEALS.find((x) => x[0] === d.m)[1]}`, foodSheet()); },
+  pickFood: (d) => { S.p.pick = d.id ? { id: d.id, servings: 1 } : null; S.p.sheet.html = foodSheet(); },
+  servings: (d) => { S.p.pick.servings = Math.max(0.5, S.p.pick.servings + +d.v); S.p.sheet.html = foodSheet(); },
+  addFoodItem: () => { const f = allFoods().find((x) => x.id === S.p.pick.id), n = S.p.pick.servings; S.food.log.push({ id: uid("fl"), meal: S.p.meal, name: f.name, kcal: Math.round(f.kcal * n), p: Math.round(f.p * n), servings: n }); S.p.sheet = null; toast(`${f.name} added. Your trainer sees it.`, "from-app"); },
+  quickAdd: () => { S.food.log.push({ id: uid("fl"), meal: S.p.meal, name: "Quick add", kcal: 250, p: 0, servings: 1 }); S.p.sheet = null; },
+  rmFood: (d) => { S.food.log = S.food.log.filter((x) => x.id !== d.id); },
+
+  payUpi: (d) => { const p = S.plans.find((x) => x.id === d.id); pSheet(`Pay ${inr(p.price)} by UPI`, `<div class="uz" style="border-radius:18px"><div class="p-sec" style="margin-bottom:10px">${esc(p.name)} membership. You pay ${esc(S.gym.name)} directly. No gateway fee ${usp(2)}</div><div style="display:flex;gap:12px;align-items:center" class="p-card"><div style="background:#fff;padding:6px;border-radius:12px">${qr("upi" + S.gym.upi + p.price, 96)}</div><div><div class="p-sec">UPI ID</div><b>${esc(S.gym.upi)}</b><div class="p-sec">${esc(S.gym.payee)}</div></div></div></div><button class="p-btn dark" style="margin-top:12px" data-a="pToast" data-t="Opens GPay / PhonePe / Paytm with the amount filled in.">Open UPI app</button><div class="p-sec" style="margin:14px 0 6px">After paying, enter the 12-digit UPI reference (UTR):</div><form data-submit="claimUpi" data-id="${p.id}"><input class="p-inp" name="utr" value="4${String(Date.now()).slice(-11)}" inputmode="numeric" aria-label="UPI reference"><button class="p-btn" style="margin-top:10px">I've paid</button></form>`); },
+  claimUpi: (f, el) => { const p = S.plans.find((x) => x.id === el.dataset.id); S.payments.unshift({ id: uid("pay"), memberId: ME, amount: p.price, what: p.name, planId: p.id, kind: "plan", status: "created", method: "upi", at: new Date(), utr: f.utr }); S.p.sheet = null; toast("Sent to the gym. Watch it appear in the admin's Payments →", "from-app"); },
+  seenReject: (d) => { S.payments.find((x) => x.id === d.id).seen = true; },
+
+  photoSheet: () => pSheet("Profile photo", `<div class="p-sec" style="margin-bottom:8px">Your gym's team sees it, so the front desk knows it's you. Other members can't.</div><label class="p-row"><span class="ic" style="background:var(--p-muted)">${ic("camera")}</span><span class="grow"><b>Take photo</b></span><input type="file" accept="image/*" capture="user" class="sr" data-file="photo" data-id="${ME}"></label><label class="p-row"><span class="ic" style="background:var(--p-muted)">${ic("image")}</span><span class="grow"><b>Choose from gallery</b></span><input type="file" accept="image/*" class="sr" data-file="photo" data-id="${ME}"></label><button class="p-row" data-a="samplePhoto" data-id="${ME}"><span class="ic" style="background:var(--p-muted)">${ic("user")}</span><span class="grow"><b>Use a sample photo</b></span></button>${M(ME).photo ? `<button class="p-row" data-a="rmPhoto" data-id="${ME}" style="color:var(--p-danger)"><span class="ic" style="background:var(--p-muted)">${ic("trash")}</span><span class="grow"><b>Remove photo</b></span></button>` : ""}`),
+  dark: (d) => { S.p.dark = d.v === "1"; },
+  signOut: () => { S.p.signedOut = true; },
+  signIn: () => { S.p.signedOut = false; S.p.route = "home"; toast("Signed in (a 6-digit code arrives by email)", "from-app"); },
+  pJoinScreen: () => { S.p.signedOut = false; S.p.route = "join"; },
+  joinGym: () => { const name = ($("#join-name")?.value || "New member").trim(); S.members.push({ id: uid("p"), name, f: false, photo: null, phone: "95440 76543", role: "member", status: "pending", joined: TODAY, notes: [] }); S.p.route = "home"; S.a.route = "members"; toast(`${name} asked to join. Approve them in the admin's Members page.`, "from-app"); },
+  deleteAccount: () => pSheet("Delete your account?", `<div class="p-sec">Your name, phone, photo, workouts, body measurements and food log are deleted, and you can't sign in again. ${esc(S.gym.name)} keeps its payment and visit records as "Deleted member".</div><button class="p-btn danger" style="margin-top:14px" data-a="doDelete">Delete my account</button><button class="p-btn sec" style="margin-top:8px" data-a="pClose">Cancel</button>`),
+  doDelete: () => { const m = M(ME); m.name = "Deleted member"; m.phone = ""; m.photo = null; m.status = "deleted"; S.food.log = []; S.history = []; S.p.deleted = true; S.p.sheet = null; S.wplans.forEach((w) => (w.assigned = w.assigned.filter((x) => x !== ME))); S.sessions.forEach((c) => (c.booked = c.booked.filter((x) => x !== ME))); toast("Account deleted. Payments stay in the admin as \"Deleted member\".", "from-app"); },
+};
+
+/* Form submits, typed input and toggles */
+const FORMS = { addMember: A.addMember, pay: A.pay, reject: A.reject, note: A.note, comment: A.comment, sellPt: A.sellPt, cancelClass: A.cancelClass, addClass: A.addClass, addEx: A.addEx, assign: A.assign, addFood: A.addFood, addPlan: A.addPlan, claimUpi: A.claimUpi };
+const INPUT = {
+  memSearch: (el) => { S.a.memQuery = el.value; $("#mem-list").innerHTML = memberTable(); },
+  ciSearch: (el) => { S.a.ciQuery = el.value; $("#ci-results").innerHTML = ciResults(); },
+  importText: (el) => { S.a.importText = el.value; $("#import-prev").innerHTML = importPreview(); },
+  wkSet: (el) => { S.p.wk.ex[+el.dataset.e].sets[+el.dataset.s][el.dataset.f] = el.value; },
+  foodSearch: (el) => { S.p.foodQuery = el.value; $("#food-results").innerHTML = foodResults(); },
+};
+const CHANGE = {
+  flag: (el) => { S.gym.f[el.dataset.k] = el.checked; toast(`${FLAG_LABELS[el.dataset.k] || el.dataset.k} ${el.checked ? "on" : "off"}. The member app updated.`, "from-admin", "sliders"); },
+  simClosed: (el) => { S.gym.simulateClosed = el.checked; },
+  gymField: (el) => { S.gym[el.dataset.k] = el.value; if (el.dataset.k === "name") S.gym.short = initials(el.value); },
+  method: (el) => { S.gym.methods[el.dataset.k] = el.checked; },
+  planActive: (el) => { S.plans.find((p) => p.id === el.dataset.k).active = el.checked; },
+  planPrice: (el) => { S.plans.find((p) => p.id === el.dataset.k).price = Math.round(+el.value * 100); toast("Price updated in the app", "from-admin"); },
+  role: (el) => { M(el.dataset.k).role = el.value; },
+  uspHighlight: (el) => { document.body.classList.toggle("usp-on", el.checked); return false; },
+};
+const FLAG_LABELS = { checkin: "Check-in", classes: "Classes", workouts: "Workouts", pt: "Personal training", nutrition: "Nutrition", nutritionAll: "Nutrition for all members", selfCheckin: "App check-in", poster: "QR poster", location: "Location check", onlyOpen: "Only during opening hours", approval: "Approve new joiners" };
+const allFoods = () => [...FOODS, ...S.gymFoods.map((g) => ({ ...g, ml: "", cat: "Gym" }))];
+function foodResults() {
+  const q = S.p.foodQuery.trim().toLowerCase();
+  const list = allFoods().filter((f) => !q || f.name.toLowerCase().includes(q) || (f.ml || "").includes(q)).slice(0, 12);
+  return list.map((f) => `<button class="p-row" style="padding:8px" data-a="pickFood" data-id="${f.id}"><span class="grow"><b style="font-size:13.5px">${esc(f.name)} <span class="ml">${esc(f.ml)}</span></b><small>${esc(f.serving)} · ≈${f.kcal} kcal · ${f.p} g protein</small></span>${ic("plus")}</button>`).join("") || `<div class="p-sec" style="padding:10px">No match. Use quick add.</div>`;
+}
+function foodSheet() {
+  if (S.p.pick) {
+    const f = allFoods().find((x) => x.id === S.p.pick.id), n = S.p.pick.servings;
+    return `<div class="p-card" style="margin-top:8px"><b style="font-size:16px">${esc(f.name)} <span class="ml">${esc(f.ml)}</span></b><div class="p-sec">${esc(f.serving)}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><div class="stepper"><button data-a="servings" data-v="-0.5" aria-label="Less">−</button><b style="font-size:18px;min-width:30px;text-align:center">${n}</b><button data-a="servings" data-v="0.5" aria-label="More">+</button></div><div style="text-align:right"><b>≈${Math.round(f.kcal * n)} kcal</b><div class="p-sec">${Math.round(f.p * n)} g protein</div></div></div></div><button class="p-btn" style="margin-top:12px" data-a="addFoodItem">Add</button><button class="p-btn sec" style="margin-top:8px" data-a="pickFood" data-id="">Back to search</button>`;
+  }
+  return `<input class="p-inp" placeholder="Search puttu, appam, fish curry…" data-input="foodSearch" value="${esc(S.p.foodQuery)}" aria-label="Search foods" style="margin:8px 0"><div class="p-sec" style="margin-bottom:4px">Kerala &amp; Indian foods in home portions ${usp(7)}</div><div id="food-results">${foodResults()}</div><button class="p-btn sec sm" style="margin-top:8px" data-a="quickAdd">Quick add 250 kcal</button>`;
+}
+
+/* ---------------------------------------------------------------------------
+   Guide and USP drawer
+--------------------------------------------------------------------------- */
+const STEPS = [
+  { t: "Member checks in", d: "App → Home → Check in. The desk sees it live.", go: () => { S.p.route = "home"; S.a.route = "checkin"; } },
+  { t: "Desk scans a member, sees their photo", d: "Admin → Check-in → Simulate a scan.", go: () => { S.a.route = "checkin"; } },
+  { t: "Member renews with UPI, no gateway", d: "App → Pass → Pay with UPI → I've paid.", go: () => { S.p.route = "membership"; S.a.route = "payments"; } },
+  { t: "Gym confirms the payment", d: "Admin → Payments → Confirm. The member gets a receipt.", go: () => { S.a.route = "payments"; S.p.route = "notifications"; } },
+  { t: "Trainer coaches food & workouts", d: "Admin → Anjali → comment on food. App → Food.", go: () => { S.a.route = "member:m1"; S.p.route = "food"; } },
+  { t: "Member logs a workout", d: "App → Workouts → Start workout, tick sets.", go: () => { S.p.route = "workouts"; S.a.route = "workouts"; } },
+  { t: "Switch from Excel in a minute", d: "Admin → Members → Import → paste rows.", go: () => { S.a.route = "members"; A.openImport(); } },
+  { t: "Turn features on and off", d: "Admin → Settings → Features. Watch the app's tabs.", go: () => { S.a.route = "settings"; S.p.route = "home"; } },
+];
+function renderChrome() {
+  $("#drawer").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><h3>Why gyms pick GOS</h3><button class="btn ghost sm" data-a="drawer" aria-label="Close">${ic("x")}</button></div><p class="sub">The 8 things competitors don't do. Badges marked ${usp(1).replace("USP", "USP")} in the demo point at them.</p>
+    <div class="pitch">Run your gym from <b>WhatsApp</b> and <b>UPI</b>: members join from one link, pay by UPI, and check in by scanning a poster. <b>No machines, no gateway fees, no data entry.</b></div>
+    ${USPS.map((u) => `<div class="usp-item"><span class="n">${u.n}</span><div><b>${esc(u.t)}</b><span>${esc(u.d)}</span><div class="vs">${esc(u.vs)}</div>${Object.keys(u.go).length ? `<button data-a="goUsp" data-n="${u.n}">Show me ${ic("right")}</button>` : ""}</div></div>`).join("")}`;
+  $("#guide").innerHTML = `<header data-a="guide"><span>${ic("play")} 2-minute demo script</span>${ic($("#guide").classList.contains("open") ? "down" : "left")}</header><ol>${STEPS.map((s, i) => `<li><button data-a="step" data-i="${i}"><span><b>${esc(s.t)}</b><small>${esc(s.d)}</small></span></button></li>`).join("")}</ol>`;
+}
+
+/* ---------------------------------------------------------------------------
+   Render loop and events
+--------------------------------------------------------------------------- */
+function render() {
+  const aScroll = $("#a-content")?.scrollTop ?? 0, aRoute = render.aRoute;
+  const pScroll = $("#p-body")?.scrollTop ?? 0, pRoute = render.pRoute;
+  renderAdmin(); renderApp();
+  if (aRoute === S.a.route && $("#a-content")) $("#a-content").scrollTop = aScroll;
+  if (pRoute === S.p.route && $("#p-body")) $("#p-body").scrollTop = pScroll;
+  render.aRoute = S.a.route; render.pRoute = S.p.route;
+  tick();
+}
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-a]");
+  if (!el) { if (S.a.pop && !e.target.closest(".a-pop")) { S.a.pop = null; render(); } return; }
+  if (el.tagName === "LABEL") return;
+  const fn = A[el.dataset.a]; if (!fn) return;
+  if (fn(el.dataset, el, e) === false) return;
+  e.preventDefault();
+  if (["drawer", "guide", "view", "toastOnly", "pToast"].includes(el.dataset.a)) { renderChrome(); return; }
+  render(); renderChrome();
+});
+document.addEventListener("submit", (e) => {
+  const f = e.target.closest("form[data-submit]"); if (!f) return;
+  e.preventDefault();
+  FORMS[f.dataset.submit](Object.fromEntries(new FormData(f)), f);
+  render();
+});
+document.addEventListener("input", (e) => { const el = e.target.closest("[data-input]"); if (el) INPUT[el.dataset.input](el); });
+document.addEventListener("change", (e) => {
+  const el = e.target;
+  if (el.dataset.file) {
+    const file = el.files?.[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = () => { M(el.dataset.id).photo = r.result; S.a.modal = null; S.p.sheet = null; toast("Photo saved. It shows everywhere the team sees this member."); render(); };
+    r.readAsDataURL(file);
+    return;
+  }
+  if (el.dataset.change && CHANGE[el.dataset.change]) { if (CHANGE[el.dataset.change](el) === false) return; render(); }
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { S.a.modal = null; S.p.sheet = null; S.a.pop = null; $("#drawer").classList.remove("open"); render(); } });
+
+/* Live clocks: the workout timer and the rest countdown. */
+function tick() {
+  const c = $("#wk-clock");
+  if (c && S.p.wk) { const s = Math.floor((Date.now() - S.p.wk.start) / 1000); c.textContent = `${Math.floor(s / 60)}:${z2(s % 60)}`; }
+  const r = $("#rest-left");
+  if (r && S.p.rest) { const left = Math.ceil((S.p.rest.until - Date.now()) / 1000); if (left <= 0) { S.p.rest = null; render(); toast("Rest over. Next set!", "from-app", "timer"); return; } r.textContent = `${Math.floor(left / 60)}:${z2(left % 60)}`; }
+}
+setInterval(tick, 1000);
+
+if (innerWidth < 900) A.view({ v: "app" });
+render(); renderChrome();
+</script>
+</body>
+</html>
