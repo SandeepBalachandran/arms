@@ -7,11 +7,11 @@ import {
   useFonts,
 } from '@expo-google-fonts/poppins';
 import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { AppState, Platform } from 'react-native';
+import { AppState, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { SplashView } from '@/components/splash-view';
 import { ConfirmHost } from '@/lib/confirm';
@@ -46,6 +46,30 @@ export default function RootLayout() {
         </SessionProvider>
       </QueryClientProvider>
     </ThemeProvider>
+  );
+}
+
+// A screen threw while rendering. Release builds would otherwise close the
+// app; show what went wrong so it can be reported, and offer a retry.
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return (
+    <View style={{ flex: 1, backgroundColor: '#1f2a10', padding: 24, paddingTop: 80, gap: 16 }}>
+      <Text style={{ color: '#ffffff', fontSize: 26, fontWeight: '800' }}>Something went wrong</Text>
+      <Text style={{ color: '#c3cdb2', fontSize: 15 }}>
+        Try again. If it keeps happening, send a screenshot of this screen to your gym.
+      </Text>
+      <ScrollView style={{ maxHeight: 220, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.08)' }} contentContainerStyle={{ padding: 12 }}>
+        <Text selectable style={{ color: '#ffffff', fontSize: 12, fontFamily: Platform.select({ ios: 'Menlo', default: 'monospace' }) }}>
+          {error.name}: {error.message}
+        </Text>
+      </ScrollView>
+      <Pressable
+        onPress={retry}
+        accessibilityRole="button"
+        style={({ pressed }) => ({ backgroundColor: '#c8f04b', borderRadius: 999, minHeight: 52, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.7 : 1 })}>
+        <Text style={{ color: '#141a04', fontSize: 16, fontWeight: '700' }}>Try again</Text>
+      </Pressable>
+    </View>
   );
 }
 

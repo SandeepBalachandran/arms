@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import { useSavedToast } from "@/lib/use-saved-toast";
-import { Button, Field, FormError, Input } from "@/components/ui";
+import { Button, Field, FormError } from "@/components/ui";
+import { PasswordInput } from "@/components/password-input";
 import { changePassword } from "./actions";
 
 export function PasswordForm() {
@@ -12,10 +13,10 @@ export function PasswordForm() {
     <form action={action} className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="New password">
-          <Input name="password" type="password" autoComplete="new-password" minLength={8} required />
+          <PasswordInput name="password" autoComplete="new-password" minLength={8} required />
         </Field>
         <Field label="Confirm password">
-          <Input name="confirm" type="password" autoComplete="new-password" minLength={8} required />
+          <PasswordInput name="confirm" autoComplete="new-password" minLength={8} required />
         </Field>
       </div>
       <FormError message={state?.error} />

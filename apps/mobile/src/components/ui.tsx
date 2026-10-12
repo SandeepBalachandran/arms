@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { Eye as EyeIcon, EyeOff, type LucideIcon } from 'lucide-react-native';
+import { useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -79,19 +80,64 @@ export function Button({
   );
 }
 
-export function Input({ label, style, ...props }: TextInputProps & { label?: string }) {
+export function Input({
+  label,
+  icon: Icon,
+  trailing,
+  style,
+  ...props
+}: TextInputProps & { label?: string; icon?: LucideIcon; trailing?: ReactNode }) {
   const theme = useTheme();
   return (
     <View style={{ gap: Spacing.one }}>
-      {label && <Text variant="small">{label}</Text>}
-      <TextInput
-        // The visible label is separate text, so name the field for screen readers.
-        accessibilityLabel={label}
-        placeholderTextColor={theme.textSecondary}
-        style={[styles.input, { color: theme.text, backgroundColor: theme.surface, borderColor: theme.border, fontFamily: Fonts.regular }, style]}
-        {...props}
-      />
+      {!!label && <Text variant="small">{label}</Text>}
+      <View>
+        <TextInput
+          // The visible label is separate text, so name the field for screen readers.
+          accessibilityLabel={label}
+          placeholderTextColor={theme.textSecondary}
+          style={[
+            styles.input,
+            { color: theme.text, backgroundColor: theme.surface, borderColor: theme.border, fontFamily: Fonts.regular },
+            !!Icon && { paddingLeft: 46 },
+            !!trailing && { paddingRight: 52 },
+            style,
+          ]}
+          {...props}
+        />
+        {!!Icon && (
+          <View pointerEvents="none" style={[styles.inputSide, { left: 16 }]}>
+            <Icon size={18} color={theme.textSecondary} />
+          </View>
+        )}
+        {!!trailing && <View style={[styles.inputSide, { right: 6 }]}>{trailing}</View>}
+      </View>
     </View>
+  );
+}
+
+// Password field with an eye button to show or hide what's typed.
+export function PasswordInput(props: Omit<TextInputProps, 'secureTextEntry'> & { label?: string; icon?: LucideIcon }) {
+  const theme = useTheme();
+  const [shown, setShown] = useState(false);
+  const Eye = shown ? EyeOff : EyeIcon;
+  return (
+    <Input
+      {...props}
+      secureTextEntry={!shown}
+      autoCapitalize="none"
+      autoCorrect={false}
+      trailing={
+        <Pressable
+          onPress={() => setShown((s) => !s)}
+          accessibilityRole="button"
+          accessibilityLabel={shown ? 'Hide password' : 'Show password'}
+          hitSlop={6}
+          style={({ pressed }) => [styles.eye, pressed && { backgroundColor: theme.surfaceMuted }]}>
+          <Eye size={20} color={theme.textSecondary} />
+        </Pressable>
+      }
+    />
   );
 }
 
@@ -133,6 +179,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     fontSize: 16,
   },
+  inputSide: { position: 'absolute', top: 0, bottom: 0, justifyContent: 'center' },
+  eye: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   card: { borderWidth: 1, borderRadius: Radius, padding: Spacing.three, gap: Spacing.two },
 });
 
