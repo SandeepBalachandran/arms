@@ -357,6 +357,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"notifications": {
+                  Row: {
+                    "created_at": string,"data": NonNullable<Json>,"gym_id": string,"id": string,"kind": string,"member_id": string,"read_at": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"data"?: NonNullable<Json>,"gym_id": string,"id"?: string,"kind": string,"member_id": string,"read_at"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"data"?: NonNullable<Json>,"gym_id"?: string,"id"?: string,"kind"?: string,"member_id"?: string,"read_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notifications_gym_id_fkey"
+      columns: ["gym_id"]
+isOneToOne: false
+      referencedRelation: "gyms"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notifications_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "gym_members"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"nutrition_comments": {
                   Row: {
                     "author_member_id": string | null,"body": string,"created_at": string,"day": string,"gym_id": string,"id": string,"member_id": string

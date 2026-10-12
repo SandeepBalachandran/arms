@@ -137,6 +137,24 @@ test("the PT card shows the trainer's photo", async ({ page }) => {
   noErrors();
 });
 
+test("the bell opens notifications; a payment leads to its receipt", async ({ page }) => {
+  const noErrors = watchErrors(page);
+  await service.from("notifications").update({ read_at: null }).eq("member_id", fx.users.member.memberId!);
+  await openApp(page);
+  // The PT package sold at the desk during setup.
+  await page.getByRole("button", { name: /^Notifications, \d+ new$/ }).click();
+  await expect(page.getByText("Updates").filter({ visible: true }).first()).toBeVisible();
+  const payment = page.getByRole("button", { name: /^New\., Payment received: ₹6,000, 12 PT sessions · Receipt #\d+/ });
+  await payment.click();
+  await expect(page.getByText("Personal training: 12 PT sessions").filter({ visible: true }).first()).toBeVisible();
+
+  // Leaving the screen marks them read.
+  await expect
+    .poll(async () => (await service.from("notifications").select("id").eq("member_id", fx.users.member.memberId!).is("read_at", null)).data?.length)
+    .toBe(0);
+  noErrors();
+});
+
 test("every tab opens without errors", async ({ page }) => {
   const noErrors = watchErrors(page);
   await openApp(page);

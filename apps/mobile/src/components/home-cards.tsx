@@ -37,8 +37,9 @@ import { Spacing, type Tint } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useSchedule } from '@/lib/classes';
 import { useActiveGym } from '@/lib/gyms';
-import { useMembership, usePaymentClaims, usePlans } from '@/lib/memberships';
+import { useMembership, usePlans } from '@/lib/memberships';
 import { useProfile } from '@/lib/profile';
+import { useNotificationBadge } from '@/lib/notifications';
 import { useMyPt } from '@/lib/pt';
 import { useMyPlans } from '@/lib/workouts';
 
@@ -47,26 +48,24 @@ function greeting(timezone: string) {
   return hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 }
 
-// Avatar, greeting and a bell that lights up when something needs attention.
+// Avatar, greeting and the notifications bell (dot: unread updates, or
+// something that needs attention such as the membership ending).
 export function HomeHeader() {
   const theme = useTheme();
   const router = useRouter();
   const gym = useActiveGym()?.gym;
   const profile = useProfile();
-  const { state } = useMembership();
-  const claims = usePaymentClaims();
+  const badge = useNotificationBadge();
   const name = profile.data?.full_name || '';
-  const attention =
-    !!claims.data?.pending ||
-    !!claims.data?.rejected.length ||
-    state?.kind === 'expired' ||
-    (state?.kind === 'active' && !state.next && state.daysLeft <= (gym?.expiry_warning_days ?? 7));
 
   return (
     <View style={{ gap: Spacing.three }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <GymBadge />
-        <IconButton label={attention ? 'Membership needs attention' : 'Membership'} dot={attention} onPress={() => router.push('/membership')}>
+        <IconButton
+          label={badge.unread ? `Notifications, ${badge.unread} new` : badge.attention ? 'Notifications, needs attention' : 'Notifications'}
+          dot={badge.show}
+          onPress={() => router.push('/notifications')}>
           <Bell size={22} color={theme.text} />
         </IconButton>
       </View>

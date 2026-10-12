@@ -46,9 +46,11 @@ body {
   color: var(--foreground);
 }
 
-/* Check-in poster: print only the poster, not the admin around it. */
+/* Check-in poster: print only the poster, not the admin around it. Only on
+   pages that have one, so other printouts (receipts) still print. */
 @media print {
-  body * { visibility: hidden; }
-  .poster, .poster * { visibility: visible; }
+  body:has(.poster) * { visibility: hidden; }
+  body:has(.poster) .poster,
+  body:has(.poster) .poster * { visibility: visible; }
   .poster { position: absolute; inset: 0; margin: auto; }
 }
