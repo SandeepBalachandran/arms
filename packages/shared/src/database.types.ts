@@ -161,6 +161,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"exercise_media": {
+                  Row: {
+                    "exercise_id": string,"gym_id": string,"how_to_en": string | null,"how_to_ml": string | null,"photo_urls": (string)[],"updated_at": string,"updated_by": string | null,"video_url": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "exercise_id": string,"gym_id": string,"how_to_en"?: string | null,"how_to_ml"?: string | null,"photo_urls"?: (string)[],"updated_at"?: string,"updated_by"?: string | null,"video_url"?: string | null
+                  }
+                  Update: {
+                    "exercise_id"?: string,"gym_id"?: string,"how_to_en"?: string | null,"how_to_ml"?: string | null,"photo_urls"?: (string)[],"updated_at"?: string,"updated_by"?: string | null,"video_url"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "exercise_media_exercise_id_fkey"
+      columns: ["exercise_id"]
+isOneToOne: false
+      referencedRelation: "exercises"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "exercise_media_gym_id_fkey"
+      columns: ["gym_id"]
+isOneToOne: false
+      referencedRelation: "gyms"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "exercise_media_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "gym_members"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"exercises": {
                   Row: {
                     "created_at": string,"gym_id": string | null,"id": string,"is_active": boolean,"measure": Database["public"]['Enums']["exercise_measure"],"muscle_group": string,"name": string
@@ -215,14 +247,14 @@ isOneToOne: false
                   ]
                 },"foods": {
                   Row: {
-                    "carbs_g": number,"category": string,"created_at": string,"fat_g": number,"food_type": Database["public"]['Enums']["food_type"],"gym_id": string | null,"id": string,"is_active": boolean,"kcal": number,"name": string,"name_ml": string | null,"protein_g": number,"serving_g": number | null,"serving_label": string
+                    "carbs_g": number,"category": string,"created_at": string,"fat_g": number,"food_type": Database["public"]['Enums']["food_type"],"gym_id": string | null,"id": string,"is_active": boolean,"kcal": number,"member_id": string | null,"name": string,"name_ml": string | null,"protein_g": number,"serving_g": number | null,"serving_label": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "carbs_g"?: number,"category"?: string,"created_at"?: string,"fat_g"?: number,"food_type"?: Database["public"]['Enums']["food_type"],"gym_id"?: string | null,"id"?: string,"is_active"?: boolean,"kcal": number,"name": string,"name_ml"?: string | null,"protein_g"?: number,"serving_g"?: number | null,"serving_label": string
+                    "carbs_g"?: number,"category"?: string,"created_at"?: string,"fat_g"?: number,"food_type"?: Database["public"]['Enums']["food_type"],"gym_id"?: string | null,"id"?: string,"is_active"?: boolean,"kcal": number,"member_id"?: string | null,"name": string,"name_ml"?: string | null,"protein_g"?: number,"serving_g"?: number | null,"serving_label": string
                   }
                   Update: {
-                    "carbs_g"?: number,"category"?: string,"created_at"?: string,"fat_g"?: number,"food_type"?: Database["public"]['Enums']["food_type"],"gym_id"?: string | null,"id"?: string,"is_active"?: boolean,"kcal"?: number,"name"?: string,"name_ml"?: string | null,"protein_g"?: number,"serving_g"?: number | null,"serving_label"?: string
+                    "carbs_g"?: number,"category"?: string,"created_at"?: string,"fat_g"?: number,"food_type"?: Database["public"]['Enums']["food_type"],"gym_id"?: string | null,"id"?: string,"is_active"?: boolean,"kcal"?: number,"member_id"?: string | null,"name"?: string,"name_ml"?: string | null,"protein_g"?: number,"serving_g"?: number | null,"serving_label"?: string
                   }
                   Relationships: [
                     {
@@ -230,6 +262,12 @@ isOneToOne: false
       columns: ["gym_id"]
 isOneToOne: false
       referencedRelation: "gyms"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "foods_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "gym_members"
       referencedColumns: ["id"]
     }
                   ]
@@ -583,14 +621,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "avatar_url": string | null,"created_at": string,"deleted_at": string | null,"full_name": string,"id": string,"is_platform_admin": boolean,"phone": string | null
+                    "avatar_url": string | null,"created_at": string,"deleted_at": string | null,"full_name": string,"id": string,"is_platform_admin": boolean,"language": string,"phone": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id": string,"is_platform_admin"?: boolean,"phone"?: string | null
+                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id": string,"is_platform_admin"?: boolean,"language"?: string,"phone"?: string | null
                   }
                   Update: {
-                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id"?: string,"is_platform_admin"?: boolean,"phone"?: string | null
+                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id"?: string,"is_platform_admin"?: boolean,"language"?: string,"phone"?: string | null
                   }
                   Relationships: [
                     
@@ -737,14 +775,14 @@ isOneToOne: false
                   ]
                 },"water_logs": {
                   Row: {
-                    "glasses": number,"gym_id": string,"logged_on": string,"member_id": string
+                    "glasses": number,"gym_id": string,"logged_on": string,"member_id": string,"ml": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "glasses"?: number,"gym_id": string,"logged_on": string,"member_id": string
+                    "glasses"?: number,"gym_id": string,"logged_on": string,"member_id": string,"ml"?: number
                   }
                   Update: {
-                    "glasses"?: number,"gym_id"?: string,"logged_on"?: string,"member_id"?: string
+                    "glasses"?: number,"gym_id"?: string,"logged_on"?: string,"member_id"?: string,"ml"?: number
                   }
                   Relationships: [
                     {
@@ -757,6 +795,32 @@ isOneToOne: false
       foreignKeyName: "water_logs_member_id_fkey"
       columns: ["member_id"]
 isOneToOne: false
+      referencedRelation: "gym_members"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"water_settings": {
+                  Row: {
+                    "containers": NonNullable<Json>,"goal_ml": number,"gym_id": string,"member_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "containers"?: NonNullable<Json>,"goal_ml"?: number,"gym_id": string,"member_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "containers"?: NonNullable<Json>,"goal_ml"?: number,"gym_id"?: string,"member_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "water_settings_gym_id_fkey"
+      columns: ["gym_id"]
+isOneToOne: false
+      referencedRelation: "gyms"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "water_settings_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: true
       referencedRelation: "gym_members"
       referencedColumns: ["id"]
     }
@@ -1000,6 +1064,9 @@ isOneToOne: false
                            },
 "poster_check_in":
 { Args: { "p_accuracy_m"?: number,"p_key": string,"p_lat"?: number,"p_lng"?: number,"p_slug": string }; Returns: Json
+                           },
+"promote_member_food":
+{ Args: { "p_food_id": string }; Returns: string
                            },
 "purge_deleted_gyms":
 { Args: Record<PropertyKey, never>; Returns: undefined

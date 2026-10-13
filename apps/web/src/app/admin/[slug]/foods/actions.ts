@@ -41,7 +41,18 @@ export async function setFoodActive(formData: FormData): Promise<ActionResult> {
     .parse(Object.fromEntries(formData));
   const { gym } = await requireGym(slug, TEAM_ROLES);
   const supabase = await createClient();
-  const { error } = await supabase.from("foods").update({ is_active: active === "true" }).eq("id", id).eq("gym_id", gym.id);
+  const { error } = await supabase.from("foods").update({ is_active: active === "true" }).eq("id", id).eq("gym_id", gym.id).is("member_id", null);
   if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}/foods`);
+}
+
+// Copies a member's own food into the gym list (owner, admin or the
+// member's trainer; the database checks).
+export async function promoteMemberFood(formData: FormData): Promise<ActionResult> {
+  const { slug, id } = z.object({ slug: z.string(), id: z.uuid() }).parse(Object.fromEntries(formData));
+  await requireGym(slug, TEAM_ROLES);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("promote_member_food", { p_food_id: id });
+  if (error) return { error: error.message };
+  revalidatePath(`/admin/${slug}`, "layout");
 }

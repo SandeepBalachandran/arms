@@ -8,6 +8,7 @@ import {
   dayTotals,
   FOOD_TYPE_LABELS,
   formatDay,
+  formatLitres,
   GOAL_LABELS,
   MEAL_LABELS,
   MEALS,
@@ -17,6 +18,7 @@ import {
 import { ActionForm } from "@/components/action-form";
 import { Badge, Card } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
+import { promoteMemberFood } from "../../foods/actions";
 import { deleteNutritionComment } from "./nutrition-actions";
 import { CommentForm, TargetForm } from "./nutrition-forms";
 
@@ -32,11 +34,11 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
 }) {
   const supabase = await createClient();
   const from = addDays(today, -(DAYS - 1));
-  const [profileRes, targetRes, logsRes, waterRes, commentsRes, weightRes] = await Promise.all([
+  const [profileRes, targetRes, logsRes, waterRes, commentsRes, weightRes, foodsRes] = await Promise.all([
     supabase.from("nutrition_profiles").select("*").eq("member_id", memberId).maybeSingle(),
     supabase.from("nutrition_targets").select("*").eq("member_id", memberId).maybeSingle(),
     supabase.from("food_logs").select("*").eq("member_id", memberId).gte("logged_on", from).order("created_at"),
-    supabase.from("water_logs").select("logged_on, glasses").eq("member_id", memberId).gte("logged_on", from),
+    supabase.from("water_logs").select("logged_on, ml").eq("member_id", memberId).gte("logged_on", from),
     supabase
       .from("nutrition_comments")
       .select("id, day, body, created_at, author_member_id, author:gym_members!nutrition_comments_author_member_id_fkey(profiles!inner(full_name))")
@@ -45,8 +47,10 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
       .limit(6),
     supabase.from("body_metrics").select("weight_kg").eq("member_id", memberId).not("weight_kg", "is", null)
       .order("measured_on", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("foods").select("id, name, serving_label, kcal, protein_g").eq("member_id", memberId).order("name").limit(50),
   ]);
-  for (const r of [profileRes, targetRes, logsRes, waterRes, commentsRes, weightRes]) if (r.error) throw r.error;
+  for (const r of [profileRes, targetRes, logsRes, waterRes, commentsRes, weightRes, foodsRes]) if (r.error) throw r.error;
+  const myFoods = foodsRes.data ?? [];
 
   const profile = profileRes.data;
   const target = targetRes.data;
@@ -60,7 +64,7 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
 
   const days = Array.from({ length: DAYS }, (_, i) => addDays(today, -i));
   const byDay = new Map(days.map((d) => [d, logs.filter((l) => l.logged_on === d)]));
-  const water = new Map((waterRes.data ?? []).map((w) => [w.logged_on, w.glasses]));
+  const water = new Map((waterRes.data ?? []).map((w) => [w.logged_on, w.ml]));
   const logged = days.filter((d) => byDay.get(d)!.length > 0);
   // Today is still in progress, so only finished days count towards "on target".
   const finished = logged.filter((d) => d !== today);
@@ -148,7 +152,7 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
                     {items.length ? <>{Math.round(t.protein_g)} g{target && <span className="text-muted"> / {target.protein_g}</span>}</> : "—"}
                   </td>
                   <td className="py-2 pr-3">
-                    {water.get(d) ? <span className="inline-flex items-center gap-1"><Droplets className="size-3.5 text-sky-500" />{water.get(d)}</span> : "—"}
+                    {water.get(d) ? <span className="inline-flex items-center gap-1"><Droplets className="size-3.5 text-sky-500" />{formatLitres(water.get(d)!)}</span> : "—"}
                   </td>
                   <td className="py-2">
                     <span className={status.cls}>{status.text}</span>
@@ -196,6 +200,26 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
           </div>
         ))}
       </div>
+      {myFoods.length > 0 && (
+        <div>
+          <h3 className="mb-2 text-sm font-medium">Their own foods ({myFoods.length})</h3>
+          <ul className="divide-y divide-border rounded-lg border border-border text-sm">
+            {myFoods.map((f) => (
+              <li key={f.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{f.name}</p>
+                  <p className="text-xs text-muted">{f.serving_label} · {f.kcal} kcal · {Number(f.protein_g)} g protein</p>
+                </div>
+                <ActionForm action={promoteMemberFood} success={`${f.name} added to your foods`}>
+                  <input type="hidden" name="slug" value={slug} />
+                  <input type="hidden" name="id" value={f.id} />
+                  <button className="shrink-0 rounded px-2 py-1 text-xs font-medium text-brand hover:bg-border/40">Add to gym foods</button>
+                </ActionForm>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <p className="text-xs text-muted">Calories are estimates from the food list. Not medical advice.</p>
     </Card>
   );

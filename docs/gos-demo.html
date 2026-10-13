@@ -222,7 +222,23 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #f
 .wa-preview { background: #e7ffdb; border-radius: 12px; padding: 12px; font-size: 12.5px; white-space: pre-wrap; border: 1px solid #c4f1a8; }
 .plan-day { border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
 .plan-day h4 { margin: 0 0 8px; font-size: 13.5px; display: flex; justify-content: space-between; align-items: center; }
-.ex-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-top: 1px dashed var(--border); }
+.ex-row { display: flex; flex-direction: column; gap: 4px; padding: 7px 0; font-size: 13px; border-top: 1px dashed var(--border); }
+.ex-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+.ex-edit { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.ex-edit .mini { width: 38px; min-width: 0; padding: 3px 4px; border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 12.5px; text-align: center; background: var(--surface); color: var(--text); }
+.guide-row { width: 100%; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.guide-ic svg { width: 13px; height: 13px; vertical-align: -2px; color: var(--p-brand); }
+.guide-photo { aspect-ratio: 4 / 3; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 16px; margin-top: 6px; }
+.guide-photo svg { width: 34px; height: 34px; }
+.guide-video { width: 100%; display: flex; align-items: center; gap: 12px; border: 0; border-radius: 18px; padding: 10px; margin-top: 10px; background: var(--p-hero); color: #fff; font: inherit; cursor: pointer; text-align: left; }
+.guide-video .play { width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; color: var(--p-accent); }
+.guide-video small { display: block; color: #c3cdb2; }
+.guide-text { display: grid; gap: 6px; font-size: 14px; line-height: 1.55; }
+.p-sheet .p-chip { border: 0; background: var(--p-muted); color: var(--p-text); font: inherit; font-size: 12.5px; font-weight: 700; padding: 6px 12px; cursor: pointer; }
+.p-sheet .p-chip.on { background: var(--p-accent); color: var(--p-accent-fg); }
+.mine-tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--t-green-bg); color: var(--t-green); vertical-align: 1px; }
+.chip-x { border: 0; background: none; color: var(--muted); font-size: 15px; line-height: 1; padding: 0 2px; cursor: pointer; }
+.chip-x:hover { color: var(--danger); }
 .import-prev td.badrow { color: var(--danger); }
 
 /* ===================== MEMBER APP ===================== */
@@ -289,10 +305,12 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #f
 .ring-wrap .c { position: absolute; text-align: center; line-height: 1.1; }
 .ring-wrap .c b { font-size: 22px; font-weight: 800; display: block; }
 .ring-wrap .c small { font-size: 11px; opacity: .75; }
-.water { display: flex; gap: 6px; }
-.water button { width: 30px; height: 36px; border-radius: 9px; border: 1.5px solid #93c5fd; display: flex; align-items: flex-end; overflow: hidden; }
-.water button i { display: block; width: 100%; background: #60a5fa; height: 0; transition: height .2s; }
-.water button.on i { height: 100%; }
+.water-bar { height: 10px; border-radius: 5px; background: var(--t-blue-bg); overflow: hidden; margin-bottom: 10px; }
+.water-bar i { display: block; height: 100%; border-radius: 5px; background: #60a5fa; transition: width .25s; }
+.water { display: flex; flex-wrap: wrap; gap: 8px; }
+.water button { border: 0; border-radius: 999px; padding: 7px 12px; background: var(--t-blue-bg); color: var(--t-blue); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.water button span { font-weight: 400; }
+.water button.undo { background: var(--p-muted, #f4f5f1); color: inherit; }
 .week { display: flex; justify-content: space-between; }
 .week div { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--p-sec); }
 .week i { width: 30px; height: 30px; border-radius: 50%; background: var(--p-muted); display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 13px; }
@@ -315,7 +333,7 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #f
 .stepper button { width: 34px; height: 34px; border-radius: 50%; background: var(--p-muted); font-size: 18px; font-weight: 700; }
 .pbar { height: 10px; border-radius: 99px; background: var(--p-muted); overflow: hidden; }
 .pbar i { display: block; height: 100%; border-radius: 99px; }
-.p-badge { font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 999px; background: var(--p-accent); color: var(--p-accent-fg); }
+.p-badge { font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 999px; background: var(--p-accent); color: var(--p-accent-fg); white-space: nowrap; flex-shrink: 0; }
 .unread-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--p-brand); flex-shrink: 0; }
 .p-signed { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 30px; text-align: center; }
 @media (max-width: 760px) {
@@ -375,6 +393,8 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #f
 --------------------------------------------------------------------------- */
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const litres = (ml) => `${Number((ml / 1000).toFixed(2))} L`;
+const cupSize = (ml) => (ml >= 1000 && ml % 100 === 0 ? litres(ml) : `${ml} ml`);
 const inr = (paise) => "₹" + Math.round(paise / 100).toLocaleString("en-IN");
 const z2 = (n) => String(n).padStart(2, "0");
 const ymd = (d) => `${d.getFullYear()}-${z2(d.getMonth() + 1)}-${z2(d.getDate())}`;
@@ -481,6 +501,12 @@ function bars(values, labels, { h = 140, color = "#65a30d", fmt = (v) => v, targ
    Sample data
 --------------------------------------------------------------------------- */
 const ME = "m1";
+// Exercise guides the gym's trainers added: a photo, a video link, how-to in English and Malayalam.
+const GUIDES = {
+  "Bench press": { tint: "blue", video: "YouTube", en: "1. Lie with your eyes under the bar, feet flat.\n2. Grip a little wider than your shoulders.\n3. Lower the bar to mid-chest, then press up. Don't bounce it.", ml: "1. കണ്ണുകൾ ബാറിന് താഴെ വരുന്ന രീതിയിൽ കിടക്കുക, പാദങ്ങൾ നിലത്ത്.\n2. തോളിനേക്കാൾ അൽപ്പം വീതിയിൽ ബാർ പിടിക്കുക.\n3. ബാർ നെഞ്ചിന്റെ നടുവിലേക്ക് താഴ്ത്തി മുകളിലേക്ക് തള്ളുക." },
+  "Lat pulldown": { tint: "green", video: "Instagram", en: "1. Set the thigh pad so your legs are locked in.\n2. Pull the bar to your upper chest, elbows down.\n3. Let it up slowly. Don't lean back.", ml: "1. കാലുകൾ ഉറച്ചിരിക്കുന്ന രീതിയിൽ തുടയുടെ പാഡ് ക്രമീകരിക്കുക.\n2. കൈമുട്ട് താഴേക്ക്, ബാർ നെഞ്ചിന്റെ മുകൾഭാഗത്തേക്ക് വലിക്കുക.\n3. പതുക്കെ മുകളിലേക്ക് വിടുക." },
+  "Squat": { tint: "yellow", video: "YouTube", en: "1. Bar on your upper back, feet shoulder-width.\n2. Sit back and down until your thighs are level.\n3. Drive up through your heels. Knees follow your toes.", ml: "" },
+};
 const EXERCISES = ["Bench press", "Incline dumbbell press", "Shoulder press", "Lateral raise", "Triceps pushdown", "Deadlift", "Lat pulldown", "Seated row", "Biceps curl", "Face pull", "Squat", "Leg press", "Romanian deadlift", "Leg curl", "Calf raise", "Plank", "Goblet squat", "Push-ups", "Kettlebell swing", "Burpees"];
 const FOODS = [
   ["Puttu", "പുട്ട്", "1 piece", 220, 4, "Breakfast"], ["Kadala curry", "കടല കറി", "1 katori", 180, 9, "Curry"], ["Appam", "അപ്പം", "1 appam", 120, 2, "Breakfast"],
@@ -602,7 +628,7 @@ function initState() {
     members: [...team, ...mem, ...pending],
     plans, subs, payments, checkins, visitHistory, sessions, wplans, lastKg, history, ptPackages, pt,
     gymFoods: [{ id: "g1", name: "Arms protein shake", serving: "1 bottle", kcal: 180, p: 25 }, { id: "g2", name: "Sprouts salad (café)", serving: "1 bowl", kcal: 140, p: 9 }],
-    food: { log: foodLog, target: { kcal: 1800, p: 110, goal: "lose" }, water: 5, week: [1720, 1890, 1650, 1810, 2050, 1760], pref: "egg" },
+    food: { log: foodLog, target: { kcal: 1800, p: 110, goal: "lose" }, mine: [{ id: "mf1", name: "Amma's fish curry", serving: "1 bowl", kcal: 320, p: 24 }], water: 1250, waterGoal: 2500, waterAdds: [], cups: [["Glass", 250], ["Bottle", 500], ["Big bottle", 1000]], week: [1720, 1890, 1650, 1810, 2050, 1760], pref: "egg" },
     comments: [{ id: uid("nc"), by: "t2", day: addDays(TODAY, -1), body: "Great protein yesterday 👍 Add a boiled egg at breakfast." }],
     notifs: [
       { id: uid("n"), kind: "comment", title: "Tara Mathew commented on your food log", body: "Great protein yesterday 👍 Add a boiled egg at breakfast.", link: "food", at: minsAgo(300), unread: true },
@@ -611,7 +637,7 @@ function initState() {
     ],
     // UI state
     a: { route: "dashboard", modal: null, pop: null, memFilter: "all", memQuery: "", classDay: 0, planSel: "w1", ciResult: null, ciQuery: "", payTab: "all", importText: "" },
-    p: { route: "home", stack: [], sheet: null, dark: false, classDay: 1, checkedQrAt: null, wk: null, rest: null, foodQuery: "", pick: null, openDay: null, signedOut: false, deleted: false, upiPending: null },
+    p: { route: "home", stack: [], sheet: null, dark: false, classDay: 1, checkedQrAt: null, wk: null, rest: null, foodQuery: "", pick: null, ownForm: false, lang: "en", openDay: null, signedOut: false, deleted: false, upiPending: null },
   };
 }
 let S = initState();
@@ -877,8 +903,8 @@ const PAGES = {
       <div class="a-card" style="padding:8px;align-self:start">${S.wplans.map((w) => `<button class="a-nav ${w.id === plan.id ? "on" : ""}" data-a="planSel" data-id="${w.id}">${ic("dumb")} <span style="flex:1">${esc(w.name)}<small class="muted" style="display:block;font-weight:400;font-size:11px">${w.assigned.length} assigned · by ${esc(firstName(M(w.by).name))}</small></span></button>`).join("")}</div>
       <div class="grid">
         <div class="a-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">${esc(plan.name)}</h2><form data-submit="assign" class="row-actions"><select class="sel" name="member" style="width:200px" aria-label="Member">${opts || "<option>Everyone is assigned</option>"}</select><button class="btn sm" ${opts ? "" : "disabled"}>Assign</button></form></div>
-          <div class="chips" style="margin-top:10px">${plan.assigned.map((id) => `<span class="chip" style="display:inline-flex;gap:6px;align-items:center">${av(M(id), 20)} ${esc(M(id).name)}</span>`).join("") || `<span class="small muted">Not assigned yet</span>`}</div></div>
-        <div class="grid g3">${plan.days.map((d, di) => `<div class="plan-day"><h4>${esc(d.label)}<span class="b">${d.items.length}</span></h4>${d.items.map(([n, s, r]) => `<div class="ex-row"><span>${esc(n)}</span><span class="muted tabnum">${s} × ${esc(r)}</span></div>`).join("")}
+          <div class="chips" style="margin-top:10px">${plan.assigned.map((id) => `<span class="chip" style="display:inline-flex;gap:6px;align-items:center">${av(M(id), 20)} ${esc(M(id).name)}<button class="chip-x" data-a="unassign" data-id="${id}" aria-label="Unassign ${esc(M(id).name)}">×</button></span>`).join("") || `<span class="small muted">Not assigned yet</span>`}</div></div>
+        <div class="grid g3">${plan.days.map((d, di) => `<div class="plan-day"><h4>${esc(d.label)}<span class="b">${d.items.length}</span></h4>${d.items.map(([n, s, r], ii) => `<div class="ex-row"><div class="ex-top"><span>${esc(n)}</span><button class="chip-x" data-a="rmEx" data-d="${di}" data-i="${ii}" aria-label="Remove ${esc(n)}">×</button></div><span class="ex-edit"><input class="mini" inputmode="numeric" maxlength="2" value="${s}" data-change="exSets" data-d="${di}" data-i="${ii}" aria-label="${esc(n)} sets"> sets × <input class="mini" value="${esc(r)}" maxlength="10" data-change="exReps" data-d="${di}" data-i="${ii}" aria-label="${esc(n)} reps"> reps</span></div>`).join("")}
           <form data-submit="addEx" data-d="${di}" class="row-actions" style="margin-top:8px"><select class="sel" name="ex" style="flex:1" aria-label="Exercise">${EXERCISES.map((e) => `<option>${e}</option>`).join("")}</select><button class="btn sec sm">${ic("plus")}</button></form></div>`).join("")}</div>
       </div>
     </div>`;
@@ -900,6 +926,7 @@ const PAGES = {
       <div class="grid" style="align-self:start">
         <div class="a-card"><h2>Your gym's foods</h2><p class="hint">Add what your café or juice bar sells.</p><table class="t">${S.gymFoods.map((f) => `<tr><td>${esc(f.name)}</td><td>${esc(f.serving)}</td><td>${f.kcal} kcal</td><td>${f.p} g</td></tr>`).join("")}</table>
           <form data-submit="addFood" class="grid g2" style="margin-top:10px"><input class="inp" name="name" placeholder="Name" required><input class="inp" name="serving" placeholder="Portion, e.g. 1 glass" required><input class="inp" name="kcal" type="number" placeholder="kcal" required><input class="inp" name="p" type="number" placeholder="Protein g" required><button class="btn" style="grid-column:1/-1">Add food</button></form></div>
+        ${(() => { const listed = new Set(S.gymFoods.map((g) => g.name.toLowerCase())); const sug = S.food.mine.filter((m) => !listed.has(m.name.toLowerCase())); return sug.length ? `<div class="a-card"><h2>Suggested by members</h2><p class="hint">Foods members added for themselves. Add one so everyone can pick it.</p><table class="t">${sug.map((m) => `<tr><td>${esc(m.name)}</td><td>${esc(m.serving)}</td><td>${m.kcal} kcal</td><td><button class="btn sm sec" data-a="promoteFood" data-id="${m.id}">Add to gym foods</button></td></tr>`).join("")}</table></div>` : ""; })()}
         <div class="a-card"><h2>Who can see food logs</h2><p class="hint" style="margin:0">Food logs are health data. Only the member, their PT trainer and the owner see them. Front-desk staff can't.</p></div>
       </div>
     </div>`;
@@ -1095,7 +1122,7 @@ const SCREENS = {
     return `<div class="p-h" style="font-size:22px">Classes</div>
       <div class="p-chips">${days.map((d, i) => `<button class="${i === S.p.classDay ? "on" : ""}" data-a="pClassDay" data-i="${i}">${i === 0 ? "Today" : dayName(d)}<b>${new Date(d + "T00:00").getDate()}</b></button>`).join("")}</div>
       ${list.map((c) => { const mine = c.booked.includes(ME), wl = c.waitlist.includes(ME), full = c.booked.length >= c.cap, cancelled = c.status === "cancelled"; return `<div class="p-card" style="${cancelled ? "opacity:.6" : ""}">
-        <div style="display:flex;justify-content:space-between;gap:8px"><div><div style="font-size:12px;font-weight:700;color:var(--p-sec)">${fmtTime(c.start)} · ${c.dur} MIN</div><b style="font-size:16px">${esc(c.name)}</b><div class="p-sec" style="display:flex;gap:6px;align-items:center;margin-top:3px">${av(M(c.trainer), 18)} ${esc(M(c.trainer).name)} · ${esc(c.room)}</div></div>${cancelled ? `<span class="p-badge" style="background:var(--p-danger);color:#fff">Cancelled</span>` : mine ? `<span class="p-badge">Booked ✓</span>` : wl ? `<span class="p-badge" style="background:#fde68a">Waitlist #${c.waitlist.indexOf(ME) + 1}</span>` : ""}</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div style="font-size:12px;font-weight:700;color:var(--p-sec)">${fmtTime(c.start)} · ${c.dur} MIN</div><b style="font-size:16px">${esc(c.name)}</b><div class="p-sec" style="display:flex;gap:6px;align-items:center;margin-top:3px">${av(M(c.trainer), 18)} ${esc(M(c.trainer).name)} · ${esc(c.room)}</div></div>${cancelled ? `<span class="p-badge" style="background:var(--p-danger);color:#fff">Cancelled</span>` : mine ? `<span class="p-badge">Booked ✓</span>` : wl ? `<span class="p-badge" style="background:#fde68a">Waitlist #${c.waitlist.indexOf(ME) + 1}</span>` : ""}</div>
         ${cancelled ? `<div class="p-sec" style="margin-top:8px">${esc(c.reason || "Cancelled by the gym")}</div>` : `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><span class="p-sec">${full ? "Full" + (c.waitlist.length ? " · " + c.waitlist.length + " waiting" : "") : c.cap - c.booked.length + " of " + c.cap + " spots left"}</span>${mine ? `<button class="p-btn sec sm" data-a="pCancelBooking" data-id="${c.id}">Cancel booking</button>` : wl ? `<button class="p-btn sec sm" data-a="pLeaveWait" data-id="${c.id}">Leave waitlist</button>` : full ? `<button class="p-btn sec sm" data-a="pJoinWait" data-id="${c.id}">Join waitlist</button>` : `<button class="p-btn sm" data-a="pBook" data-id="${c.id}">Book a spot</button>`}</div>`}
       </div>`; }).join("") || `<div class="p-card" style="text-align:center"><b>No classes this day</b><div class="p-sec">Try another day.</div></div>`}`;
   },
@@ -1110,7 +1137,7 @@ const SCREENS = {
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin:12px 0">${nx.day.items.slice(0, 4).map(([n]) => `<span class="p-chip">${esc(n)}</span>`).join("")}</div><button class="p-btn" data-a="startWk">${ic("play")} Start workout</button>`
         : `<div class="k">Free workout</div><h3>Log any workout</h3><button class="p-btn" data-a="startWk" style="margin-top:10px">${ic("play")} Start empty workout</button>`}</div>
       <div class="p-tiles"><div class="p-tile tint-green"><span class="ic fg">${ic("flame")}</span><b style="font-size:20px">${thisWeek.length}</b><small>this week</small></div><div class="p-tile tint-blue"><span class="ic fg">${ic("dumb")}</span><b style="font-size:20px">${(vol / 1000).toFixed(1)}t</b><small>lifted</small></div><div class="p-tile tint-pink"><span class="ic fg">${ic("clock")}</span><b style="font-size:20px">${mins}</b><small>minutes</small></div></div>
-      ${nx ? `<div class="p-h">${esc(nx.plan.name)}</div><div class="p-card" style="padding:6px">${nx.plan.days.map((d, i) => { const last = S.history.find((h) => h.label === d.label); const open = S.p.openDay === i; return `<button class="p-row" data-a="pOpenDay" data-i="${i}"><span class="ic tint-${i === nx.idx ? "green" : "blue"}"><span class="fg">${ic("dumb")}</span></span><span class="grow"><b>${esc(d.label)}</b><small>${d.items.length} exercises${last ? " · done " + relDay(last.day).toLowerCase() : ""}</small></span>${i === nx.idx ? `<span class="p-badge">Next</span>` : ""}${ic(open ? "down" : "right")}</button>${open ? `<div style="padding:0 12px 10px 64px">${d.items.map(([n, s, r]) => `<div class="food-item"><span>${esc(n)}</span><span class="p-sec">${s} × ${esc(r)}</span></div>`).join("")}</div>` : ""}`; }).join("")}</div>` : ""}
+      ${nx ? `<div class="p-h">${esc(nx.plan.name)}</div><div class="p-card" style="padding:6px">${nx.plan.days.map((d, i) => { const last = S.history.find((h) => h.label === d.label); const open = S.p.openDay === i; return `<button class="p-row" data-a="pOpenDay" data-i="${i}"><span class="ic tint-${i === nx.idx ? "green" : "blue"}"><span class="fg">${ic("dumb")}</span></span><span class="grow"><b>${esc(d.label)}</b><small>${d.items.length} exercises${last ? " · done " + relDay(last.day).toLowerCase() : ""}</small></span>${i === nx.idx ? `<span class="p-badge">Next</span>` : ""}${ic(open ? "down" : "right")}</button>${open ? `<div style="padding:0 12px 10px 64px">${d.items.map(([n, s, r]) => GUIDES[n] ? `<button class="food-item guide-row" data-a="exGuide" data-n="${esc(n)}" aria-label="How to do ${esc(n)}"><span>${esc(n)} <span class="guide-ic">${ic("play")}</span></span><span class="p-sec">${s} × ${esc(r)}</span></button>` : `<div class="food-item"><span>${esc(n)}</span><span class="p-sec">${s} × ${esc(r)}</span></div>`).join("")}</div>` : ""}`; }).join("")}</div>` : ""}
       <div class="p-h">Personal bests ${ic("trophy")}</div>
       <div class="p-tiles">${[["Squat", "50 kg"], ["Bench", "32.5 kg"], ["Deadlift", "70 kg"]].map(([n, v]) => `<div class="p-tile tint-yellow" style="min-height:0"><small>${n}</small><b style="font-size:17px">${v}</b></div>`).join("")}</div>
       <div class="p-h">History</div>
@@ -1146,7 +1173,7 @@ const SCREENS = {
         <div style="display:flex;gap:16px;align-items:center;margin-top:10px"><div class="ring-wrap">${ring(tot.kcal / tg.kcal, 112, 11, left < 0 ? "#f87171" : "#c8f04b", "rgba(255,255,255,.12)")}<div class="c" style="color:#fff"><b>${Math.abs(left)}</b><small>${left < 0 ? "kcal over" : "kcal left"}</small></div></div>
         <div style="flex:1;font-size:12.5px"><div style="display:flex;justify-content:space-between"><span>Eaten</span><b>${tot.kcal} kcal</b></div><div style="display:flex;justify-content:space-between;margin-bottom:10px"><span>Target</span><b>${tg.kcal}</b></div>
         <div style="display:flex;justify-content:space-between"><span>Protein</span><b>${tot.p} / ${tg.p} g</b></div><div class="pbar" style="background:rgba(255,255,255,.12);margin-top:5px"><i style="width:${Math.min(100, (tot.p / tg.p) * 100)}%;background:#7dd3fc"></i></div></div></div></div>
-      <div class="p-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>${ic("drop")} Water</b><span class="p-sec">${S.food.water} of 8 glasses</span></div><div class="water">${[...Array(8)].map((_, i) => `<button class="${i < S.food.water ? "on" : ""}" data-a="water" data-i="${i}" aria-label="Glass ${i + 1}"><i></i></button>`).join("")}</div></div>
+      <div class="p-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><b>${ic("drop")} Water</b><div class="p-sec">${S.food.water >= S.food.waterGoal ? "Goal reached" : litres(S.food.waterGoal - S.food.water) + " to go"}</div></div><b class="tabnum">${litres(S.food.water)}<span class="p-sec"> / ${litres(S.food.waterGoal)}</span></b></div><div class="water-bar"><i style="width:${Math.min(100, (S.food.water / S.food.waterGoal) * 100)}%"></i></div><div class="water">${S.food.cups.map(([l, ml], i) => `<button data-a="water" data-i="${i}" aria-label="Add ${l}, ${cupSize(ml)}">+ ${l} <span>${cupSize(ml)}</span></button>`).join("")}${S.food.waterAdds.length ? `<button class="undo" data-a="waterUndo">Undo</button>` : ""}</div></div>
       ${latest ? `<div class="p-card tint-blue" style="display:flex;gap:10px;border:0">${av(M(latest.by), 34)}<div><b style="font-size:13.5px">${esc(latest.body)}</b><div class="p-sec">${esc(M(latest.by).name)} · your trainer · ${relDay(latest.day)}</div></div></div>` : ""}
       ${MEALS.map(([k, l]) => { const items = S.food.log.filter((x) => x.meal === k); const kc = items.reduce((t, x) => t + x.kcal, 0); return `<div class="p-card"><div style="display:flex;justify-content:space-between;align-items:center"><div><b>${l}</b>${kc ? `<span class="p-sec"> · ${kc} kcal</span>` : ""}</div><button class="p-btn sm sec" data-a="addFoodSheet" data-m="${k}" aria-label="Add to ${l}">${ic("plus")} Add</button></div>${items.map((x) => `<div class="food-item"><div>${esc(x.name)}<small>${x.servings !== 1 ? x.servings + " × " : ""}≈${x.kcal} kcal · ${x.p} g protein</small></div><button data-a="rmFood" data-id="${x.id}" style="color:var(--p-sec)" aria-label="Remove">${ic("x")}</button></div>`).join("")}</div>`; }).join("")}
       <div class="p-card"><b>Last 7 days</b><div class="p-sec" style="margin-bottom:8px">Calories against your target</div>${bars(week, week.map((_, i) => dayName(addDays(TODAY, i - 6)).slice(0, 2)), { h: 110, color: "#65a30d", fmt: (v) => v + " kcal", target: tg.kcal })}</div>
@@ -1340,6 +1367,8 @@ const A = {
 
   newPlan: () => { const w = { id: uid("w"), name: "New plan " + (S.wplans.length + 1), by: "t2", days: [{ label: "Day 1", items: [] }, { label: "Day 2", items: [] }], assigned: [] }; S.wplans.push(w); S.a.planSel = w.id; },
   addEx: (f, el) => { const w = S.wplans.find((x) => x.id === S.a.planSel); w.days[+el.dataset.d].items.push([f.ex, 3, "10"]); },
+  rmEx: (d) => { const w = S.wplans.find((x) => x.id === S.a.planSel); const [n] = w.days[+d.d].items.splice(+d.i, 1)[0]; toast(`${n} removed from ${w.days[+d.d].label}`, "from-admin"); },
+  unassign: (d) => { const w = S.wplans.find((x) => x.id === S.a.planSel); w.assigned = w.assigned.filter((x) => x !== d.id); toast(`${w.name} removed from ${M(d.id).name}`, "from-admin"); },
   assign: (f) => { const w = S.wplans.find((x) => x.id === S.a.planSel); if (!f.member || !M(f.member)) return; w.assigned.push(f.member); notify(f.member, { kind: "plan", title: `New workout plan: ${w.name}`, body: `From ${M(w.by).name}`, link: "workouts" }); toast(`${w.name} assigned to ${M(f.member).name}`, "from-admin"); },
   addFood: (f) => { S.gymFoods.push({ id: uid("g"), name: f.name, serving: f.serving, kcal: +f.kcal, p: +f.p }); toast("Food added. Members can log it now.", "from-admin"); },
   addPlan: (f) => { S.plans.push({ id: uid("pl"), name: f.name, price: Math.round(+f.price * 100), days: +f.days, active: true }); toast("Plan added. It shows in the app now.", "from-admin"); },
@@ -1357,6 +1386,9 @@ const A = {
   pCancelBooking: (d) => { const c = S.sessions.find((x) => x.id === d.id); c.booked = c.booked.filter((x) => x !== ME); if (c.waitlist.length) { const moved = c.waitlist.shift(); c.booked.push(moved); toast(`Spot freed: ${M(moved).name} moved up from the waitlist`, "from-app"); } else toast("Booking cancelled", "from-app"); },
   pJoinWait: (d) => { S.sessions.find((x) => x.id === d.id).waitlist.push(ME); toast("You're on the waitlist. You'll get the spot automatically if someone cancels.", "from-app"); },
   pLeaveWait: (d) => { const c = S.sessions.find((x) => x.id === d.id); c.waitlist = c.waitlist.filter((x) => x !== ME); },
+  exGuide: (d) => { S.p.guide = d.n; pSheet(d.n, guideSheet()); },
+  guideLang: (d) => { S.p.lang = d.l; S.p.sheet.html = guideSheet(); },
+  guideVideo: () => toast("Opens the video in the YouTube or Instagram app", "from-app"),
   pOpenDay: (d) => { S.p.openDay = S.p.openDay === +d.i ? null : +d.i; },
   selfCheckin: () => { doCheckin(ME, "self"); toast("Checked in! It shows on the desk's screen right away.", "from-app"); },
   scanPoster: () => pSheet("Scan the poster", `<div style="background:#000;border-radius:20px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden"><div style="opacity:.85">${qr("poster" + S.gym.slug, 170)}</div><div style="position:absolute;inset:18%;border:3px solid var(--p-accent);border-radius:22px"></div></div><div class="p-sec" style="text-align:center;margin:10px 0">${S.gym.f.location ? ic("pin") + " Location check: you're at " + esc(S.gym.name) + " ✓" : "Point the camera at the poster at the entrance."}</div><button class="p-btn" data-a="posterDone">Simulate scan</button>`),
@@ -1372,12 +1404,22 @@ const A = {
   wkFinish: () => { const wk = S.p.wk; let sets = 0, vol = 0; for (const e of wk.ex) for (const s of e.sets) if (s.done) { sets++; vol += (+s.kg || 0) * (+s.reps || 0); } S.history.unshift({ id: uid("wl"), day: TODAY, label: wk.label, sets, vol: Math.round(vol), mins: Math.max(1, Math.round((Date.now() - wk.start) / 60000)) }); S.p.wk = null; S.p.rest = null; S.p.route = "wkdone"; },
   wkDiscard: () => { S.p.wk = null; S.p.rest = null; S.p.route = "workouts"; },
 
-  water: (d) => { S.food.water = S.food.water === +d.i + 1 ? +d.i : +d.i + 1; },
-  addFoodSheet: (d) => { S.p.foodQuery = ""; S.p.pick = null; S.p.meal = d.m; pSheet(`Add to ${MEALS.find((x) => x[0] === d.m)[1]}`, foodSheet()); },
+  water: (d) => { const ml = S.food.cups[+d.i][1]; if (S.food.water + ml > 10000) return; S.food.water += ml; S.food.waterAdds.push(ml); },
+  waterUndo: () => { const ml = S.food.waterAdds.pop(); if (ml) S.food.water = Math.max(0, S.food.water - ml); },
+  addFoodSheet: (d) => { S.p.foodQuery = ""; S.p.pick = null; S.p.ownForm = false; S.p.meal = d.m; pSheet(`Add to ${MEALS.find((x) => x[0] === d.m)[1]}`, foodSheet()); },
   pickFood: (d) => { S.p.pick = d.id ? { id: d.id, servings: 1 } : null; S.p.sheet.html = foodSheet(); },
   servings: (d) => { S.p.pick.servings = Math.max(0.5, S.p.pick.servings + +d.v); S.p.sheet.html = foodSheet(); },
   addFoodItem: () => { const f = allFoods().find((x) => x.id === S.p.pick.id), n = S.p.pick.servings; S.food.log.push({ id: uid("fl"), meal: S.p.meal, name: f.name, kcal: Math.round(f.kcal * n), p: Math.round(f.p * n), servings: n }); S.p.sheet = null; toast(`${f.name} added. Your trainer sees it.`, "from-app"); },
-  quickAdd: () => { S.food.log.push({ id: uid("fl"), meal: S.p.meal, name: "Quick add", kcal: 250, p: 0, servings: 1 }); S.p.sheet = null; },
+  ownFoodOpen: () => { S.p.ownForm = true; S.p.sheet.html = foodSheet(); },
+  ownFoodBack: () => { S.p.ownForm = false; S.p.sheet.html = foodSheet(); },
+  ownFood: (f) => {
+    const food = { id: uid("mf"), name: f.name.trim(), serving: f.serving.trim() || "1 serving", kcal: Math.round(+f.kcal) || 0, p: Math.round(+f.p) || 0 };
+    if (f.keep) S.food.mine.push(food);
+    S.food.log.push({ id: uid("fl"), meal: S.p.meal, name: food.name, kcal: food.kcal, p: food.p, servings: 1 });
+    S.p.ownForm = false; S.p.sheet = null;
+    toast(f.keep ? `${food.name} added and saved to My foods` : `${food.name} added`, "from-app");
+  },
+  promoteFood: (d) => { const m = S.food.mine.find((x) => x.id === d.id); S.gymFoods.push({ id: uid("g"), name: m.name, serving: m.serving, kcal: m.kcal, p: m.p }); toast(`${m.name} added to the gym's foods. Every member can pick it now.`, "from-admin"); },
   rmFood: (d) => { S.food.log = S.food.log.filter((x) => x.id !== d.id); },
 
   payUpi: (d) => { const p = S.plans.find((x) => x.id === d.id); pSheet(`Pay ${inr(p.price)} by UPI`, `<div class="uz" style="border-radius:18px"><div class="p-sec" style="margin-bottom:10px">${esc(p.name)} membership. You pay ${esc(S.gym.name)} directly. No gateway fee ${usp(2)}</div><div style="display:flex;gap:12px;align-items:center" class="p-card"><div style="background:#fff;padding:6px;border-radius:12px">${qr("upi" + S.gym.upi + p.price, 96)}</div><div><div class="p-sec">UPI ID</div><b>${esc(S.gym.upi)}</b><div class="p-sec">${esc(S.gym.payee)}</div></div></div></div><button class="p-btn dark" style="margin-top:12px" data-a="pToast" data-t="Opens GPay / PhonePe / Paytm with the amount filled in.">Open UPI app</button><div class="p-sec" style="margin:14px 0 6px">After paying, enter the 12-digit UPI reference (UTR):</div><form data-submit="claimUpi" data-id="${p.id}"><input class="p-inp" name="utr" value="4${String(Date.now()).slice(-11)}" inputmode="numeric" aria-label="UPI reference"><button class="p-btn" style="margin-top:10px">I've paid</button></form>`); },
@@ -1395,7 +1437,7 @@ const A = {
 };
 
 /* Form submits, typed input and toggles */
-const FORMS = { addMember: A.addMember, pay: A.pay, reject: A.reject, note: A.note, comment: A.comment, sellPt: A.sellPt, cancelClass: A.cancelClass, addClass: A.addClass, addEx: A.addEx, assign: A.assign, addFood: A.addFood, addPlan: A.addPlan, claimUpi: A.claimUpi };
+const FORMS = { addMember: A.addMember, pay: A.pay, reject: A.reject, note: A.note, comment: A.comment, sellPt: A.sellPt, cancelClass: A.cancelClass, addClass: A.addClass, addEx: A.addEx, assign: A.assign, addFood: A.addFood, ownFood: A.ownFood, addPlan: A.addPlan, claimUpi: A.claimUpi };
 const INPUT = {
   memSearch: (el) => { S.a.memQuery = el.value; $("#mem-list").innerHTML = memberTable(); },
   ciSearch: (el) => { S.a.ciQuery = el.value; $("#ci-results").innerHTML = ciResults(); },
@@ -1409,23 +1451,43 @@ const CHANGE = {
   gymField: (el) => { S.gym[el.dataset.k] = el.value; if (el.dataset.k === "name") S.gym.short = initials(el.value); },
   method: (el) => { S.gym.methods[el.dataset.k] = el.checked; },
   planActive: (el) => { S.plans.find((p) => p.id === el.dataset.k).active = el.checked; },
+  exSets: (el) => { const n = Math.min(20, Math.max(1, Math.round(+el.value) || 1)); S.wplans.find((x) => x.id === S.a.planSel).days[+el.dataset.d].items[+el.dataset.i][1] = n; },
+  exReps: (el) => { const v = el.value.trim(); if (!v) return false; S.wplans.find((x) => x.id === S.a.planSel).days[+el.dataset.d].items[+el.dataset.i][2] = v; },
   planPrice: (el) => { S.plans.find((p) => p.id === el.dataset.k).price = Math.round(+el.value * 100); toast("Price updated in the app", "from-admin"); },
   role: (el) => { M(el.dataset.k).role = el.value; },
   uspHighlight: (el) => { document.body.classList.toggle("usp-on", el.checked); return false; },
 };
 const FLAG_LABELS = { checkin: "Check-in", classes: "Classes", workouts: "Workouts", pt: "Personal training", nutrition: "Nutrition", nutritionAll: "Nutrition for all members", selfCheckin: "App check-in", poster: "QR poster", location: "Location check", onlyOpen: "Only during opening hours", approval: "Approve new joiners" };
-const allFoods = () => [...FOODS, ...S.gymFoods.map((g) => ({ ...g, ml: "", cat: "Gym" }))];
+const allFoods = () => [...S.food.mine.map((m) => ({ ...m, ml: "", cat: "Mine", mine: true })), ...FOODS, ...S.gymFoods.map((g) => ({ ...g, ml: "", cat: "Gym" }))];
 function foodResults() {
   const q = S.p.foodQuery.trim().toLowerCase();
   const list = allFoods().filter((f) => !q || f.name.toLowerCase().includes(q) || (f.ml || "").includes(q)).slice(0, 12);
-  return list.map((f) => `<button class="p-row" style="padding:8px" data-a="pickFood" data-id="${f.id}"><span class="grow"><b style="font-size:13.5px">${esc(f.name)} <span class="ml">${esc(f.ml)}</span></b><small>${esc(f.serving)} · ≈${f.kcal} kcal · ${f.p} g protein</small></span>${ic("plus")}</button>`).join("") || `<div class="p-sec" style="padding:10px">No match. Use quick add.</div>`;
+  return list.map((f) => `<button class="p-row" style="padding:8px" data-a="pickFood" data-id="${f.id}"><span class="grow"><b style="font-size:13.5px">${esc(f.name)} <span class="ml">${esc(f.ml)}</span>${f.mine ? ` <span class="mine-tag">Mine</span>` : ""}</b><small>${esc(f.serving)} · ≈${f.kcal} kcal · ${f.p} g protein</small></span>${ic("plus")}</button>`).join("") || `<div class="p-sec" style="padding:10px">Not in the list? Add it as your own food below.</div>`;
 }
+function guideSheet() {
+  const g = GUIDES[S.p.guide], ml = S.p.lang === "ml" && g.ml;
+  const text = (ml ? g.ml : g.en).split("\n").map((l) => `<div>${esc(l)}</div>`).join("");
+  return `<div class="guide-photo tint-${g.tint}"><span class="fg">${ic("camera")}</span><small>Photo of the ${esc(S.p.guide.toLowerCase())} station, added by the trainer</small></div>
+    <button class="guide-video" data-a="guideVideo"><span class="play">${ic("play")}</span><span class="grow"><b>Watch how it's done</b><small>Opens in ${g.video}</small></span>${ic("link")}</button>
+    <div class="p-h" style="margin:14px 0 6px">${ml ? "എങ്ങനെ ചെയ്യാം" : "How to do it"}</div>
+    ${g.ml ? `<div class="chips" style="margin-bottom:8px">${[["en", "English"], ["ml", "മലയാളം"]].map(([k, l]) => `<button class="p-chip ${S.p.lang === k ? "on" : ""}" data-a="guideLang" data-l="${k}">${l}</button>`).join("")}</div>` : ""}
+    <div class="guide-text">${text}</div>${!g.ml && S.p.lang === "ml" ? `<div class="p-sec" style="margin-top:6px">No Malayalam yet, showing English.</div>` : ""}`;
+}
+
 function foodSheet() {
+  if (S.p.ownForm) {
+    return `<form data-submit="ownFood" style="display:grid;gap:8px;margin-top:8px">
+      <input class="p-inp" name="name" placeholder="Name, e.g. Amma's fish curry" value="${esc(S.p.foodQuery)}" required minlength="2" aria-label="Name">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input class="p-inp" name="serving" value="1 serving" aria-label="Portion"><input class="p-inp" name="kcal" inputmode="numeric" placeholder="Calories" required pattern="[0-9]+" aria-label="Calories"></div>
+      <input class="p-inp" name="p" inputmode="numeric" placeholder="Protein g (optional)" aria-label="Protein">
+      <label class="p-sec" style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="keep" checked> Save to My foods: pick it again next time. Your trainer can see it.</label>
+      <button class="p-btn">Add</button><button type="button" class="p-btn sec" data-a="ownFoodBack">Back to search</button></form>`;
+  }
   if (S.p.pick) {
     const f = allFoods().find((x) => x.id === S.p.pick.id), n = S.p.pick.servings;
     return `<div class="p-card" style="margin-top:8px"><b style="font-size:16px">${esc(f.name)} <span class="ml">${esc(f.ml)}</span></b><div class="p-sec">${esc(f.serving)}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><div class="stepper"><button data-a="servings" data-v="-0.5" aria-label="Less">−</button><b style="font-size:18px;min-width:30px;text-align:center">${n}</b><button data-a="servings" data-v="0.5" aria-label="More">+</button></div><div style="text-align:right"><b>≈${Math.round(f.kcal * n)} kcal</b><div class="p-sec">${Math.round(f.p * n)} g protein</div></div></div></div><button class="p-btn" style="margin-top:12px" data-a="addFoodItem">Add</button><button class="p-btn sec" style="margin-top:8px" data-a="pickFood" data-id="">Back to search</button>`;
   }
-  return `<input class="p-inp" placeholder="Search puttu, appam, fish curry…" data-input="foodSearch" value="${esc(S.p.foodQuery)}" aria-label="Search foods" style="margin:8px 0"><div class="p-sec" style="margin-bottom:4px">Kerala &amp; Indian foods in home portions ${usp(7)}</div><div id="food-results">${foodResults()}</div><button class="p-btn sec sm" style="margin-top:8px" data-a="quickAdd">Quick add 250 kcal</button>`;
+  return `<input class="p-inp" placeholder="Search puttu, appam, fish curry…" data-input="foodSearch" value="${esc(S.p.foodQuery)}" aria-label="Search foods" style="margin:8px 0"><div class="p-sec" style="margin-bottom:4px">Kerala &amp; Indian foods in home portions ${usp(7)}</div><div id="food-results">${foodResults()}</div><button class="p-btn sec sm" style="margin-top:8px" data-a="ownFoodOpen">${ic("plus")} Add my own food</button>`;
 }
 
 /* ---------------------------------------------------------------------------
@@ -1452,6 +1514,14 @@ function renderChrome() {
    Render loop and events
 --------------------------------------------------------------------------- */
 function render() {
+  // Replacing the DOM blurs a focused input, which fires "change" and would
+  // render again mid-render; that nested change still updates state.
+  if (render.busy) return;
+  render.busy = true;
+  try { renderNow(); } finally { render.busy = false; }
+}
+
+function renderNow() {
   const aScroll = $("#a-content")?.scrollTop ?? 0, aRoute = render.aRoute;
   const pScroll = $("#p-body")?.scrollTop ?? 0, pRoute = render.pRoute;
   renderAdmin(); renderApp();

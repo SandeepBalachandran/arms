@@ -1,9 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useActionState, useState } from "react";
+import { ActionForm } from "@/components/action-form";
 import { useSavedToast } from "@/lib/use-saved-toast";
 import { Button, Field, FormError, Input, Select } from "@/components/ui";
-import { addPlanItem, createExercise, createPlan } from "./actions";
+import { addPlanItem, createExercise, createPlan, movePlanItem, removePlanItem, updatePlanItem } from "./actions";
 
 export function NewPlanForm({ slug }: { slug: string }) {
   const [state, action, pending] = useActionState(createPlan, undefined);
@@ -46,6 +48,105 @@ export function NewExerciseForm({ slug }: { slug: string }) {
       <FormError message={state?.error} />
       <Button variant="secondary" disabled={pending}>{pending ? "Adding…" : "Add exercise"}</Button>
     </form>
+  );
+}
+
+type PlanItem = { id: string; sets: number; reps: string; rest_sec: number | null; notes: string | null; exercises: { name: string } };
+
+// One exercise in a plan day: a summary line with move/edit/remove, and an
+// inline form for sets, reps, rest and notes while editing.
+export function PlanItemRow({
+  slug,
+  planId,
+  item,
+  index,
+  isFirst,
+  isLast,
+}: {
+  slug: string;
+  planId: string;
+  item: PlanItem;
+  index: number;
+  isFirst: boolean;
+  isLast: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [state, action, pending] = useActionState(updatePlanItem, undefined);
+  useSavedToast(state, "Exercise updated", () => setEditing(false));
+
+  const hidden = (
+    <>
+      <input type="hidden" name="slug" value={slug} />
+      <input type="hidden" name="plan_id" value={planId} />
+      <input type="hidden" name="id" value={item.id} />
+    </>
+  );
+  const moveButton = (dir: "up" | "down", disabled: boolean) => (
+    <ActionForm action={movePlanItem}>
+      {hidden}
+      <input type="hidden" name="dir" value={dir} />
+      <button
+        disabled={disabled}
+        aria-label={`Move ${item.exercises.name} ${dir}`}
+        className="rounded p-1 text-muted hover:bg-border/40 hover:text-foreground disabled:pointer-events-none disabled:opacity-30">
+        {dir === "up" ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+      </button>
+    </ActionForm>
+  );
+
+  return (
+    <li className="p-3">
+      <div className="flex items-center gap-2">
+        <div className="flex flex-col">
+          {moveButton("up", isFirst)}
+          {moveButton("down", isLast)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">{index + 1}. {item.exercises.name}</p>
+          {!editing && (
+            <p className="text-muted">
+              {item.sets} × {item.reps}
+              {item.rest_sec != null && ` · rest ${item.rest_sec}s`}
+              {item.notes && ` · ${item.notes}`}
+            </p>
+          )}
+        </div>
+        {!editing && (
+          <button onClick={() => setEditing(true)} className="text-xs text-muted hover:text-foreground">
+            Edit
+          </button>
+        )}
+        <ActionForm action={removePlanItem} success="Exercise removed" confirm={`Remove ${item.exercises.name} from this plan?`}>
+          {hidden}
+          <button className="text-xs text-muted hover:text-danger">Remove</button>
+        </ActionForm>
+      </div>
+
+      {editing && (
+        <form action={action} className="mt-3 space-y-3 pl-8">
+          {hidden}
+          <div className="grid grid-cols-3 gap-3">
+            <Field label="Sets">
+              <Input name="sets" type="number" min={1} max={20} defaultValue={item.sets} required autoFocus />
+            </Field>
+            <Field label="Reps">
+              <Input name="reps" defaultValue={item.reps} required />
+            </Field>
+            <Field label="Rest (s)">
+              <Input name="rest_sec" type="number" min={0} max={900} defaultValue={item.rest_sec ?? ""} />
+            </Field>
+          </div>
+          <Field label="Notes">
+            <Input name="notes" defaultValue={item.notes ?? ""} placeholder="Slow on the way down" />
+          </Field>
+          <FormError message={state?.error} />
+          <div className="flex gap-2">
+            <Button disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
+            <Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
+          </div>
+        </form>
+      )}
+    </li>
   );
 }
 

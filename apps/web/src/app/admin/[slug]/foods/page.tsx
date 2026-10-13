@@ -5,7 +5,7 @@ import { ActionForm } from "@/components/action-form";
 import { Badge, Card, Input, PageHeader } from "@/components/ui";
 import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { setFoodActive } from "./actions";
+import { promoteMemberFood, setFoodActive } from "./actions";
 import { AddFood } from "./add-food";
 
 export const metadata: Metadata = { title: "Foods" };
@@ -22,12 +22,24 @@ export default async function FoodsPage({ params, searchParams }: PageProps<"/ad
   const supabase = await createClient();
   let builtIn = supabase.from("foods").select("*").is("gym_id", null).order("category").order("name");
   if (query) builtIn = builtIn.or(`name.ilike.%${query}%,name_ml.ilike.%${query}%`);
-  const [ownRes, builtInRes] = await Promise.all([
-    supabase.from("foods").select("*").eq("gym_id", gym.id).order("is_active", { ascending: false }).order("name"),
+  const [ownRes, builtInRes, memberRes] = await Promise.all([
+    supabase.from("foods").select("*").eq("gym_id", gym.id).is("member_id", null).order("is_active", { ascending: false }).order("name"),
     builtIn,
+    // Members' own foods; only rows this person coaches come back (owner/admin: all).
+    supabase.from("foods").select("id, name, serving_label, kcal, protein_g, member_id").eq("gym_id", gym.id).not("member_id", "is", null).limit(1000),
   ]);
   if (ownRes.error) throw ownRes.error;
   if (builtInRes.error) throw builtInRes.error;
+  if (memberRes.error) throw memberRes.error;
+
+  // Group members' foods by name; the most-added ones first, skipping names
+  // already in the gym list.
+  const listed = new Set(ownRes.data.map((f) => f.name.trim().toLowerCase()));
+  const suggestions = [...Map.groupBy(memberRes.data, (f) => f.name.trim().toLowerCase())]
+    .filter(([name]) => !listed.has(name))
+    .map(([, foods]) => ({ food: foods[0], members: new Set(foods.map((f) => f.member_id)).size }))
+    .sort((a, b) => b.members - a.members || a.food.name.localeCompare(b.food.name))
+    .slice(0, 20);
 
   return (
     <>
@@ -45,6 +57,45 @@ export default async function FoodsPage({ params, searchParams }: PageProps<"/ad
           <p className="p-4 text-sm text-muted">None yet. The built-in list below covers most home food.</p>
         )}
       </Card>
+
+      {suggestions.length > 0 && (
+        <>
+          <h2 className="mb-1 font-medium">Suggested by members ({suggestions.length})</h2>
+          <p className="mb-2 text-sm text-muted">Foods members added for themselves. Add one to your list so everyone can pick it.</p>
+          <Card className="mb-8 overflow-x-auto p-0">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-muted">
+                  <th className="p-3 font-medium">Food</th>
+                  <th className="p-3 font-medium">Portion</th>
+                  <th className="p-3 font-medium">kcal</th>
+                  <th className="p-3 font-medium">Protein</th>
+                  <th className="p-3 font-medium">Added by</th>
+                  <th className="p-3"><span className="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {suggestions.map(({ food, members }) => (
+                  <tr key={food.id} className="border-b border-border last:border-0">
+                    <td className="p-3 font-medium">{food.name}</td>
+                    <td className="p-3 text-muted">{food.serving_label}</td>
+                    <td className="p-3 tabular-nums">{food.kcal}</td>
+                    <td className="p-3 tabular-nums">{Number(food.protein_g)} g</td>
+                    <td className="p-3 text-muted">{members} {members === 1 ? "member" : "members"}</td>
+                    <td className="p-3 text-right">
+                      <ActionForm action={promoteMemberFood} success={`${food.name} added to your foods`}>
+                        <input type="hidden" name="slug" value={slug} />
+                        <input type="hidden" name="id" value={food.id} />
+                        <button className="rounded px-2 py-1 text-xs font-medium text-brand hover:bg-border/40">Add to gym foods</button>
+                      </ActionForm>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        </>
+      )}
 
       <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-medium">Built-in Indian &amp; Kerala foods ({builtInRes.data.length})</h2>

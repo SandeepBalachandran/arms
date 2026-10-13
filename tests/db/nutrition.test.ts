@@ -26,7 +26,7 @@ describe("member", () => {
   it("logs food, water and their details", async () => {
     expect((await as.member.from("nutrition_profiles").upsert({ member_id: mid(), gym_id: gymId, consent_at: new Date().toISOString(), height_cm: 172, notes: "TEST lactose intolerant" })).error?.message).toBeUndefined();
     expect((await as.member.from("food_logs").insert({ gym_id: gymId, member_id: mid(), logged_on: today, meal: "breakfast", name: "Puttu", kcal: 170, protein_g: 3.5 })).error?.message).toBeUndefined();
-    expect((await as.member.from("water_logs").upsert({ member_id: mid(), gym_id: gymId, logged_on: today, glasses: 3 })).error?.message).toBeUndefined();
+    expect((await as.member.from("water_logs").upsert({ member_id: mid(), gym_id: gymId, logged_on: today, ml: 750 })).error?.message).toBeUndefined();
   });
 
   it("can't log food for someone else", async () => {
@@ -64,11 +64,83 @@ describe("trainer", () => {
   });
 });
 
+describe("water", () => {
+  it("keeps glasses and ml in step for older app versions", async () => {
+    const day = "2001-01-01";
+    // An old app writes glasses only; ml follows.
+    expect((await as.member.from("water_logs").upsert({ member_id: mid(), gym_id: gymId, logged_on: day, glasses: 3 })).error?.message).toBeUndefined();
+    expect((await as.member.from("water_logs").select("ml, glasses").eq("member_id", mid()).eq("logged_on", day).single()).data).toEqual({ ml: 750, glasses: 3 });
+    // The new app writes ml; glasses is rounded from it.
+    expect((await as.member.from("water_logs").update({ ml: 1600 }).eq("member_id", mid()).eq("logged_on", day)).error?.message).toBeUndefined();
+    expect((await as.member.from("water_logs").select("ml, glasses").eq("member_id", mid()).eq("logged_on", day).single()).data).toEqual({ ml: 1600, glasses: 6 });
+    await as.member.from("water_logs").delete().eq("member_id", mid()).eq("logged_on", day);
+  });
+
+  it("member saves a goal and containers; their coach can read them, others can't", async () => {
+    const containers = [{ label: "Steel bottle", ml: 750 }];
+    expect((await as.member.from("water_settings").upsert({ member_id: mid(), gym_id: gymId, goal_ml: 3000, containers })).error?.message).toBeUndefined();
+    expect((await as.trainer.from("water_settings").select("goal_ml").eq("member_id", mid())).data).toEqual([{ goal_ml: 3000 }]);
+    for (const role of ["staff", "member2", "outsider"] as const) {
+      expect((await as[role].from("water_settings").select("goal_ml").eq("member_id", mid())).data).toEqual([]);
+    }
+    expect(refused(await as.member2.from("water_settings").upsert({ member_id: mid(), gym_id: gymId, goal_ml: 500 }).select("member_id"))).toBe(true);
+  });
+
+  it("rejects too many containers", async () => {
+    const containers = Array.from({ length: 6 }, () => ({ label: "Glass", ml: 250 }));
+    expect((await as.member.from("water_settings").upsert({ member_id: mid(), gym_id: gymId, containers })).error).not.toBeNull();
+  });
+});
+
+describe("my foods", () => {
+  let foodId = "";
+  const food = () => ({ gym_id: gymId, member_id: mid(), name: "TEST Amma's fish curry", serving_label: "1 bowl", kcal: 320, protein_g: 24 });
+
+  it("a member saves their own food and logs it", async () => {
+    const res = await as.member.from("foods").insert(food()).select("id").single();
+    expect(res.error?.message).toBeUndefined();
+    foodId = res.data!.id;
+    expect((await as.member.from("food_logs").insert({ gym_id: gymId, member_id: mid(), logged_on: today, meal: "lunch", food_id: foodId, name: "TEST Amma's fish curry", kcal: 320 })).error?.message).toBeUndefined();
+    expect((await as.member.from("foods").update({ kcal: 300 }).eq("id", foodId).select("kcal").single()).data).toEqual({ kcal: 300 });
+  });
+
+  it("other members and staff can't see or change it", async () => {
+    for (const role of ["member2", "staff", "outsider"] as const) {
+      expect((await as[role].from("foods").select("id").eq("id", foodId)).data).toEqual([]);
+    }
+    expect((await as.member2.from("foods").update({ kcal: 1 }).eq("id", foodId).select("id")).data ?? []).toEqual([]);
+    expect(refused(await as.member2.from("foods").insert({ ...food() }).select("id"))).toBe(true);
+  });
+
+  it("the member's coach can see it but not edit it", async () => {
+    expect((await as.trainer.from("foods").select("id").eq("id", foodId)).data).toHaveLength(1);
+    expect((await as.owner.from("foods").select("id").eq("id", foodId)).data).toHaveLength(1);
+    expect((await as.trainer.from("foods").update({ kcal: 1 }).eq("id", foodId).select("id")).data ?? []).toEqual([]);
+  });
+
+  it("a coach copies it into the gym list; staff can't", async () => {
+    expect((await as.staff.rpc("promote_member_food", { p_food_id: foodId })).error).not.toBeNull();
+    const res = await as.trainer.rpc("promote_member_food", { p_food_id: foodId });
+    expect(res.error?.message).toBeUndefined();
+    const gymFood = await as.member2.from("foods").select("name, member_id, gym_id").eq("id", res.data!).single();
+    expect(gymFood.data).toEqual({ name: "TEST Amma's fish curry", member_id: null, gym_id: gymId });
+    // Copying again returns the same gym food.
+    expect((await as.owner.rpc("promote_member_food", { p_food_id: foodId })).data).toBe(res.data);
+    await service.from("foods").delete().eq("id", res.data!);
+  });
+
+  it("deleting it keeps the logged entry", async () => {
+    expect((await as.member.from("foods").delete().eq("id", foodId)).error?.message).toBeUndefined();
+    const log = await as.member.from("food_logs").select("name, food_id").eq("member_id", mid()).eq("name", "TEST Amma's fish curry").single();
+    expect(log.data).toEqual({ name: "TEST Amma's fish curry", food_id: null });
+  });
+});
+
 describe("everyone else", () => {
   it.each(["staff", "member2", "outsider"] as const)("%s can't see the food log or health notes", async (role) => {
     expect((await as[role].from("food_logs").select("id").eq("member_id", mid())).data).toEqual([]);
     expect((await as[role].from("nutrition_profiles").select("member_id").eq("member_id", mid())).data).toEqual([]);
-    expect((await as[role].from("water_logs").select("glasses").eq("member_id", mid())).data).toEqual([]);
+    expect((await as[role].from("water_logs").select("ml").eq("member_id", mid())).data).toEqual([]);
   });
 
   it("staff can't comment or set targets", async () => {
@@ -78,7 +150,7 @@ describe("everyone else", () => {
 
   it("owner and admin can read it", async () => {
     expect((await as.owner.from("food_logs").select("id").eq("member_id", mid())).data!.length).toBeGreaterThan(0);
-    expect((await as.admin.from("water_logs").select("glasses").eq("member_id", mid())).data).toHaveLength(1);
+    expect((await as.admin.from("water_logs").select("ml").eq("member_id", mid())).data).toHaveLength(1);
   });
 
   it("a trainer who isn't the member's coach can't see it", async () => {

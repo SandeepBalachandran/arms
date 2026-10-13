@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { ageFrom, calorieBalance, dayTotals, nutritionAvailable, onTarget, suggestTargets } from "@gymos/shared";
+import {
+  ageFrom,
+  calorieBalance,
+  dayTotals,
+  DEFAULT_WATER_CONTAINERS,
+  formatContainer,
+  formatLitres,
+  nutritionAvailable,
+  onTarget,
+  parseWaterContainers,
+  suggestTargets,
+} from "@gymos/shared";
 
 describe("suggestTargets", () => {
   const man = { weightKg: 78, heightCm: 172, age: 32, sex: "male" as const, activity: "moderate" as const };
@@ -55,5 +66,36 @@ describe("who gets nutrition", () => {
   it("works out age from birth year", () => {
     expect(ageFrom(1994, new Date("2026-10-12"))).toBe(32);
     expect(ageFrom(null)).toBeNull();
+  });
+});
+
+describe("water", () => {
+  it("formats litres without trailing zeros", () => {
+    expect(formatLitres(0)).toBe("0 L");
+    expect(formatLitres(500)).toBe("0.5 L");
+    expect(formatLitres(1250)).toBe("1.25 L");
+    expect(formatLitres(2000)).toBe("2 L");
+  });
+
+  it("formats containers in ml below a litre", () => {
+    expect(formatContainer(250)).toBe("250 ml");
+    expect(formatContainer(1000)).toBe("1 L");
+    expect(formatContainer(1500)).toBe("1.5 L");
+    expect(formatContainer(1250)).toBe("1250 ml");
+  });
+
+  it("accepts valid containers and trims labels", () => {
+    expect(parseWaterContainers(DEFAULT_WATER_CONTAINERS)).toEqual(DEFAULT_WATER_CONTAINERS);
+    expect(parseWaterContainers([{ label: "  Steel bottle ", ml: 750 }])).toEqual([{ label: "Steel bottle", ml: 750 }]);
+  });
+
+  it("rejects bad containers", () => {
+    expect(parseWaterContainers([])).toBeNull();
+    expect(parseWaterContainers(Array.from({ length: 6 }, () => ({ label: "Glass", ml: 250 })))).toBeNull();
+    expect(parseWaterContainers([{ label: "", ml: 250 }])).toBeNull();
+    expect(parseWaterContainers([{ label: "Tiny", ml: 20 }])).toBeNull();
+    expect(parseWaterContainers([{ label: "Huge", ml: 5000 }])).toBeNull();
+    expect(parseWaterContainers([{ label: "Half", ml: 250.5 }])).toBeNull();
+    expect(parseWaterContainers("glass")).toBeNull();
   });
 });

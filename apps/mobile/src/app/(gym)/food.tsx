@@ -1,6 +1,19 @@
-import { addDays, calorieBalance, dayTotals, MEAL_LABELS, MEALS, onTarget, type MealSlot } from '@gymos/shared';
+import {
+  addDays,
+  calorieBalance,
+  dayTotals,
+  DEFAULT_WATER_CONTAINERS,
+  DEFAULT_WATER_GOAL_ML,
+  formatContainer,
+  formatLitres,
+  MAX_WATER_ML,
+  MEAL_LABELS,
+  MEALS,
+  onTarget,
+  type MealSlot,
+} from '@gymos/shared';
 import { Redirect, useRouter } from 'expo-router';
-import { Droplets, MessageCircle, Plus, Salad, X } from 'lucide-react-native';
+import { Droplets, MessageCircle, Plus, Salad, Settings2, Undo2, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -20,9 +33,8 @@ import {
   useSetWater,
   useToday,
   useWater,
+  useWaterSettings,
 } from '@/lib/nutrition';
-
-const WATER_GOAL = 8;
 
 export default function FoodScreen() {
   const theme = useTheme();
@@ -107,7 +119,7 @@ export default function FoodScreen() {
       )}
 
       <Appear index={3}>
-        <WaterRow day={date} />
+        <WaterRow key={date} day={date} />
       </Appear>
 
       {MEALS.map((meal, i) => (
@@ -182,35 +194,86 @@ function Summary({ eaten, target }: { eaten: ReturnType<typeof dayTotals>; targe
   );
 }
 
+// Water for the day in litres against the member's goal, with one quick-add
+// button per container and Undo for this visit's adds.
 function WaterRow({ day }: { day: string }) {
   const theme = useTheme();
+  const router = useRouter();
   const water = useWater(day);
+  const settings = useWaterSettings();
   const setWater = useSetWater();
-  const glasses = water.data ?? 0;
+  const [added, setAdded] = useState<number[]>([]);
+  const ml = water.data ?? 0;
+  const goal = settings.data?.goalMl ?? DEFAULT_WATER_GOAL_ML;
+  const containers = settings.data?.containers ?? DEFAULT_WATER_CONTAINERS;
   const tint = theme.tints.blue;
-  // Tap a glass to fill up to it; tap the last full one to empty it.
-  const tap = (i: number) => setWater.mutate({ day, glasses: glasses === i + 1 ? i : i + 1 });
+  const left = goal - ml;
+
+  function add(amount: number) {
+    if (ml + amount > MAX_WATER_ML) return;
+    setWater.mutate({ day, ml: ml + amount });
+    setAdded((list) => [...list, amount]);
+  }
+  function undo() {
+    const last = added.at(-1);
+    if (last === undefined) return;
+    setWater.mutate({ day, ml: Math.max(0, ml - last) });
+    setAdded((list) => list.slice(0, -1));
+  }
+
   return (
-    <Card style={{ gap: 10 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Droplets size={18} color={tint.fg} />
-          <Text style={{ fontWeight: '700' }}>Water</Text>
+    <Card style={{ gap: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: tint.bg, alignItems: 'center', justifyContent: 'center' }}>
+          <Droplets size={17} color={tint.fg} />
         </View>
-        <Text variant="small">{glasses} of {WATER_GOAL} glasses</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontWeight: '700' }}>Water</Text>
+          <Text variant="small">{left > 0 ? `${formatLitres(left)} to go` : 'Goal reached'}</Text>
+        </View>
+        <Text style={{ fontWeight: '800', fontSize: 16, fontVariant: ['tabular-nums'] }}>
+          {formatLitres(ml)}
+          <Text variant="small"> / {formatLitres(goal)}</Text>
+        </Text>
+        <Pressable
+          onPress={() => router.push('/food/water')}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Water goal and containers"
+          style={({ pressed }) => ({ padding: 4, opacity: pressed ? 0.5 : 1 })}>
+          <Settings2 size={18} color={theme.textSecondary} />
+        </Pressable>
       </View>
-      <View style={{ flexDirection: 'row', gap: 6 }}>
-        {Array.from({ length: WATER_GOAL }, (_, i) => (
+      <View
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityValue={{ min: 0, max: goal, now: Math.min(ml, goal) }}
+        style={{ height: 10, borderRadius: 5, backgroundColor: tint.bg, overflow: 'hidden' }}>
+        <View style={{ height: '100%', width: `${Math.min(100, (ml / goal) * 100)}%`, borderRadius: 5, backgroundColor: '#60a5fa' }} />
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {containers.map((c, i) => (
           <Pressable
-            key={i}
-            onPress={() => tap(i)}
+            key={`${c.label}-${i}`}
+            onPress={() => add(c.ml)}
             accessibilityRole="button"
-            accessibilityLabel={i < glasses ? `Glass ${i + 1}, drunk` : `Glass ${i + 1}`}
-            hitSlop={4}
-            style={{ flex: 1, maxWidth: 34, height: 38, borderRadius: 9, borderWidth: 1.5, borderColor: '#93c5fd', overflow: 'hidden', justifyContent: 'flex-end' }}>
-            <View style={{ height: i < glasses ? '100%' : 0, backgroundColor: '#60a5fa' }} />
+            accessibilityLabel={`Add ${c.label}, ${formatContainer(c.ml)}`}
+            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: tint.bg, opacity: pressed ? 0.6 : 1 })}>
+            <Plus size={14} color={tint.fg} />
+            <Text style={{ fontSize: 13, fontWeight: '700', color: tint.fg }}>{c.label}</Text>
+            <Text style={{ fontSize: 12, color: tint.fg }}>{formatContainer(c.ml)}</Text>
           </Pressable>
         ))}
+        {added.length > 0 && (
+          <Pressable
+            onPress={undo}
+            accessibilityRole="button"
+            accessibilityLabel={`Undo, remove ${formatContainer(added.at(-1)!)}`}
+            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: theme.surfaceMuted, opacity: pressed ? 0.6 : 1 })}>
+            <Undo2 size={14} color={theme.text} />
+            <Text style={{ fontSize: 13, fontWeight: '700' }}>Undo</Text>
+          </Pressable>
+        )}
       </View>
     </Card>
   );
