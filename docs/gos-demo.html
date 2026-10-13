@@ -226,6 +226,16 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #f
 .ex-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
 .ex-edit { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .ex-edit .mini { width: 38px; min-width: 0; padding: 3px 4px; border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 12.5px; text-align: center; background: var(--surface); color: var(--text); }
+.guide-row { width: 100%; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.guide-ic svg { width: 13px; height: 13px; vertical-align: -2px; color: var(--p-brand); }
+.guide-photo { aspect-ratio: 4 / 3; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 16px; margin-top: 6px; }
+.guide-photo svg { width: 34px; height: 34px; }
+.guide-video { width: 100%; display: flex; align-items: center; gap: 12px; border: 0; border-radius: 18px; padding: 10px; margin-top: 10px; background: var(--p-hero); color: #fff; font: inherit; cursor: pointer; text-align: left; }
+.guide-video .play { width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; color: var(--p-accent); }
+.guide-video small { display: block; color: #c3cdb2; }
+.guide-text { display: grid; gap: 6px; font-size: 14px; line-height: 1.55; }
+.p-sheet .p-chip { border: 0; background: var(--p-muted); color: var(--p-text); font: inherit; font-size: 12.5px; font-weight: 700; padding: 6px 12px; cursor: pointer; }
+.p-sheet .p-chip.on { background: var(--p-accent); color: var(--p-accent-fg); }
 .mine-tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--t-green-bg); color: var(--t-green); vertical-align: 1px; }
 .chip-x { border: 0; background: none; color: var(--muted); font-size: 15px; line-height: 1; padding: 0 2px; cursor: pointer; }
 .chip-x:hover { color: var(--danger); }
@@ -491,6 +501,12 @@ function bars(values, labels, { h = 140, color = "#65a30d", fmt = (v) => v, targ
    Sample data
 --------------------------------------------------------------------------- */
 const ME = "m1";
+// Exercise guides the gym's trainers added: a photo, a video link, how-to in English and Malayalam.
+const GUIDES = {
+  "Bench press": { tint: "blue", video: "YouTube", en: "1. Lie with your eyes under the bar, feet flat.\n2. Grip a little wider than your shoulders.\n3. Lower the bar to mid-chest, then press up. Don't bounce it.", ml: "1. കണ്ണുകൾ ബാറിന് താഴെ വരുന്ന രീതിയിൽ കിടക്കുക, പാദങ്ങൾ നിലത്ത്.\n2. തോളിനേക്കാൾ അൽപ്പം വീതിയിൽ ബാർ പിടിക്കുക.\n3. ബാർ നെഞ്ചിന്റെ നടുവിലേക്ക് താഴ്ത്തി മുകളിലേക്ക് തള്ളുക." },
+  "Lat pulldown": { tint: "green", video: "Instagram", en: "1. Set the thigh pad so your legs are locked in.\n2. Pull the bar to your upper chest, elbows down.\n3. Let it up slowly. Don't lean back.", ml: "1. കാലുകൾ ഉറച്ചിരിക്കുന്ന രീതിയിൽ തുടയുടെ പാഡ് ക്രമീകരിക്കുക.\n2. കൈമുട്ട് താഴേക്ക്, ബാർ നെഞ്ചിന്റെ മുകൾഭാഗത്തേക്ക് വലിക്കുക.\n3. പതുക്കെ മുകളിലേക്ക് വിടുക." },
+  "Squat": { tint: "yellow", video: "YouTube", en: "1. Bar on your upper back, feet shoulder-width.\n2. Sit back and down until your thighs are level.\n3. Drive up through your heels. Knees follow your toes.", ml: "" },
+};
 const EXERCISES = ["Bench press", "Incline dumbbell press", "Shoulder press", "Lateral raise", "Triceps pushdown", "Deadlift", "Lat pulldown", "Seated row", "Biceps curl", "Face pull", "Squat", "Leg press", "Romanian deadlift", "Leg curl", "Calf raise", "Plank", "Goblet squat", "Push-ups", "Kettlebell swing", "Burpees"];
 const FOODS = [
   ["Puttu", "പുട്ട്", "1 piece", 220, 4, "Breakfast"], ["Kadala curry", "കടല കറി", "1 katori", 180, 9, "Curry"], ["Appam", "അപ്പം", "1 appam", 120, 2, "Breakfast"],
@@ -621,7 +637,7 @@ function initState() {
     ],
     // UI state
     a: { route: "dashboard", modal: null, pop: null, memFilter: "all", memQuery: "", classDay: 0, planSel: "w1", ciResult: null, ciQuery: "", payTab: "all", importText: "" },
-    p: { route: "home", stack: [], sheet: null, dark: false, classDay: 1, checkedQrAt: null, wk: null, rest: null, foodQuery: "", pick: null, ownForm: false, openDay: null, signedOut: false, deleted: false, upiPending: null },
+    p: { route: "home", stack: [], sheet: null, dark: false, classDay: 1, checkedQrAt: null, wk: null, rest: null, foodQuery: "", pick: null, ownForm: false, lang: "en", openDay: null, signedOut: false, deleted: false, upiPending: null },
   };
 }
 let S = initState();
@@ -1121,7 +1137,7 @@ const SCREENS = {
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin:12px 0">${nx.day.items.slice(0, 4).map(([n]) => `<span class="p-chip">${esc(n)}</span>`).join("")}</div><button class="p-btn" data-a="startWk">${ic("play")} Start workout</button>`
         : `<div class="k">Free workout</div><h3>Log any workout</h3><button class="p-btn" data-a="startWk" style="margin-top:10px">${ic("play")} Start empty workout</button>`}</div>
       <div class="p-tiles"><div class="p-tile tint-green"><span class="ic fg">${ic("flame")}</span><b style="font-size:20px">${thisWeek.length}</b><small>this week</small></div><div class="p-tile tint-blue"><span class="ic fg">${ic("dumb")}</span><b style="font-size:20px">${(vol / 1000).toFixed(1)}t</b><small>lifted</small></div><div class="p-tile tint-pink"><span class="ic fg">${ic("clock")}</span><b style="font-size:20px">${mins}</b><small>minutes</small></div></div>
-      ${nx ? `<div class="p-h">${esc(nx.plan.name)}</div><div class="p-card" style="padding:6px">${nx.plan.days.map((d, i) => { const last = S.history.find((h) => h.label === d.label); const open = S.p.openDay === i; return `<button class="p-row" data-a="pOpenDay" data-i="${i}"><span class="ic tint-${i === nx.idx ? "green" : "blue"}"><span class="fg">${ic("dumb")}</span></span><span class="grow"><b>${esc(d.label)}</b><small>${d.items.length} exercises${last ? " · done " + relDay(last.day).toLowerCase() : ""}</small></span>${i === nx.idx ? `<span class="p-badge">Next</span>` : ""}${ic(open ? "down" : "right")}</button>${open ? `<div style="padding:0 12px 10px 64px">${d.items.map(([n, s, r]) => `<div class="food-item"><span>${esc(n)}</span><span class="p-sec">${s} × ${esc(r)}</span></div>`).join("")}</div>` : ""}`; }).join("")}</div>` : ""}
+      ${nx ? `<div class="p-h">${esc(nx.plan.name)}</div><div class="p-card" style="padding:6px">${nx.plan.days.map((d, i) => { const last = S.history.find((h) => h.label === d.label); const open = S.p.openDay === i; return `<button class="p-row" data-a="pOpenDay" data-i="${i}"><span class="ic tint-${i === nx.idx ? "green" : "blue"}"><span class="fg">${ic("dumb")}</span></span><span class="grow"><b>${esc(d.label)}</b><small>${d.items.length} exercises${last ? " · done " + relDay(last.day).toLowerCase() : ""}</small></span>${i === nx.idx ? `<span class="p-badge">Next</span>` : ""}${ic(open ? "down" : "right")}</button>${open ? `<div style="padding:0 12px 10px 64px">${d.items.map(([n, s, r]) => GUIDES[n] ? `<button class="food-item guide-row" data-a="exGuide" data-n="${esc(n)}" aria-label="How to do ${esc(n)}"><span>${esc(n)} <span class="guide-ic">${ic("play")}</span></span><span class="p-sec">${s} × ${esc(r)}</span></button>` : `<div class="food-item"><span>${esc(n)}</span><span class="p-sec">${s} × ${esc(r)}</span></div>`).join("")}</div>` : ""}`; }).join("")}</div>` : ""}
       <div class="p-h">Personal bests ${ic("trophy")}</div>
       <div class="p-tiles">${[["Squat", "50 kg"], ["Bench", "32.5 kg"], ["Deadlift", "70 kg"]].map(([n, v]) => `<div class="p-tile tint-yellow" style="min-height:0"><small>${n}</small><b style="font-size:17px">${v}</b></div>`).join("")}</div>
       <div class="p-h">History</div>
@@ -1370,6 +1386,9 @@ const A = {
   pCancelBooking: (d) => { const c = S.sessions.find((x) => x.id === d.id); c.booked = c.booked.filter((x) => x !== ME); if (c.waitlist.length) { const moved = c.waitlist.shift(); c.booked.push(moved); toast(`Spot freed: ${M(moved).name} moved up from the waitlist`, "from-app"); } else toast("Booking cancelled", "from-app"); },
   pJoinWait: (d) => { S.sessions.find((x) => x.id === d.id).waitlist.push(ME); toast("You're on the waitlist. You'll get the spot automatically if someone cancels.", "from-app"); },
   pLeaveWait: (d) => { const c = S.sessions.find((x) => x.id === d.id); c.waitlist = c.waitlist.filter((x) => x !== ME); },
+  exGuide: (d) => { S.p.guide = d.n; pSheet(d.n, guideSheet()); },
+  guideLang: (d) => { S.p.lang = d.l; S.p.sheet.html = guideSheet(); },
+  guideVideo: () => toast("Opens the video in the YouTube or Instagram app", "from-app"),
   pOpenDay: (d) => { S.p.openDay = S.p.openDay === +d.i ? null : +d.i; },
   selfCheckin: () => { doCheckin(ME, "self"); toast("Checked in! It shows on the desk's screen right away.", "from-app"); },
   scanPoster: () => pSheet("Scan the poster", `<div style="background:#000;border-radius:20px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden"><div style="opacity:.85">${qr("poster" + S.gym.slug, 170)}</div><div style="position:absolute;inset:18%;border:3px solid var(--p-accent);border-radius:22px"></div></div><div class="p-sec" style="text-align:center;margin:10px 0">${S.gym.f.location ? ic("pin") + " Location check: you're at " + esc(S.gym.name) + " ✓" : "Point the camera at the poster at the entrance."}</div><button class="p-btn" data-a="posterDone">Simulate scan</button>`),
@@ -1445,6 +1464,16 @@ function foodResults() {
   const list = allFoods().filter((f) => !q || f.name.toLowerCase().includes(q) || (f.ml || "").includes(q)).slice(0, 12);
   return list.map((f) => `<button class="p-row" style="padding:8px" data-a="pickFood" data-id="${f.id}"><span class="grow"><b style="font-size:13.5px">${esc(f.name)} <span class="ml">${esc(f.ml)}</span>${f.mine ? ` <span class="mine-tag">Mine</span>` : ""}</b><small>${esc(f.serving)} · ≈${f.kcal} kcal · ${f.p} g protein</small></span>${ic("plus")}</button>`).join("") || `<div class="p-sec" style="padding:10px">Not in the list? Add it as your own food below.</div>`;
 }
+function guideSheet() {
+  const g = GUIDES[S.p.guide], ml = S.p.lang === "ml" && g.ml;
+  const text = (ml ? g.ml : g.en).split("\n").map((l) => `<div>${esc(l)}</div>`).join("");
+  return `<div class="guide-photo tint-${g.tint}"><span class="fg">${ic("camera")}</span><small>Photo of the ${esc(S.p.guide.toLowerCase())} station, added by the trainer</small></div>
+    <button class="guide-video" data-a="guideVideo"><span class="play">${ic("play")}</span><span class="grow"><b>Watch how it's done</b><small>Opens in ${g.video}</small></span>${ic("link")}</button>
+    <div class="p-h" style="margin:14px 0 6px">${ml ? "എങ്ങനെ ചെയ്യാം" : "How to do it"}</div>
+    ${g.ml ? `<div class="chips" style="margin-bottom:8px">${[["en", "English"], ["ml", "മലയാളം"]].map(([k, l]) => `<button class="p-chip ${S.p.lang === k ? "on" : ""}" data-a="guideLang" data-l="${k}">${l}</button>`).join("")}</div>` : ""}
+    <div class="guide-text">${text}</div>${!g.ml && S.p.lang === "ml" ? `<div class="p-sec" style="margin-top:6px">No Malayalam yet, showing English.</div>` : ""}`;
+}
+
 function foodSheet() {
   if (S.p.ownForm) {
     return `<form data-submit="ownFood" style="display:grid;gap:8px;margin-top:8px">

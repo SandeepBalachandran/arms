@@ -1,5 +1,5 @@
 import { formatSet, num } from '@gymos/shared';
-import { Check, Dumbbell, Minus, Plus, Search, Trash2, X } from 'lucide-react-native';
+import { BookOpen, Check, Dumbbell, Minus, Plus, Search, Trash2, X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,10 +20,12 @@ type LastSet = { reps: number | null; weight_kg: number | string | null; duratio
 
 // One exercise with its sets. "live" mode ticks sets as done and shows last
 // time's numbers; "edit" mode (a saved workout) removes individual sets instead.
-export function ExerciseCard({ ex, number, mode = 'live', last, onSet, onToggle, onAddSet, onRemoveSet, onRemove }: {
+export function ExerciseCard({ ex, number, mode = 'live', last, onGuide, onSet, onToggle, onAddSet, onRemoveSet, onRemove }: {
   ex: DraftExercise;
   number: number;
   mode?: 'live' | 'edit';
+  // Set when the gym has a how-to guide for this exercise.
+  onGuide?: () => void;
   last?: LastSet[];
   onSet: (si: number, patch: Partial<DraftSet>) => void;
   onToggle?: (si: number) => void;
@@ -51,6 +53,14 @@ export function ExerciseCard({ ex, number, mode = 'live', last, onSet, onToggle,
             <Chip>{ex.exercise.muscle_group}</Chip>
             {ex.target && <Chip>{`Target ${ex.target}`}</Chip>}
             {ex.restSec ? <Chip>{`Rest ${clock(ex.restSec)}`}</Chip> : null}
+            {onGuide && (
+              <Pressable onPress={onGuide} accessibilityRole="button" accessibilityLabel={`How to do ${ex.exercise.name}`} hitSlop={6}>
+                <Chip tone="accent">
+                  <BookOpen size={13} color={theme.accentText} />
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: theme.accentText }}>How to</Text>
+                </Chip>
+              </Pressable>
+            )}
           </View>
         </View>
         <Pressable onPress={onRemove} hitSlop={10} accessibilityRole="button" accessibilityLabel={`Remove ${ex.exercise.name}`}>

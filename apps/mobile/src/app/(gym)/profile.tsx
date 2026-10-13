@@ -19,7 +19,7 @@ import { useSetAvatar } from '@/lib/avatar';
 import { confirm } from '@/lib/confirm';
 import { useActiveGym, useMyGyms, useSetActiveGym } from '@/lib/gyms';
 import { useNutritionAccess } from '@/lib/nutrition';
-import { profileKey, useProfile } from '@/lib/profile';
+import { profileKey, useProfile, useSetLanguage } from '@/lib/profile';
 import { useSession } from '@/lib/session';
 import { saveSplashBrand } from '@/lib/splash-brand';
 import { supabase } from '@/lib/supabase';
@@ -88,6 +88,7 @@ export default function ProfileScreen() {
       <Appear index={2} style={{ gap: 10 }}>
         <Text style={{ fontSize: 13, fontWeight: '700', letterSpacing: 0.5 }} variant="small">PREFERENCES</Text>
         <AppearancePicker />
+        {active?.gym.workouts_enabled && <LanguagePicker />}
       </Appear>
 
       <Appear index={3} style={{ gap: 10 }}>
@@ -330,6 +331,38 @@ function AppearancePicker() {
           </Pressable>
         );
       })}
+    </View>
+  );
+}
+
+// Language for exercise guides (how-to text the gym writes in English and
+// Malayalam). Falls back to English when a guide has no Malayalam.
+function LanguagePicker() {
+  const theme = useTheme();
+  const language = useProfile().data?.language ?? 'en';
+  const setLanguage = useSetLanguage();
+  const options = [
+    { value: 'en' as const, label: 'English' },
+    { value: 'ml' as const, label: 'മലയാളം' },
+  ];
+  return (
+    <View style={{ gap: 6 }}>
+      <Text variant="small">Exercise guides in</Text>
+      <View style={{ flexDirection: 'row', gap: 6, padding: 5, borderRadius: 999, backgroundColor: theme.surfaceMuted }} accessibilityRole="radiogroup" accessibilityLabel="Exercise guide language">
+        {options.map(({ value, label }) => {
+          const selected = language === value;
+          return (
+            <Pressable
+              key={value}
+              onPress={() => !selected && setLanguage.mutate(value)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected }}
+              style={{ flex: 1, minHeight: 46, alignItems: 'center', justifyContent: 'center', borderRadius: 999, backgroundColor: selected ? theme.hero : 'transparent' }}>
+              <Text style={{ color: selected ? theme.heroText : theme.textSecondary, fontWeight: '700' }}>{label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }

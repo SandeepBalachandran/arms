@@ -1,10 +1,11 @@
 import { addDays, groupPlanDays, todayIn } from '@gymos/shared';
 import { Redirect, useRouter } from 'expo-router';
-import { ChevronDown, ChevronRight, Clock, Dumbbell, Play, Scale, Trophy, Weight } from 'lucide-react-native';
+import { BookOpen, ChevronDown, ChevronRight, Clock, Dumbbell, Play, Scale, Trophy, Weight } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ExerciseGuideSheet } from '@/components/exercise-guide';
 import { Appear, Float, PressableScale } from '@/components/motion';
 import { Card, Chip, Loading, SectionHeader, Text } from '@/components/ui';
 import { Spacing, type Tint } from '@/constants/theme';
@@ -14,8 +15,10 @@ import {
   nextPlanDay,
   useBodyMetrics,
   useMyPlans,
+  useExerciseGuides,
   usePersonalRecords,
   useWorkoutHistory,
+  type ExerciseGuide,
   type WorkoutHistoryItem,
 } from '@/lib/workouts';
 
@@ -35,6 +38,8 @@ export default function WorkoutsScreen() {
   const gym = useActiveGym()?.gym;
   const plans = useMyPlans();
   const history = useWorkoutHistory();
+  const guides = useExerciseGuides();
+  const [guideFor, setGuideFor] = useState<{ id: string; name: string; muscle_group: string } | null>(null);
   const metrics = useBodyMetrics();
   const records = usePersonalRecords();
   const [refreshing, setRefreshing] = useState(false);
@@ -91,6 +96,8 @@ export default function WorkoutsScreen() {
             {plan.description && <Text variant="muted">{plan.description}</Text>}
             {days.map((day, i) => (
               <PlanDayRow
+                guides={guides.data}
+                onGuide={setGuideFor}
                 key={day.label}
                 day={day}
                 tint={DAY_TINTS[i % DAY_TINTS.length]}
@@ -145,6 +152,7 @@ export default function WorkoutsScreen() {
           </Appear>
         )}
       </ScrollView>
+      <ExerciseGuideSheet exercise={guideFor} guide={guideFor ? guides.data?.get(guideFor.id) : undefined} onClose={() => setGuideFor(null)} />
     </SafeAreaView>
   );
 }
@@ -221,13 +229,15 @@ function Stat({ tint, icon: Icon, value, label }: { tint: Tint; icon: typeof Dum
 }
 
 // One plan day: tap to see its exercises, then start it.
-function PlanDayRow({ day, tint, number, isNext, doneOn, onStart }: {
+function PlanDayRow({ day, tint, number, isNext, doneOn, onStart, guides, onGuide }: {
   day: PlanDay;
   tint: Tint;
   number: number;
   isNext: boolean;
   doneOn?: WorkoutHistoryItem;
   onStart: () => void;
+  guides?: Map<string, ExerciseGuide>;
+  onGuide: (exercise: { id: string; name: string; muscle_group: string }) => void;
 }) {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
@@ -258,17 +268,29 @@ function PlanDayRow({ day, tint, number, isNext, doneOn, onStart }: {
       </Pressable>
       {open && (
         <View style={{ paddingHorizontal: 14, paddingBottom: 14, gap: 10 }}>
-          {day.items.map((item) => (
-            <View key={item.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, borderColor: theme.border, paddingTop: 10 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontWeight: '600' }}>{item.exercises.name}</Text>
-                {item.notes && <Text variant="small">{item.notes}</Text>}
-              </View>
-              <Text style={{ fontWeight: '700', fontVariant: ['tabular-nums'] }}>
-                {item.sets} × {item.reps}
-              </Text>
-            </View>
-          ))}
+          {day.items.map((item) => {
+            const hasGuide = guides?.has(item.exercises.id);
+            return (
+              <Pressable
+                key={item.id}
+                onPress={hasGuide ? () => onGuide(item.exercises) : undefined}
+                disabled={!hasGuide}
+                accessibilityRole={hasGuide ? 'button' : undefined}
+                accessibilityHint={hasGuide ? 'Shows how to do it' : undefined}
+                style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, borderColor: theme.border, paddingTop: 10, opacity: pressed ? 0.6 : 1 })}>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontWeight: '600', flexShrink: 1 }}>{item.exercises.name}</Text>
+                    {hasGuide && <BookOpen size={14} color={theme.brand} />}
+                  </View>
+                  {item.notes && <Text variant="small">{item.notes}</Text>}
+                </View>
+                <Text style={{ fontWeight: '700', fontVariant: ['tabular-nums'] }}>
+                  {item.sets} × {item.reps}
+                </Text>
+              </Pressable>
+            );
+          })}
           <PressableScale
             onPress={onStart}
             accessibilityRole="button"

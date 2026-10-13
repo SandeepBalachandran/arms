@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Camera } from "lucide-react";
 import { notFound } from "next/navigation";
+import { hasGuide } from "@gymos/shared";
 import { ActionForm } from "@/components/action-form";
 import { Card, PageHeader } from "@/components/ui";
 import { requireGym, TEAM_ROLES } from "@/lib/auth";
@@ -16,7 +18,7 @@ export default async function WorkoutsPage({ params }: PageProps<"/admin/[slug]/
   if (!gym.workouts_enabled) notFound();
 
   const supabase = await createClient();
-  const [plans, library, hidden] = await Promise.all([
+  const [plans, library, hidden, guides] = await Promise.all([
     supabase
       .from("workout_plans")
       .select("id, name, description, workout_plan_items(count), plan_assignments(count)")
@@ -30,7 +32,10 @@ export default async function WorkoutsPage({ params }: PageProps<"/admin/[slug]/
       .order("muscle_group")
       .order("name"),
     supabase.from("gym_hidden_exercises").select("exercise_id").eq("gym_id", gym.id),
+    supabase.from("exercise_media").select("exercise_id, photo_urls, video_url, how_to_en, how_to_ml").eq("gym_id", gym.id),
   ]);
+  if (guides.error) throw guides.error;
+  const guided = new Set(guides.data.filter(hasGuide).map((g) => g.exercise_id));
   if (plans.error) throw plans.error;
   if (library.error) throw library.error;
   if (hidden.error) throw hidden.error;
@@ -67,7 +72,7 @@ export default async function WorkoutsPage({ params }: PageProps<"/admin/[slug]/
           <Card>
             <h2 className="mb-1 font-medium">Exercise library</h2>
             <p className="mb-3 text-sm text-muted">
-              Built-in exercises plus your own. Hidden ones don&apos;t appear in plans or the member app.
+              Built-in exercises plus your own. Click one to add photos, a video and how-to for members. Hidden ones don&apos;t appear in plans or the member app.
             </p>
             <div className="mb-4 max-h-80 space-y-3 overflow-y-auto pr-1">
               {[...byGroup].map(([group, exercises]) => (
@@ -78,10 +83,15 @@ export default async function WorkoutsPage({ params }: PageProps<"/admin/[slug]/
                       const isHidden = hiddenIds.has(e.id);
                       return (
                         <li key={e.id} className="flex items-center justify-between py-0.5 text-sm">
-                          <span className={isHidden ? "text-muted line-through" : ""}>
+                          <Link
+                            href={`/admin/${slug}/workouts/exercises/${e.id}`}
+                            className={`inline-flex items-center gap-1 hover:underline ${isHidden ? "text-muted line-through" : ""}`}
+                            title={guided.has(e.id) ? "Has a guide. Edit it" : "Add photos, a video or how-to"}
+                          >
                             {e.name}
-                            {e.gym_id && <span className="ml-1 text-xs text-brand">yours</span>}
-                          </span>
+                            {guided.has(e.id) && <Camera className="size-3.5 text-brand" aria-label="has a guide" />}
+                            {e.gym_id && <span className="text-xs text-brand">yours</span>}
+                          </Link>
                           <ActionForm action={setExerciseHidden} success={isHidden ? "Exercise shown again" : "Exercise hidden"}>
                             <input type="hidden" name="slug" value={slug} />
                             <input type="hidden" name="exercise_id" value={e.id} />

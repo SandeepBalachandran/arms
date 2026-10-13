@@ -161,6 +161,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"exercise_media": {
+                  Row: {
+                    "exercise_id": string,"gym_id": string,"how_to_en": string | null,"how_to_ml": string | null,"photo_urls": (string)[],"updated_at": string,"updated_by": string | null,"video_url": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "exercise_id": string,"gym_id": string,"how_to_en"?: string | null,"how_to_ml"?: string | null,"photo_urls"?: (string)[],"updated_at"?: string,"updated_by"?: string | null,"video_url"?: string | null
+                  }
+                  Update: {
+                    "exercise_id"?: string,"gym_id"?: string,"how_to_en"?: string | null,"how_to_ml"?: string | null,"photo_urls"?: (string)[],"updated_at"?: string,"updated_by"?: string | null,"video_url"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "exercise_media_exercise_id_fkey"
+      columns: ["exercise_id"]
+isOneToOne: false
+      referencedRelation: "exercises"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "exercise_media_gym_id_fkey"
+      columns: ["gym_id"]
+isOneToOne: false
+      referencedRelation: "gyms"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "exercise_media_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "gym_members"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"exercises": {
                   Row: {
                     "created_at": string,"gym_id": string | null,"id": string,"is_active": boolean,"measure": Database["public"]['Enums']["exercise_measure"],"muscle_group": string,"name": string
@@ -589,14 +621,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "avatar_url": string | null,"created_at": string,"deleted_at": string | null,"full_name": string,"id": string,"is_platform_admin": boolean,"phone": string | null
+                    "avatar_url": string | null,"created_at": string,"deleted_at": string | null,"full_name": string,"id": string,"is_platform_admin": boolean,"language": string,"phone": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id": string,"is_platform_admin"?: boolean,"phone"?: string | null
+                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id": string,"is_platform_admin"?: boolean,"language"?: string,"phone"?: string | null
                   }
                   Update: {
-                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id"?: string,"is_platform_admin"?: boolean,"phone"?: string | null
+                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id"?: string,"is_platform_admin"?: boolean,"language"?: string,"phone"?: string | null
                   }
                   Relationships: [
                     

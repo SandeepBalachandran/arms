@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ExerciseGuideSheet } from '@/components/exercise-guide';
 import { Appear, GrowFill } from '@/components/motion';
 import { Button, Card, Loading, Text } from '@/components/ui';
 import { clock, emptySet, ExerciseCard, ExercisePicker } from '@/components/workout-editor';
@@ -12,6 +13,7 @@ import { Spacing } from '@/constants/theme';
 import { confirm } from '@/lib/confirm';
 import { useTheme } from '@/hooks/use-theme';
 import {
+  useExerciseGuides,
   useLastSets,
   useMyPlans,
   useSaveWorkout,
@@ -57,6 +59,8 @@ function Logger({ planId, dayLabel, initial }: { planId: string | null; dayLabel
   const [summary, setSummary] = useState<Summary | null>(null);
   const save = useSaveWorkout();
   const lastSets = useLastSets(exercises.map((e) => e.exercise.id));
+  const guides = useExerciseGuides();
+  const [guideFor, setGuideFor] = useState<ExerciseInfo | null>(null);
 
   // One tick a second drives the workout clock and the rest timer.
   useEffect(() => {
@@ -189,6 +193,7 @@ function Logger({ planId, dayLabel, initial }: { planId: string | null; dayLabel
               ex={ex}
               number={ei + 1}
               last={lastSets.data?.get(ex.exercise.id)?.sets}
+              onGuide={guides.data?.has(ex.exercise.id) ? () => setGuideFor(ex.exercise) : undefined}
               onSet={(si, patch) => updateSet(ei, si, patch)}
               onToggle={(si) => toggleDone(ei, si)}
               onAddSet={() => updateExercise(ei, (e) => ({ ...e, sets: [...e.sets, emptySet()] }))}
@@ -224,6 +229,7 @@ function Logger({ planId, dayLabel, initial }: { planId: string | null; dayLabel
       </View>
 
       <ExercisePicker visible={picking} onClose={() => setPicking(false)} onPick={addExercise} />
+      <ExerciseGuideSheet exercise={guideFor} guide={guideFor ? guides.data?.get(guideFor.id) : undefined} onClose={() => setGuideFor(null)} />
     </SafeAreaView>
   );
 }

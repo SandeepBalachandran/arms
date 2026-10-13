@@ -82,3 +82,40 @@ describe("logging workouts", () => {
 it("cleans up", async () => {
   await service.from("workout_plans").delete().eq("id", planId);
 });
+
+describe("exercise guides", () => {
+  const guide = () => ({ gym_id: gymId, exercise_id: exerciseId, video_url: "https://youtu.be/dQw4w9WgXcQ", how_to_en: "TEST Keep your back flat.", how_to_ml: "TEST പുറം നേരെ വയ്ക്കുക." });
+
+  it("the team writes a guide; members read it but can't change it", async () => {
+    expect((await as.trainer.from("exercise_media").upsert(guide())).error?.message).toBeUndefined();
+    expect((await as.member.from("exercise_media").select("how_to_ml").eq("gym_id", gymId).eq("exercise_id", exerciseId).single()).data).toEqual({ how_to_ml: "TEST പുറം നേരെ വയ്ക്കുക." });
+    expect((await as.member.from("exercise_media").update({ how_to_en: "x" }).eq("gym_id", gymId).eq("exercise_id", exerciseId).select("gym_id")).data ?? []).toEqual([]);
+    expect(refused(await as.member2.from("exercise_media").upsert({ ...guide(), how_to_en: "x" }).select("gym_id"))).toBe(true);
+  });
+
+  it("people outside the gym can't read it", async () => {
+    expect((await as.outsider.from("exercise_media").select("gym_id").eq("gym_id", gymId)).data).toEqual([]);
+  });
+
+  it("only takes https video links and short text", async () => {
+    expect((await as.staff.from("exercise_media").upsert({ ...guide(), video_url: "http://example.com/v" })).error).not.toBeNull();
+    expect((await as.staff.from("exercise_media").upsert({ ...guide(), how_to_en: "x".repeat(1001) })).error).not.toBeNull();
+    expect((await as.staff.from("exercise_media").upsert({ ...guide(), photo_urls: ["a", "b", "c", "d"] })).error).not.toBeNull();
+  });
+
+  it("can't attach a guide to another gym's own exercise", async () => {
+    const other = await service.from("gyms").insert({ name: "TEST other gym", slug: `test-other-${Date.now()}` }).select("id").single();
+    const ex = await service.from("exercises").insert({ gym_id: other.data!.id, name: "TEST secret move", muscle_group: "Core" }).select("id").single();
+    const res = await as.owner.from("exercise_media").upsert({ gym_id: gymId, exercise_id: ex.data!.id, how_to_en: "x" }).select("gym_id");
+    await service.from("gyms").delete().eq("id", other.data!.id);
+    expect(refused(res)).toBe(true);
+  });
+
+  it("a member picks the language guides are shown in", async () => {
+    const { data: me } = await as.member.auth.getUser();
+    expect((await as.member.from("profiles").update({ language: "ml" }).eq("id", me.user!.id)).error?.message).toBeUndefined();
+    expect((await as.member.from("profiles").update({ language: "fr" }).eq("id", me.user!.id)).error).not.toBeNull();
+    await as.member.from("profiles").update({ language: "en" }).eq("id", me.user!.id);
+    await service.from("exercise_media").delete().eq("gym_id", gymId).eq("exercise_id", exerciseId);
+  });
+});

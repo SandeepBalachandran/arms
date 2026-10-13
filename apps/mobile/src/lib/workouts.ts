@@ -1,4 +1,4 @@
-import { estimatedOneRepMax, num, type ExerciseMeasure } from '@gymos/shared';
+import { estimatedOneRepMax, hasGuide, num, type ExerciseMeasure } from '@gymos/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useActiveGym } from '@/lib/gyms';
@@ -47,6 +47,26 @@ export function useExercises() {
       if (hidden.error) throw hidden.error;
       const hiddenIds = new Set(hidden.data.map((h) => h.exercise_id));
       return exercises.data.filter((e) => !hiddenIds.has(e.id)) as ExerciseInfo[];
+    },
+  });
+}
+
+export type ExerciseGuide = { photo_urls: string[]; video_url: string | null; how_to_en: string | null; how_to_ml: string | null };
+
+// The gym's exercise guides (photos, video link, how-to), by exercise id.
+export function useExerciseGuides() {
+  const gymId = useActiveGym()?.gym.id;
+  return useQuery({
+    queryKey: ['exercise-guides', gymId],
+    enabled: !!gymId,
+    staleTime: 10 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('exercise_media')
+        .select('exercise_id, photo_urls, video_url, how_to_en, how_to_ml')
+        .eq('gym_id', gymId!);
+      if (error) throw error;
+      return new Map(data.filter(hasGuide).map(({ exercise_id, ...guide }) => [exercise_id, guide as ExerciseGuide]));
     },
   });
 }

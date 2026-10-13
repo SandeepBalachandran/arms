@@ -4,12 +4,13 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ExerciseGuideSheet } from '@/components/exercise-guide';
 import { Button, Card, Input, Loading, Screen, Text } from '@/components/ui';
 import { emptySet, ExerciseCard, ExercisePicker, NumberField } from '@/components/workout-editor';
 import { Spacing } from '@/constants/theme';
 import { confirm } from '@/lib/confirm';
 import { useTheme } from '@/hooks/use-theme';
-import { useDeleteWorkout, useUpdateWorkout, useWorkoutLog, type DraftExercise, type DraftSet, type ExerciseInfo } from '@/lib/workouts';
+import { useDeleteWorkout, useExerciseGuides, useUpdateWorkout, useWorkoutLog, type DraftExercise, type DraftSet, type ExerciseInfo } from '@/lib/workouts';
 
 // Edit a saved workout from History: fix reps, weight or time, add or remove
 // sets and exercises, change the duration and notes, or delete it.
@@ -44,6 +45,8 @@ function Editor({ log }: { log: Log }) {
   const [notes, setNotes] = useState(log.notes ?? '');
   const [picking, setPicking] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const guides = useExerciseGuides();
+  const [guideFor, setGuideFor] = useState<ExerciseInfo | null>(null);
   const originalSetIds = log.exercises.flatMap((e) => e.sets.flatMap((s) => (s.id ? [s.id] : [])));
   const performed = new Date(log.performed_at);
 
@@ -113,6 +116,7 @@ function Editor({ log }: { log: Log }) {
             ex={ex}
             number={ei + 1}
             mode="edit"
+            onGuide={guides.data?.has(ex.exercise.id) ? () => setGuideFor(ex.exercise) : undefined}
             onSet={(si, patch) => updateSet(ei, si, patch)}
             onAddSet={() => updateExercise(ei, (e) => ({ ...e, sets: [...e.sets, { ...emptySet(), done: true }] }))}
             onRemoveSet={(si) => updateExercise(ei, (e) => ({ ...e, sets: e.sets.filter((_, j) => j !== si) }))}
@@ -145,6 +149,7 @@ function Editor({ log }: { log: Log }) {
       </View>
 
       <ExercisePicker visible={picking} onClose={() => setPicking(false)} onPick={addExercise} />
+      <ExerciseGuideSheet exercise={guideFor} guide={guideFor ? guides.data?.get(guideFor.id) : undefined} onClose={() => setGuideFor(null)} />
     </SafeAreaView>
   );
 }
