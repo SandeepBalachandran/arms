@@ -215,14 +215,14 @@ isOneToOne: false
                   ]
                 },"foods": {
                   Row: {
-                    "carbs_g": number,"category": string,"created_at": string,"fat_g": number,"food_type": Database["public"]['Enums']["food_type"],"gym_id": string | null,"id": string,"is_active": boolean,"kcal": number,"name": string,"name_ml": string | null,"protein_g": number,"serving_g": number | null,"serving_label": string
+                    "carbs_g": number,"category": string,"created_at": string,"fat_g": number,"food_type": Database["public"]['Enums']["food_type"],"gym_id": string | null,"id": string,"is_active": boolean,"kcal": number,"member_id": string | null,"name": string,"name_ml": string | null,"protein_g": number,"serving_g": number | null,"serving_label": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "carbs_g"?: number,"category"?: string,"created_at"?: string,"fat_g"?: number,"food_type"?: Database["public"]['Enums']["food_type"],"gym_id"?: string | null,"id"?: string,"is_active"?: boolean,"kcal": number,"name": string,"name_ml"?: string | null,"protein_g"?: number,"serving_g"?: number | null,"serving_label": string
+                    "carbs_g"?: number,"category"?: string,"created_at"?: string,"fat_g"?: number,"food_type"?: Database["public"]['Enums']["food_type"],"gym_id"?: string | null,"id"?: string,"is_active"?: boolean,"kcal": number,"member_id"?: string | null,"name": string,"name_ml"?: string | null,"protein_g"?: number,"serving_g"?: number | null,"serving_label": string
                   }
                   Update: {
-                    "carbs_g"?: number,"category"?: string,"created_at"?: string,"fat_g"?: number,"food_type"?: Database["public"]['Enums']["food_type"],"gym_id"?: string | null,"id"?: string,"is_active"?: boolean,"kcal"?: number,"name"?: string,"name_ml"?: string | null,"protein_g"?: number,"serving_g"?: number | null,"serving_label"?: string
+                    "carbs_g"?: number,"category"?: string,"created_at"?: string,"fat_g"?: number,"food_type"?: Database["public"]['Enums']["food_type"],"gym_id"?: string | null,"id"?: string,"is_active"?: boolean,"kcal"?: number,"member_id"?: string | null,"name"?: string,"name_ml"?: string | null,"protein_g"?: number,"serving_g"?: number | null,"serving_label"?: string
                   }
                   Relationships: [
                     {
@@ -230,6 +230,12 @@ isOneToOne: false
       columns: ["gym_id"]
 isOneToOne: false
       referencedRelation: "gyms"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "foods_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "gym_members"
       referencedColumns: ["id"]
     }
                   ]
@@ -1026,6 +1032,9 @@ isOneToOne: false
                            },
 "poster_check_in":
 { Args: { "p_accuracy_m"?: number,"p_key": string,"p_lat"?: number,"p_lng"?: number,"p_slug": string }; Returns: Json
+                           },
+"promote_member_food":
+{ Args: { "p_food_id": string }; Returns: string
                            },
 "purge_deleted_gyms":
 { Args: Record<PropertyKey, never>; Returns: undefined

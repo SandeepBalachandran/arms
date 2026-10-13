@@ -226,6 +226,7 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #f
 .ex-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
 .ex-edit { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .ex-edit .mini { width: 38px; min-width: 0; padding: 3px 4px; border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 12.5px; text-align: center; background: var(--surface); color: var(--text); }
+.mine-tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--t-green-bg); color: var(--t-green); vertical-align: 1px; }
 .chip-x { border: 0; background: none; color: var(--muted); font-size: 15px; line-height: 1; padding: 0 2px; cursor: pointer; }
 .chip-x:hover { color: var(--danger); }
 .import-prev td.badrow { color: var(--danger); }
@@ -611,7 +612,7 @@ function initState() {
     members: [...team, ...mem, ...pending],
     plans, subs, payments, checkins, visitHistory, sessions, wplans, lastKg, history, ptPackages, pt,
     gymFoods: [{ id: "g1", name: "Arms protein shake", serving: "1 bottle", kcal: 180, p: 25 }, { id: "g2", name: "Sprouts salad (café)", serving: "1 bowl", kcal: 140, p: 9 }],
-    food: { log: foodLog, target: { kcal: 1800, p: 110, goal: "lose" }, water: 1250, waterGoal: 2500, waterAdds: [], cups: [["Glass", 250], ["Bottle", 500], ["Big bottle", 1000]], week: [1720, 1890, 1650, 1810, 2050, 1760], pref: "egg" },
+    food: { log: foodLog, target: { kcal: 1800, p: 110, goal: "lose" }, mine: [{ id: "mf1", name: "Amma's fish curry", serving: "1 bowl", kcal: 320, p: 24 }], water: 1250, waterGoal: 2500, waterAdds: [], cups: [["Glass", 250], ["Bottle", 500], ["Big bottle", 1000]], week: [1720, 1890, 1650, 1810, 2050, 1760], pref: "egg" },
     comments: [{ id: uid("nc"), by: "t2", day: addDays(TODAY, -1), body: "Great protein yesterday 👍 Add a boiled egg at breakfast." }],
     notifs: [
       { id: uid("n"), kind: "comment", title: "Tara Mathew commented on your food log", body: "Great protein yesterday 👍 Add a boiled egg at breakfast.", link: "food", at: minsAgo(300), unread: true },
@@ -620,7 +621,7 @@ function initState() {
     ],
     // UI state
     a: { route: "dashboard", modal: null, pop: null, memFilter: "all", memQuery: "", classDay: 0, planSel: "w1", ciResult: null, ciQuery: "", payTab: "all", importText: "" },
-    p: { route: "home", stack: [], sheet: null, dark: false, classDay: 1, checkedQrAt: null, wk: null, rest: null, foodQuery: "", pick: null, openDay: null, signedOut: false, deleted: false, upiPending: null },
+    p: { route: "home", stack: [], sheet: null, dark: false, classDay: 1, checkedQrAt: null, wk: null, rest: null, foodQuery: "", pick: null, ownForm: false, openDay: null, signedOut: false, deleted: false, upiPending: null },
   };
 }
 let S = initState();
@@ -909,6 +910,7 @@ const PAGES = {
       <div class="grid" style="align-self:start">
         <div class="a-card"><h2>Your gym's foods</h2><p class="hint">Add what your café or juice bar sells.</p><table class="t">${S.gymFoods.map((f) => `<tr><td>${esc(f.name)}</td><td>${esc(f.serving)}</td><td>${f.kcal} kcal</td><td>${f.p} g</td></tr>`).join("")}</table>
           <form data-submit="addFood" class="grid g2" style="margin-top:10px"><input class="inp" name="name" placeholder="Name" required><input class="inp" name="serving" placeholder="Portion, e.g. 1 glass" required><input class="inp" name="kcal" type="number" placeholder="kcal" required><input class="inp" name="p" type="number" placeholder="Protein g" required><button class="btn" style="grid-column:1/-1">Add food</button></form></div>
+        ${(() => { const listed = new Set(S.gymFoods.map((g) => g.name.toLowerCase())); const sug = S.food.mine.filter((m) => !listed.has(m.name.toLowerCase())); return sug.length ? `<div class="a-card"><h2>Suggested by members</h2><p class="hint">Foods members added for themselves. Add one so everyone can pick it.</p><table class="t">${sug.map((m) => `<tr><td>${esc(m.name)}</td><td>${esc(m.serving)}</td><td>${m.kcal} kcal</td><td><button class="btn sm sec" data-a="promoteFood" data-id="${m.id}">Add to gym foods</button></td></tr>`).join("")}</table></div>` : ""; })()}
         <div class="a-card"><h2>Who can see food logs</h2><p class="hint" style="margin:0">Food logs are health data. Only the member, their PT trainer and the owner see them. Front-desk staff can't.</p></div>
       </div>
     </div>`;
@@ -1385,11 +1387,20 @@ const A = {
 
   water: (d) => { const ml = S.food.cups[+d.i][1]; if (S.food.water + ml > 10000) return; S.food.water += ml; S.food.waterAdds.push(ml); },
   waterUndo: () => { const ml = S.food.waterAdds.pop(); if (ml) S.food.water = Math.max(0, S.food.water - ml); },
-  addFoodSheet: (d) => { S.p.foodQuery = ""; S.p.pick = null; S.p.meal = d.m; pSheet(`Add to ${MEALS.find((x) => x[0] === d.m)[1]}`, foodSheet()); },
+  addFoodSheet: (d) => { S.p.foodQuery = ""; S.p.pick = null; S.p.ownForm = false; S.p.meal = d.m; pSheet(`Add to ${MEALS.find((x) => x[0] === d.m)[1]}`, foodSheet()); },
   pickFood: (d) => { S.p.pick = d.id ? { id: d.id, servings: 1 } : null; S.p.sheet.html = foodSheet(); },
   servings: (d) => { S.p.pick.servings = Math.max(0.5, S.p.pick.servings + +d.v); S.p.sheet.html = foodSheet(); },
   addFoodItem: () => { const f = allFoods().find((x) => x.id === S.p.pick.id), n = S.p.pick.servings; S.food.log.push({ id: uid("fl"), meal: S.p.meal, name: f.name, kcal: Math.round(f.kcal * n), p: Math.round(f.p * n), servings: n }); S.p.sheet = null; toast(`${f.name} added. Your trainer sees it.`, "from-app"); },
-  quickAdd: () => { S.food.log.push({ id: uid("fl"), meal: S.p.meal, name: "Quick add", kcal: 250, p: 0, servings: 1 }); S.p.sheet = null; },
+  ownFoodOpen: () => { S.p.ownForm = true; S.p.sheet.html = foodSheet(); },
+  ownFoodBack: () => { S.p.ownForm = false; S.p.sheet.html = foodSheet(); },
+  ownFood: (f) => {
+    const food = { id: uid("mf"), name: f.name.trim(), serving: f.serving.trim() || "1 serving", kcal: Math.round(+f.kcal) || 0, p: Math.round(+f.p) || 0 };
+    if (f.keep) S.food.mine.push(food);
+    S.food.log.push({ id: uid("fl"), meal: S.p.meal, name: food.name, kcal: food.kcal, p: food.p, servings: 1 });
+    S.p.ownForm = false; S.p.sheet = null;
+    toast(f.keep ? `${food.name} added and saved to My foods` : `${food.name} added`, "from-app");
+  },
+  promoteFood: (d) => { const m = S.food.mine.find((x) => x.id === d.id); S.gymFoods.push({ id: uid("g"), name: m.name, serving: m.serving, kcal: m.kcal, p: m.p }); toast(`${m.name} added to the gym's foods. Every member can pick it now.`, "from-admin"); },
   rmFood: (d) => { S.food.log = S.food.log.filter((x) => x.id !== d.id); },
 
   payUpi: (d) => { const p = S.plans.find((x) => x.id === d.id); pSheet(`Pay ${inr(p.price)} by UPI`, `<div class="uz" style="border-radius:18px"><div class="p-sec" style="margin-bottom:10px">${esc(p.name)} membership. You pay ${esc(S.gym.name)} directly. No gateway fee ${usp(2)}</div><div style="display:flex;gap:12px;align-items:center" class="p-card"><div style="background:#fff;padding:6px;border-radius:12px">${qr("upi" + S.gym.upi + p.price, 96)}</div><div><div class="p-sec">UPI ID</div><b>${esc(S.gym.upi)}</b><div class="p-sec">${esc(S.gym.payee)}</div></div></div></div><button class="p-btn dark" style="margin-top:12px" data-a="pToast" data-t="Opens GPay / PhonePe / Paytm with the amount filled in.">Open UPI app</button><div class="p-sec" style="margin:14px 0 6px">After paying, enter the 12-digit UPI reference (UTR):</div><form data-submit="claimUpi" data-id="${p.id}"><input class="p-inp" name="utr" value="4${String(Date.now()).slice(-11)}" inputmode="numeric" aria-label="UPI reference"><button class="p-btn" style="margin-top:10px">I've paid</button></form>`); },
@@ -1407,7 +1418,7 @@ const A = {
 };
 
 /* Form submits, typed input and toggles */
-const FORMS = { addMember: A.addMember, pay: A.pay, reject: A.reject, note: A.note, comment: A.comment, sellPt: A.sellPt, cancelClass: A.cancelClass, addClass: A.addClass, addEx: A.addEx, assign: A.assign, addFood: A.addFood, addPlan: A.addPlan, claimUpi: A.claimUpi };
+const FORMS = { addMember: A.addMember, pay: A.pay, reject: A.reject, note: A.note, comment: A.comment, sellPt: A.sellPt, cancelClass: A.cancelClass, addClass: A.addClass, addEx: A.addEx, assign: A.assign, addFood: A.addFood, ownFood: A.ownFood, addPlan: A.addPlan, claimUpi: A.claimUpi };
 const INPUT = {
   memSearch: (el) => { S.a.memQuery = el.value; $("#mem-list").innerHTML = memberTable(); },
   ciSearch: (el) => { S.a.ciQuery = el.value; $("#ci-results").innerHTML = ciResults(); },
@@ -1428,18 +1439,26 @@ const CHANGE = {
   uspHighlight: (el) => { document.body.classList.toggle("usp-on", el.checked); return false; },
 };
 const FLAG_LABELS = { checkin: "Check-in", classes: "Classes", workouts: "Workouts", pt: "Personal training", nutrition: "Nutrition", nutritionAll: "Nutrition for all members", selfCheckin: "App check-in", poster: "QR poster", location: "Location check", onlyOpen: "Only during opening hours", approval: "Approve new joiners" };
-const allFoods = () => [...FOODS, ...S.gymFoods.map((g) => ({ ...g, ml: "", cat: "Gym" }))];
+const allFoods = () => [...S.food.mine.map((m) => ({ ...m, ml: "", cat: "Mine", mine: true })), ...FOODS, ...S.gymFoods.map((g) => ({ ...g, ml: "", cat: "Gym" }))];
 function foodResults() {
   const q = S.p.foodQuery.trim().toLowerCase();
   const list = allFoods().filter((f) => !q || f.name.toLowerCase().includes(q) || (f.ml || "").includes(q)).slice(0, 12);
-  return list.map((f) => `<button class="p-row" style="padding:8px" data-a="pickFood" data-id="${f.id}"><span class="grow"><b style="font-size:13.5px">${esc(f.name)} <span class="ml">${esc(f.ml)}</span></b><small>${esc(f.serving)} · ≈${f.kcal} kcal · ${f.p} g protein</small></span>${ic("plus")}</button>`).join("") || `<div class="p-sec" style="padding:10px">No match. Use quick add.</div>`;
+  return list.map((f) => `<button class="p-row" style="padding:8px" data-a="pickFood" data-id="${f.id}"><span class="grow"><b style="font-size:13.5px">${esc(f.name)} <span class="ml">${esc(f.ml)}</span>${f.mine ? ` <span class="mine-tag">Mine</span>` : ""}</b><small>${esc(f.serving)} · ≈${f.kcal} kcal · ${f.p} g protein</small></span>${ic("plus")}</button>`).join("") || `<div class="p-sec" style="padding:10px">Not in the list? Add it as your own food below.</div>`;
 }
 function foodSheet() {
+  if (S.p.ownForm) {
+    return `<form data-submit="ownFood" style="display:grid;gap:8px;margin-top:8px">
+      <input class="p-inp" name="name" placeholder="Name, e.g. Amma's fish curry" value="${esc(S.p.foodQuery)}" required minlength="2" aria-label="Name">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input class="p-inp" name="serving" value="1 serving" aria-label="Portion"><input class="p-inp" name="kcal" inputmode="numeric" placeholder="Calories" required pattern="[0-9]+" aria-label="Calories"></div>
+      <input class="p-inp" name="p" inputmode="numeric" placeholder="Protein g (optional)" aria-label="Protein">
+      <label class="p-sec" style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="keep" checked> Save to My foods: pick it again next time. Your trainer can see it.</label>
+      <button class="p-btn">Add</button><button type="button" class="p-btn sec" data-a="ownFoodBack">Back to search</button></form>`;
+  }
   if (S.p.pick) {
     const f = allFoods().find((x) => x.id === S.p.pick.id), n = S.p.pick.servings;
     return `<div class="p-card" style="margin-top:8px"><b style="font-size:16px">${esc(f.name)} <span class="ml">${esc(f.ml)}</span></b><div class="p-sec">${esc(f.serving)}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><div class="stepper"><button data-a="servings" data-v="-0.5" aria-label="Less">−</button><b style="font-size:18px;min-width:30px;text-align:center">${n}</b><button data-a="servings" data-v="0.5" aria-label="More">+</button></div><div style="text-align:right"><b>≈${Math.round(f.kcal * n)} kcal</b><div class="p-sec">${Math.round(f.p * n)} g protein</div></div></div></div><button class="p-btn" style="margin-top:12px" data-a="addFoodItem">Add</button><button class="p-btn sec" style="margin-top:8px" data-a="pickFood" data-id="">Back to search</button>`;
   }
-  return `<input class="p-inp" placeholder="Search puttu, appam, fish curry…" data-input="foodSearch" value="${esc(S.p.foodQuery)}" aria-label="Search foods" style="margin:8px 0"><div class="p-sec" style="margin-bottom:4px">Kerala &amp; Indian foods in home portions ${usp(7)}</div><div id="food-results">${foodResults()}</div><button class="p-btn sec sm" style="margin-top:8px" data-a="quickAdd">Quick add 250 kcal</button>`;
+  return `<input class="p-inp" placeholder="Search puttu, appam, fish curry…" data-input="foodSearch" value="${esc(S.p.foodQuery)}" aria-label="Search foods" style="margin:8px 0"><div class="p-sec" style="margin-bottom:4px">Kerala &amp; Indian foods in home portions ${usp(7)}</div><div id="food-results">${foodResults()}</div><button class="p-btn sec sm" style="margin-top:8px" data-a="ownFoodOpen">${ic("plus")} Add my own food</button>`;
 }
 
 /* ---------------------------------------------------------------------------
