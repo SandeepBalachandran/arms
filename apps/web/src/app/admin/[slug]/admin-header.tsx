@@ -7,7 +7,7 @@ import { Dropdown, MenuSection } from "@/components/dropdown";
 import { menuItemClass } from "@/components/menu-styles";
 import { ThemeSwitch } from "@/components/theme-toggle";
 import { signAvatar } from "@/lib/avatars";
-import { getMyGyms, STAFF_ROLES, TEAM_ROLES, type CurrentUser, type GymMembership } from "@/lib/auth";
+import { getMyGyms, getMyPermissions, STAFF_ROLES, TEAM_ROLES, type CurrentUser, type GymMembership } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getTheme } from "@/lib/theme";
 
@@ -16,7 +16,8 @@ import { getTheme } from "@/lib/theme";
 export async function AdminHeader({ membership, user }: { membership: GymMembership; user: CurrentUser }) {
   const { gym, role } = membership;
   const isStaff = STAFF_ROLES.includes(role);
-  const canConfigure = role === "owner" || role === "admin";
+  const permissions = await getMyPermissions(gym.id);
+  const canConfigure = permissions.has("edit_gym_settings") || permissions.has("manage_sections");
   const displayName = user.fullName || user.email || "Account";
   const supabase = await createClient();
 

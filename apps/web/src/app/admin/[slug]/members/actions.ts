@@ -5,34 +5,36 @@ import { redirect } from "next/navigation";
 import { internationalPhone, MANUAL_PAYMENT_METHODS, rupeesSchema } from "@gymos/shared";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
-import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
+import { TEAM_ROLES, requireGym, requirePermission } from "@/lib/auth";
 import { findOrCreateUser } from "@/lib/member-accounts";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+const TEAM_EXTRA = ["admin", "staff", "trainer"] as const;
 const roleSchema = z.object({
   slug: z.string(),
   id: z.uuid(),
-  role: z.enum(["admin", "staff", "trainer", "member"]),
+  role: z.enum(["owner", "admin", "staff", "trainer", "member"]),
+  extra: z.array(z.enum(TEAM_EXTRA)),
 });
 
-// RLS enforces the same rules (no owner edits, only owners grant admin);
-// the checks here give a clear error instead of a silent no-op.
+// Main role plus extra roles (e.g. a trainer who also works the front desk).
+// The database (set_member_roles) enforces the rules: manage_members to
+// change anyone, only the owner makes admins, the owner stays owner.
 export async function updateMember(formData: FormData): Promise<ActionResult> {
-  const { slug, id, role } = roleSchema.parse(Object.fromEntries(formData));
-  const { gym, role: myRole } = await requireGym(slug, STAFF_ROLES);
-  if (role === "admin" && myRole !== "owner") return { error: "Only the owner can make admins" };
+  const { slug, id, role, extra } = roleSchema.parse({
+    slug: formData.get("slug"),
+    id: formData.get("id"),
+    role: formData.get("role"),
+    extra: formData.getAll("extra"),
+  });
+  await requirePermission(slug, "manage_members");
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("gym_members")
-    .update({ role })
-    .eq("id", id)
-    .eq("gym_id", gym.id)
-    .neq("role", "owner");
+  const { error } = await supabase.rpc("set_member_roles", { p_member_id: id, p_role: role, p_extra_roles: extra });
   if (error) return { error: error.message };
 
-  revalidatePath(`/admin/${slug}/members`);
+  revalidatePath(`/admin/${slug}`, "layout");
 }
 
 export type RecordPaymentState = { error?: string; saved?: boolean } | undefined;
@@ -55,7 +57,7 @@ export async function recordPayment(
   const parsed = paymentSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, member_id, plan_id, method, amount, starts_on, note } = parsed.data;
-  await requireGym(slug, STAFF_ROLES);
+  await requirePermission(slug, "record_payments");
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("record_manual_payment", {
@@ -76,7 +78,7 @@ export async function cancelSubscription(formData: FormData): Promise<ActionResu
   const { slug, member_id, id } = z
     .object({ slug: z.string(), member_id: z.uuid(), id: z.uuid() })
     .parse(Object.fromEntries(formData));
-  await requireGym(slug, STAFF_ROLES);
+  await requirePermission(slug, "record_payments");
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("cancel_subscription", { p_subscription_id: id });
@@ -89,7 +91,7 @@ export async function reviewJoinRequest(formData: FormData): Promise<ActionResul
   const { slug, member_id, approve } = z
     .object({ slug: z.string(), member_id: z.uuid(), approve: z.enum(["true", "false"]) })
     .parse(Object.fromEntries(formData));
-  await requireGym(slug, STAFF_ROLES);
+  await requirePermission(slug, "manage_members");
   const supabase = await createClient();
   const { error } = await supabase.rpc("review_join_request", {
     p_member_id: member_id,
@@ -115,7 +117,7 @@ export async function addMember(_prev: AddMemberState, formData: FormData): Prom
   const parsed = addMemberSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, full_name, email, phone } = parsed.data;
-  const { gym } = await requireGym(slug, STAFF_ROLES);
+  const { gym } = await requirePermission(slug, "manage_members");
 
   const intlPhone = phone ? internationalPhone(phone, gym.phone_country_code) : null;
   if (phone && !intlPhone) return { error: "Check the phone number" };
@@ -153,7 +155,7 @@ export async function updateMemberDetails(_prev: DetailsState, formData: FormDat
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, member_id, full_name, phone } = parsed.data;
-  const { gym } = await requireGym(slug, STAFF_ROLES);
+  const { gym } = await requirePermission(slug, "manage_members");
 
   const admin = createAdminClient();
   const { data: member } = await admin
@@ -175,7 +177,7 @@ export async function setMemberActive(formData: FormData): Promise<ActionResult>
   const { slug, member_id, active } = z
     .object({ slug: z.string(), member_id: z.uuid(), active: z.enum(["true", "false"]) })
     .parse(Object.fromEntries(formData));
-  const { gym, user } = await requireGym(slug, STAFF_ROLES);
+  const { gym, user } = await requirePermission(slug, "manage_members");
 
   const supabase = await createClient();
   const { error } = await supabase

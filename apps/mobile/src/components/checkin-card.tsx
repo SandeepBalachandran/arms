@@ -8,13 +8,14 @@ import { Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useMyVisits, useSelfCheckIn } from '@/lib/checkins';
-import { useActiveGym } from '@/lib/gyms';
+import { useActiveGym, useMyPermissions } from '@/lib/gyms';
 
 // Shown on Home only when the gym has check-in turned on.
 export function CheckinCard() {
   const theme = useTheme();
   const router = useRouter();
   const gym = useActiveGym()?.gym;
+  const { memberCan } = useMyPermissions();
   const visits = useMyVisits();
   const checkIn = useSelfCheckIn();
   // Re-check opening hours every minute while Home is open.
@@ -28,7 +29,8 @@ export function CheckinCard() {
   const hours = parseOpeningHours(gym.opening_hours);
   // The gym only takes member check-ins during opening hours (staff still can).
   const closed = gym.checkin_only_when_open && !checkinOpenNow(hours, gym.timezone);
-  const canSelf = !visits.todayVisit && !closed;
+  const allowed = memberCan('self_check_in');
+  const canSelf = !visits.todayVisit && !closed && allowed;
 
   const time = (iso: string) =>
     new Date(iso).toLocaleTimeString('en-IN', { timeZone: gym.timezone, hour: 'numeric', minute: '2-digit' });
@@ -96,6 +98,7 @@ export function CheckinCard() {
         <QrCode size={16} color={theme.text} />
         <Text style={{ fontWeight: '700', fontSize: 13 }}>Show my QR at the desk</Text>
       </Pressable>
+      {!allowed && !visits.todayVisit && <Text variant="small">Check-in from the app is turned off for you. Ask the front desk to check you in.</Text>}
       {checkIn.error && <Text variant="error">{checkIn.error.message}</Text>}
     </View>
   );

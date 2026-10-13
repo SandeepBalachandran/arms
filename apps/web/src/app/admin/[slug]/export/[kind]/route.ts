@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { formatReceipt, PAYMENT_METHOD_LABELS } from "@gymos/shared";
-import { getMyGyms } from "@/lib/auth";
+import { getMyGyms, getMyPermissions } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 // CSV downloads of a gym's members and payments, for the owner's records
-// (offered before deleting a gym). Owners and admins only.
+// (offered before deleting a gym). Needs "view_reports" in the owner's grid.
 export async function GET(_request: Request, { params }: RouteContext<"/admin/[slug]/export/[kind]">) {
   const { slug, kind } = await params;
   const membership = (await getMyGyms()).find((m) => m.gym.slug === slug);
-  if (!membership || !["owner", "admin"].includes(membership.role)) {
+  if (!membership || !(await getMyPermissions(membership.gym.id)).has("view_reports")) {
     return new NextResponse("Not found", { status: 404 });
   }
   const { gym } = membership;

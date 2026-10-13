@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { todayIn } from "@gymos/shared";
 import { z } from "zod";
-import { requireGym, STAFF_ROLES } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { findOrCreateUser } from "@/lib/member-accounts";
 import { checkRows, IMPORT_BATCH, IMPORT_COLUMNS, type RawRow } from "@/lib/member-import";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -25,7 +25,7 @@ export async function importMembers(input: z.input<typeof batchSchema>): Promise
   const parsed = batchSchema.safeParse(input);
   if (!parsed.success) return { results: [], error: "This file couldn't be read. Try again from the template." };
   const { slug, rows } = parsed.data;
-  const { gym, user } = await requireGym(slug, STAFF_ROLES);
+  const { gym, user } = await requirePermission(slug, "manage_members");
 
   const supabase = await createClient();
   const { data: plans, error: plansError } = await supabase

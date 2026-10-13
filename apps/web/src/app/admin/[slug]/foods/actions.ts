@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
-import { requireGym, TEAM_ROLES } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type FoodState = { error?: string; saved?: boolean } | undefined;
@@ -27,7 +27,7 @@ export async function addFood(_prev: FoodState, formData: FormData): Promise<Foo
   const parsed = foodSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, ...food } = parsed.data;
-  const { gym } = await requireGym(slug, TEAM_ROLES);
+  const { gym } = await requirePermission(slug, "manage_food_list");
   const supabase = await createClient();
   const { error } = await supabase.from("foods").insert({ ...food, gym_id: gym.id });
   if (error) return { error: error.message };
@@ -39,7 +39,7 @@ export async function setFoodActive(formData: FormData): Promise<ActionResult> {
   const { slug, id, active } = z
     .object({ slug: z.string(), id: z.uuid(), active: z.enum(["true", "false"]) })
     .parse(Object.fromEntries(formData));
-  const { gym } = await requireGym(slug, TEAM_ROLES);
+  const { gym } = await requirePermission(slug, "manage_food_list");
   const supabase = await createClient();
   const { error } = await supabase.from("foods").update({ is_active: active === "true" }).eq("id", id).eq("gym_id", gym.id).is("member_id", null);
   if (error) return { error: error.message };
@@ -50,7 +50,7 @@ export async function setFoodActive(formData: FormData): Promise<ActionResult> {
 // member's trainer; the database checks).
 export async function promoteMemberFood(formData: FormData): Promise<ActionResult> {
   const { slug, id } = z.object({ slug: z.string(), id: z.uuid() }).parse(Object.fromEntries(formData));
-  await requireGym(slug, TEAM_ROLES);
+  await requirePermission(slug, "manage_food_list");
   const supabase = await createClient();
   const { error } = await supabase.rpc("promote_member_food", { p_food_id: id });
   if (error) return { error: error.message };

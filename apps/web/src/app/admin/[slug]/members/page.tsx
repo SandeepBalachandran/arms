@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import clsx from "clsx";
 import { Download, Upload } from "lucide-react";
-import { membershipState, todayIn, type Subscription } from "@gymos/shared";
+import { membershipState, rolesLabel, todayIn, type Subscription } from "@gymos/shared";
 import { ActionForm } from "@/components/action-form";
 import { Avatar } from "@/components/avatar";
 import { MembershipBadge } from "@/components/membership-badge";
 import { Card, PageHeader } from "@/components/ui";
-import { requireGym, STAFF_ROLES, TEAM_ROLES, type GymRole } from "@/lib/auth";
+import { requireGym, TEAM_ROLES, type GymRole } from "@/lib/auth";
 import { signAvatars } from "@/lib/avatars";
 import { createClient } from "@/lib/supabase/server";
 import { joinUrl } from "@/lib/site";
@@ -27,15 +27,16 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
   const filter: Filter = FILTER_KEYS.includes(show as Filter) ? (show as Filter) : "all";
   const query = typeof q === "string" ? q.trim() : "";
 
-  const { gym, role: myRole, user } = await requireGym(slug, TEAM_ROLES);
-  const canManage = STAFF_ROLES.includes(myRole);
-  const assignable: GymRole[] =
-    myRole === "owner" ? ["admin", "staff", "trainer", "member"] : ["staff", "trainer", "member"];
+  const { gym, role: myRole, user, can } = await requireGym(slug, TEAM_ROLES);
+  const canManage = can("manage_members");
+  const isOwner = myRole === "owner";
+  const assignable: GymRole[] = isOwner ? ["admin", "staff", "trainer", "member"] : ["staff", "trainer", "member"];
+  const extraAssignable: GymRole[] = isOwner ? ["admin", "staff", "trainer"] : ["staff", "trainer"];
 
   const supabase = await createClient();
   let request = supabase
     .from("gym_members")
-    .select("id, user_id, role, status, joined_at, profiles!inner(full_name, phone, avatar_url)")
+    .select("id, user_id, role, extra_roles, status, joined_at, profiles!inner(full_name, phone, avatar_url)")
     .eq("gym_id", gym.id)
     .neq("status", "pending")
     .order("joined_at", { ascending: false })
@@ -197,8 +198,12 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
           </thead>
           <tbody>
             {rows.map((m) => {
-              const editable = canManage && m.role !== "owner" && m.user_id !== user.id &&
-                (myRole === "owner" || m.role !== "admin");
+              // Only the owner touches admins; the owner may add extra roles to their own row.
+              const ownRow = m.user_id === user.id;
+              const editable = canManage && (
+                m.role === "owner" ? isOwner && ownRow
+                : !ownRow && (isOwner || (m.role !== "admin" && !m.extra_roles.includes("admin")))
+              );
               return (
                 <tr key={m.id} className="border-b border-border last:border-0">
                   <td className="p-3 font-medium">
@@ -217,11 +222,14 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
                         slug={slug}
                         memberId={m.id}
                         role={m.role}
+                        extraRoles={m.extra_roles}
                         options={assignable}
+                        extraOptions={extraAssignable}
+                        isOwner={m.role === "owner"}
                         name={m.profiles.full_name || "This member"}
                       />
                     ) : (
-                      <span className="capitalize">{m.role}</span>
+                      <span>{rolesLabel(m.role, m.extra_roles)}</span>
                     )}
                   </td>
                   <td className="hidden p-3 text-muted lg:table-cell">{new Date(m.joined_at).toLocaleDateString("en-IN", { timeZone: gym.timezone })}</td>

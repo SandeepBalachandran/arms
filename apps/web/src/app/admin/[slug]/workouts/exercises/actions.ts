@@ -10,7 +10,7 @@ import {
   videoLink,
 } from "@gymos/shared";
 import type { ActionResult } from "@/lib/action-result";
-import { requireGym, TEAM_ROLES } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -72,7 +72,7 @@ export async function saveGuide(_prev: GuideState, formData: FormData): Promise<
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, exercise_id, video_url, ...howTo } = parsed.data;
-  const { gym, memberId } = await requireGym(slug, TEAM_ROLES);
+  const { gym, memberId } = await requirePermission(slug, "edit_exercises");
 
   const supabase = await createClient();
   const { error } = await supabase.from("exercise_media").upsert({
@@ -95,7 +95,7 @@ export async function uploadExercisePhoto(formData: FormData): Promise<ActionRes
     exercise_id: formData.get("exercise_id"),
   });
   const file = formData.get("photo");
-  const { gym, memberId } = await requireGym(slug, TEAM_ROLES);
+  const { gym, memberId } = await requirePermission(slug, "edit_exercises");
   if (!(file instanceof File) || file.size === 0) return { error: "Choose a photo" };
   if (file.type !== "image/jpeg") return { error: "Couldn't read that photo" };
   if (file.size > EXERCISE_PHOTO_MAX_BYTES) return { error: "The photo must be 2 MB or smaller" };
@@ -131,7 +131,7 @@ export async function removeExercisePhoto(formData: FormData): Promise<ActionRes
   const { slug, exercise_id, url } = z
     .object({ slug: z.string(), exercise_id: z.uuid(), url: z.string() })
     .parse(Object.fromEntries(formData));
-  const { gym, memberId } = await requireGym(slug, TEAM_ROLES);
+  const { gym, memberId } = await requirePermission(slug, "edit_exercises");
   const supabase = await createClient();
   const guide = await currentGuide(supabase, gym.id, exercise_id);
   if (!guide?.photo_urls.includes(url)) return;

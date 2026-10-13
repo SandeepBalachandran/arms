@@ -10,7 +10,8 @@ import { Appear, Float, PressableScale } from '@/components/motion';
 import { Card, Chip, Loading, SectionHeader, Text } from '@/components/ui';
 import { Spacing, type Tint } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { useActiveGym } from '@/lib/gyms';
+import { useActiveGym, useMyPermissions } from '@/lib/gyms';
+import { confirm } from '@/lib/confirm';
 import {
   nextPlanDay,
   useBodyMetrics,
@@ -36,6 +37,7 @@ export default function WorkoutsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const gym = useActiveGym()?.gym;
+  const { memberCan } = useMyPermissions();
   const plans = useMyPlans();
   const history = useWorkoutHistory();
   const guides = useExerciseGuides();
@@ -65,8 +67,13 @@ export default function WorkoutsScreen() {
   const dayOf = (log: WorkoutHistoryItem) => todayIn(gym.timezone, new Date(log.performed_at));
   const week = logs.filter((l) => dayOf(l) >= monday);
   const latestWeight = [...(metrics.data ?? [])].reverse().find((m) => m.weight_kg !== null)?.weight_kg;
-  const start = (day?: PlanDay) =>
+  const start = (day?: PlanDay) => {
+    if (!memberCan('log_workouts')) {
+      confirm({ title: 'Logging is turned off', message: 'Your gym has turned off workout logging for you. Ask the front desk.', confirmText: 'OK', cancelText: 'Close' });
+      return;
+    }
     router.push(day && plan ? { pathname: '/workout/log', params: { planId: plan.id, day: day.label } } : '/workout/log');
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={['top']}>

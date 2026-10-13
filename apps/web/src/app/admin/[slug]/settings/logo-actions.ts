@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
-import { requireGym } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -35,7 +35,7 @@ function storedPath(url: string | null) {
 export async function uploadLogo(formData: FormData): Promise<ActionResult> {
   const slug = z.string().parse(formData.get("slug"));
   const file = formData.get("logo");
-  const { gym } = await requireGym(slug, ["owner", "admin"]);
+  const { gym } = await requirePermission(slug, "edit_gym_settings");
   if (!(file instanceof File) || file.size === 0) return { error: "Choose an image" };
   const ext = TYPES[file.type];
   if (!ext) return { error: "Use a PNG, JPG or WebP image" };
@@ -60,7 +60,7 @@ export async function uploadLogo(formData: FormData): Promise<ActionResult> {
 
 export async function removeLogo(formData: FormData): Promise<ActionResult> {
   const slug = z.string().parse(formData.get("slug"));
-  const { gym } = await requireGym(slug, ["owner", "admin"]);
+  const { gym } = await requirePermission(slug, "edit_gym_settings");
   const supabase = await createClient();
   const { error } = await supabase.from("gyms").update({ logo_url: null }).eq("id", gym.id);
   if (error) return { error: error.message };

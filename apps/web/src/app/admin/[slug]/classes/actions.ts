@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
-import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
+import { TEAM_ROLES, requireGym, requirePermission } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type FormState = { error?: string; message?: string } | undefined;
@@ -26,7 +26,7 @@ export async function createClassType(_prev: FormState, formData: FormData): Pro
   const parsed = typeSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, ...values } = parsed.data;
-  const { gym } = await requireGym(slug, STAFF_ROLES);
+  const { gym } = await requirePermission(slug, "manage_classes");
 
   const supabase = await createClient();
   const { error } = await supabase.from("class_types").insert({ ...values, gym_id: gym.id });
@@ -39,7 +39,7 @@ export async function updateClassType(_prev: FormState, formData: FormData): Pro
   const parsed = typeSchema.extend({ id: z.uuid() }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, id, ...values } = parsed.data;
-  const { gym } = await requireGym(slug, STAFF_ROLES);
+  const { gym } = await requirePermission(slug, "manage_classes");
 
   const supabase = await createClient();
   const { error } = await supabase.from("class_types").update(values).eq("id", id).eq("gym_id", gym.id);
@@ -51,7 +51,7 @@ export async function updateClassType(_prev: FormState, formData: FormData): Pro
 // Archived types can't be scheduled again; classes already on the calendar stay.
 export async function archiveClassType(formData: FormData): Promise<ActionResult> {
   const { slug, id } = z.object({ slug: z.string(), id: z.uuid() }).parse(Object.fromEntries(formData));
-  const { gym } = await requireGym(slug, STAFF_ROLES);
+  const { gym } = await requirePermission(slug, "manage_classes");
   const supabase = await createClient();
   const { error } = await supabase.from("class_types").update({ is_active: false }).eq("id", id).eq("gym_id", gym.id);
   if (error) return { error: error.message };
@@ -78,7 +78,7 @@ export async function createSeries(_prev: FormState, formData: FormData): Promis
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const d = parsed.data;
-  await requireGym(d.slug, STAFF_ROLES);
+  await requirePermission(d.slug, "manage_classes");
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("create_class_series", {
@@ -101,7 +101,7 @@ export async function cancelSession(formData: FormData): Promise<ActionResult> {
   const { slug, id, reason } = z
     .object({ slug: z.string(), id: z.uuid(), reason: z.string().trim().max(300) })
     .parse(Object.fromEntries(formData));
-  await requireGym(slug, STAFF_ROLES);
+  await requirePermission(slug, "manage_classes");
   const supabase = await createClient();
   const { error } = await supabase.rpc("cancel_class_session", {
     p_session_id: id,
@@ -130,7 +130,7 @@ export async function removeBooking(formData: FormData): Promise<ActionResult> {
   const { slug, session_id, booking_id } = z
     .object({ slug: z.string(), session_id: z.uuid(), booking_id: z.uuid() })
     .parse(Object.fromEntries(formData));
-  await requireGym(slug, STAFF_ROLES);
+  await requirePermission(slug, "manage_classes");
   const supabase = await createClient();
   const { error } = await supabase.rpc("cancel_booking", { p_booking_id: booking_id });
   if (error) return { error: error.message };

@@ -1,4 +1,4 @@
-import { parseGymCode, type Database, type GymRole } from '@gymos/shared';
+import { parseGymCode, type Database, type GymRole, type Permission } from '@gymos/shared';
 import { useQuery } from '@tanstack/react-query';
 import * as Application from 'expo-application';
 import { createContext, use, useState, type ReactNode } from 'react';
@@ -10,6 +10,8 @@ import { supabase } from '@/lib/supabase';
 export type GymMembership = {
   memberId: string;
   role: GymRole;
+  // Roles besides the main one (e.g. an owner who also trains).
+  extraRoles: GymRole[];
   status: Database['public']['Enums']['member_status'];
   // The whole gym row, including its settings (configured in the web admin).
   gym: Database['public']['Tables']['gyms']['Row'];
@@ -27,13 +29,13 @@ function useMemberships<T>(select: (rows: GymMembership[]) => T) {
     queryFn: async (): Promise<GymMembership[]> => {
       const { data, error } = await supabase
         .from('gym_members')
-        .select('id, role, status, gyms!inner(*)')
+        .select('id, role, extra_roles, status, gyms!inner(*)')
         .eq('user_id', userId!)
         .in('status', ['active', 'pending'])
         .eq('gyms.status', 'active')
         .order('joined_at');
       if (error) throw error;
-      return data.map((row) => ({ memberId: row.id, role: row.role, status: row.status, gym: row.gyms }));
+      return data.map((row) => ({ memberId: row.id, role: row.role, extraRoles: row.extra_roles, status: row.status, gym: row.gyms }));
     },
     select,
   });
@@ -75,6 +77,32 @@ export function useActiveGym(): GymMembership | null {
   const { data: gyms } = useMyGyms();
   if (!gyms?.length) return null;
   return gyms.find((m) => m.gym.slug === activeSlug) ?? gyms[0];
+}
+
+// What the signed-in user may do in the active gym (the owner's grid, see
+// has_permission in the database). Empty until loaded, so buttons only
+// appear once we know. Member-side permissions default to allowed, so a
+// member isn't blocked while this loads.
+export function useMyPermissions() {
+  const gymId = useActiveGym()?.gym.id;
+  const query = useQuery({
+    queryKey: ['my-permissions', gymId],
+    enabled: !!gymId,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('my_permissions', { p_gym_id: gymId! });
+      if (error) throw error;
+      return new Set(data as Permission[]);
+    },
+  });
+  const set = query.data;
+  return {
+    loaded: !!set,
+    // Team permissions: false until loaded.
+    can: (permission: Permission) => !!set?.has(permission),
+    // Member-side actions: allowed until we know the owner turned them off.
+    memberCan: (permission: Permission) => !set || set.has(permission),
+  };
 }
 
 export function useSetActiveGym() {

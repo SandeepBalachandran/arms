@@ -17,7 +17,7 @@ function shiftMonth(month: string, delta: number) {
 export default async function PaymentsPage({ params, searchParams }: PageProps<"/admin/[slug]/payments">) {
   const { slug } = await params;
   const { month: monthParam } = await searchParams;
-  const { gym } = await requireGym(slug, STAFF_ROLES);
+  const { gym, can } = await requireGym(slug, STAFF_ROLES);
 
   const thisMonth = todayIn(gym.timezone).slice(0, 7);
   const month = typeof monthParam === "string" && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : thisMonth;
@@ -61,7 +61,7 @@ export default async function PaymentsPage({ params, searchParams }: PageProps<"
         }
       />
 
-      <PendingPayments slug={slug} gymId={gym.id} currency={gym.currency} timezone={gym.timezone} />
+      {can("confirm_upi") && <PendingPayments slug={slug} gymId={gym.id} currency={gym.currency} timezone={gym.timezone} />}
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>

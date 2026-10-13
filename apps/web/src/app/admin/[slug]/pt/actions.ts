@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { MANUAL_PAYMENT_METHODS, rupeesSchema } from "@gymos/shared";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
-import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
+import { TEAM_ROLES, requireGym, requirePermission } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type PtState = { error?: string; saved?: boolean } | undefined;
@@ -34,7 +34,7 @@ export async function savePackage(_prev: PtState, formData: FormData): Promise<P
   const parsed = packageSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, id, price, ...values } = parsed.data;
-  const { gym } = await requireGym(slug, ["owner", "admin"]);
+  const { gym } = await requirePermission(slug, "manage_plans_pricing");
 
   const supabase = await createClient();
   const row = { ...values, price_paise: price };
@@ -50,7 +50,7 @@ export async function togglePackage(formData: FormData): Promise<ActionResult> {
   const { slug, id, is_active } = z
     .object({ slug: z.string(), id: z.uuid(), is_active: z.enum(["true", "false"]) })
     .parse(Object.fromEntries(formData));
-  const { gym } = await requireGym(slug, ["owner", "admin"]);
+  const { gym } = await requirePermission(slug, "manage_plans_pricing");
   const supabase = await createClient();
   const { error } = await supabase
     .from("pt_packages")
@@ -63,7 +63,7 @@ export async function togglePackage(formData: FormData): Promise<ActionResult> {
 
 export async function deletePackage(formData: FormData): Promise<ActionResult> {
   const { slug, id } = z.object({ slug: z.string(), id: z.uuid() }).parse(Object.fromEntries(formData));
-  const { gym } = await requireGym(slug, ["owner", "admin"]);
+  const { gym } = await requirePermission(slug, "manage_plans_pricing");
   const supabase = await createClient();
   // RLS only allows deleting packages that were never sold.
   const { data, error } = await supabase.from("pt_packages").delete().eq("id", id).eq("gym_id", gym.id).select("id");
@@ -87,7 +87,7 @@ export async function sellPackage(_prev: PtState, formData: FormData): Promise<P
   const parsed = sellSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const d = parsed.data;
-  await requireGym(d.slug, STAFF_ROLES);
+  await requirePermission(d.slug, "sell_pt");
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("sell_pt_package", {
@@ -143,7 +143,7 @@ export async function changeTrainer(formData: FormData): Promise<ActionResult> {
   const { slug, id, trainer_member_id } = z
     .object({ slug: z.string(), id: z.uuid(), trainer_member_id: z.union([z.literal(""), z.uuid()]) })
     .parse(Object.fromEntries(formData));
-  const { gym } = await requireGym(slug, STAFF_ROLES);
+  const { gym } = await requirePermission(slug, "sell_pt");
   const supabase = await createClient();
   const { error } = await supabase
     .from("pt_subscriptions")
@@ -156,7 +156,7 @@ export async function changeTrainer(formData: FormData): Promise<ActionResult> {
 
 export async function cancelPtSubscription(formData: FormData): Promise<ActionResult> {
   const { slug, id } = z.object({ slug: z.string(), id: z.uuid() }).parse(Object.fromEntries(formData));
-  const { gym } = await requireGym(slug, STAFF_ROLES);
+  const { gym } = await requirePermission(slug, "sell_pt");
   const supabase = await createClient();
   const { error } = await supabase
     .from("pt_subscriptions")

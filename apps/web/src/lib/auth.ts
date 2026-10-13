@@ -2,9 +2,9 @@ import "server-only";
 import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { Database, GymRole } from "@gymos/shared";
+import { highestRole, type Database, type GymRole, type Permission } from "@gymos/shared";
 
-export { STAFF_ROLES, TEAM_ROLES, type GymRole } from "@gymos/shared";
+export { STAFF_ROLES, TEAM_ROLES, type GymRole, type Permission } from "@gymos/shared";
 
 export type CurrentUser = {
   id: string;
@@ -17,7 +17,11 @@ export type CurrentUser = {
 
 export type GymMembership = {
   memberId: string;
+  // Their highest role (main or extra), as the database's auth_role_in()
+  // sees it, so role checks include extra roles.
   role: GymRole;
+  // Main role first, then any extra roles (e.g. an owner who also trains).
+  roles: GymRole[];
   // The whole gym row, including its settings.
   gym: Database["public"]["Tables"]["gyms"]["Row"];
 };
@@ -58,17 +62,25 @@ export const getMyGyms = cache(async (): Promise<GymMembership[]> => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("gym_members")
-    .select("id, role, gyms!inner(*)")
+    .select("id, role, extra_roles, gyms!inner(*)")
     .eq("user_id", user.id)
     .eq("status", "active")
     .eq("gyms.status", "active")
     .order("joined_at");
 
-  return (data ?? []).map((row) => ({
-    memberId: row.id,
-    role: row.role,
-    gym: row.gyms,
-  }));
+  return (data ?? []).map((row) => {
+    const roles = [row.role, ...row.extra_roles];
+    return { memberId: row.id, role: highestRole(roles), roles, gym: row.gyms };
+  });
+});
+
+// What the signed-in user may do in a gym (the owner's grid, see
+// has_permission in the database). Cached per request.
+export const getMyPermissions = cache(async (gymId: string): Promise<Set<Permission>> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("my_permissions", { p_gym_id: gymId });
+  if (error) throw error;
+  return new Set(data as Permission[]);
 });
 
 // Resolves a gym by slug for the signed-in user, enforcing a role. Use at the
@@ -77,7 +89,17 @@ export async function requireGym(slug: string, roles: GymRole[], next = `/admin/
   const user = await requireUser(next);
   const membership = (await getMyGyms()).find((m) => m.gym.slug === slug);
   if (!membership || !roles.includes(membership.role)) notFound();
-  return { user, ...membership };
+  const permissions = await getMyPermissions(membership.gym.id);
+  return { user, ...membership, permissions, can: (permission: Permission) => permissions.has(permission) };
+}
+
+// Like requireGym, for an action the owner's grid controls. The database
+// checks the same permission, so this is for a clear "not found" and for
+// hiding pages, not the only guard.
+export async function requirePermission(slug: string, permission: Permission, next = `/admin/${slug}`) {
+  const gym = await requireGym(slug, ["owner", "admin", "staff", "trainer", "member"], next);
+  if (!gym.can(permission)) notFound();
+  return gym;
 }
 
 // Only allow redirects to paths on this site, never to another domain.

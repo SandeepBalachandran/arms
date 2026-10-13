@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { AVATAR_BUCKET, AVATAR_MAX_BYTES, AVATAR_TYPES, avatarPath } from "@gymos/shared";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
-import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
+import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,10 +15,10 @@ async function target(formData: FormData) {
   const { slug, member_id } = z
     .object({ slug: z.string(), member_id: z.uuid().optional() })
     .parse({ slug: formData.get("slug"), member_id: formData.get("member_id") || undefined });
-  const { user, role, gym } = await requireGym(slug, TEAM_ROLES);
+  const { user, gym, can } = await requireGym(slug, TEAM_ROLES);
   if (!member_id) return { slug, userId: user.id, self: true as const };
 
-  if (!STAFF_ROLES.includes(role)) return { error: "Only the front desk can change a member's photo" };
+  if (!can("manage_members")) return { error: "You don't have permission to change members' photos" };
   const supabase = await createClient();
   const { data: member } = await supabase
     .from("gym_members")

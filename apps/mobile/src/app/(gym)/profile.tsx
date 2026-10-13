@@ -1,4 +1,4 @@
-import { STAFF_ROLES } from '@gymos/shared';
+import { rolesLabel } from '@gymos/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Apple, Camera, Check, ChevronRight, LogOut, Moon, Pencil, Plus, ScanLine, Sun, Trash2, type LucideIcon } from 'lucide-react-native';
@@ -17,7 +17,7 @@ import { useActivity } from '@/lib/activity';
 import { setScheme, useScheme } from '@/lib/appearance';
 import { useSetAvatar } from '@/lib/avatar';
 import { confirm } from '@/lib/confirm';
-import { useActiveGym, useMyGyms, useSetActiveGym } from '@/lib/gyms';
+import { useActiveGym, useMyGyms, useMyPermissions, useSetActiveGym } from '@/lib/gyms';
 import { useNutritionAccess } from '@/lib/nutrition';
 import { profileKey, useProfile, useSetLanguage } from '@/lib/profile';
 import { useSession } from '@/lib/session';
@@ -36,7 +36,8 @@ export default function ProfileScreen() {
   const active = useActiveGym();
   const [editing, setEditing] = useState(false);
   const nutrition = useNutritionAccess();
-  const canScan = !!active?.gym.checkin_enabled && STAFF_ROLES.includes(active.role);
+  const { can } = useMyPermissions();
+  const canScan = !!active?.gym.checkin_enabled && can('check_in_members');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string>();
 
@@ -172,7 +173,7 @@ function ProfileHero({ onEdit }: { onEdit: () => void }) {
             <Text style={{ color: theme.heroText, fontSize: 12, fontWeight: '600' }}>{active.gym.name}</Text>
           </View>
           <View style={{ borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: theme.accent }}>
-            <Text style={{ color: theme.accentText, fontSize: 12, fontWeight: '700', textTransform: 'capitalize' }}>{active.role}</Text>
+            <Text style={{ color: theme.accentText, fontSize: 12, fontWeight: '700' }}>{rolesLabel(active.role, active.extraRoles)}</Text>
           </View>
         </View>
       )}

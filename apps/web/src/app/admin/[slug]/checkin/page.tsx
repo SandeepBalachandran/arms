@@ -5,7 +5,7 @@ import { todayIn } from "@gymos/shared";
 import { QrCode } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { Badge, Card, PageHeader } from "@/components/ui";
-import { requireGym, STAFF_ROLES } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { signAvatars } from "@/lib/avatars";
 import { createClient } from "@/lib/supabase/server";
 import { hoursAgo } from "@/lib/time";
@@ -21,7 +21,7 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
   const { slug } = await params;
   const { q } = await searchParams;
   const query = typeof q === "string" ? q.trim() : "";
-  const { gym } = await requireGym(slug, STAFF_ROLES);
+  const { gym } = await requirePermission(slug, "check_in_members");
   if (!gym.checkin_enabled) notFound();
 
   const supabase = await createClient();

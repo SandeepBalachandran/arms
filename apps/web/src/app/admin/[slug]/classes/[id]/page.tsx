@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { dayKey, formatDay, formatTime, hasStarted } from "@gymos/shared";
 import { ActionForm } from "@/components/action-form";
 import { Badge, Card, PageHeader } from "@/components/ui";
-import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
+import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { cancelSession, markAttendance, removeBooking } from "../actions";
 
@@ -20,9 +20,9 @@ const STATUS = {
 
 export default async function SessionPage({ params }: PageProps<"/admin/[slug]/classes/[id]">) {
   const { slug, id } = await params;
-  const { gym, role } = await requireGym(slug, TEAM_ROLES);
+  const { gym, can } = await requireGym(slug, TEAM_ROLES);
   if (!gym.classes_enabled) notFound();
-  const isStaff = STAFF_ROLES.includes(role);
+  const isStaff = can("manage_classes");
 
   const supabase = await createClient();
   const { data: session } = await supabase

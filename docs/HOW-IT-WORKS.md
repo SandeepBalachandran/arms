@@ -20,17 +20,26 @@ Optional features (check-in, classes, workouts, personal training) are switched 
 
 ## Who does what (roles)
 
-Each person has a role **per gym**. The same person can be a member at one gym and staff at another.
+Each person has a main role **per gym**, and can also hold extra roles there (an owner who also trains, a trainer who also works the front desk). The same person can be a member at one gym and staff at another.
 
-| Role | Web admin | What they can do |
+| Role | Web admin | What they can do by default |
 |---|---|---|
-| **Owner** | Yes | Everything, including Settings, making admins, and editing plans and PT packages |
-| **Admin** | Yes | Same as owner, except they can't make other admins |
+| **Owner** | Yes | Everything, always. Can't be restricted. Only the owner can make admins, turn sections on or off, change gym settings, and edit the permission grid |
+| **Admin** | Yes | Everything except the owner-only items above: members, payments, plans and prices, classes, workouts, PT, nutrition |
 | **Staff** | Yes | Front desk: add and approve members, record payments, confirm UPI, check people in, sell PT, schedule classes |
-| **Trainer** | Yes (limited) | See members, mark class attendance, build workout plans, log PT sessions for their own clients |
-| **Member** | No | Use the app: membership, payments, check-in QR, classes, workouts, PT progress |
+| **Trainer** | Yes (limited) | Build and assign workout plans, write exercise guides, coach nutrition for their own PT clients, log PT sessions |
+| **Member** | No | Use the app: membership, payments, check-in QR, classes, workouts, food, PT progress |
 
-The database enforces these rules, not just the screens (see [Security](#security)).
+### Roles & permissions (the owner's grid)
+
+What each role may do is not fixed. The owner opens **Roles & permissions** in the admin and ticks or unticks any box for Admin, Staff, Trainer or Member, including member-side things like booking classes or logging food. The Owner column is locked: the owner can always do everything. Unticked-by-default items stay that way until the owner ticks them, for example **Turn sections on or off** and **Change gym settings** are the owner's alone until granted to an admin.
+
+- A person with several roles gets all of their roles' permissions.
+- Rows for a section that's switched off (say Classes) are greyed out; their ticks are kept for when it's back on.
+- Only the changes from the defaults are stored (`gym_role_permissions`); the defaults live in `default_permission()` in the database and `packages/shared/src/permissions.ts` (a unit test keeps the two lists in step).
+- The database enforces it: `has_permission(gym, permission)` is checked in the access rules and functions, and in a trigger on the gym settings (`protect_gym_columns`) that treats the section switches and the other settings as two separate permissions. The screens only hide what you can't do.
+
+Seeing data stays role-based: the team reads members, payments and check-ins as before; the grid governs what they can change.
 
 ## The life of a gym
 
@@ -220,12 +229,14 @@ All gym data carries a `gym_id`. Tables by area:
 
 | Helper | True when the signed-in user… |
 |---|---|
-| `auth_role_in(gym)` | returns their role in that gym (null if none) |
+| `auth_role_in(gym)` | returns their highest role in that gym (null if none), counting extra roles |
+| `auth_roles_in(gym)` | returns all their roles there |
 | `is_gym_staff(gym)` | is owner, admin or staff there |
 | `is_gym_team(gym)` | is staff or a trainer there |
+| `has_permission(gym, permission)` | may do that thing, per the owner's grid (the owner always may) |
 | `is_my_membership(member)` | is that gym member |
 
-Typical rules: members read only their own subscriptions, payments, check-ins and bookings; staff read everything in their gym; only owners and admins change plans, PT packages and settings.
+Typical rules: members read only their own subscriptions, payments, check-ins and bookings; the team reads everything in their gym; what they can *change* follows the owner's grid (`has_permission`).
 
 **Database functions (RPCs)** do multi-step work in one transaction and check permissions themselves (`security definer`). The main ones:
 

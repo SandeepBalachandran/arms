@@ -20,6 +20,7 @@ export default async function AdminLayout({ children, params }: LayoutProps<"/ad
   const navProps = {
     slug,
     role,
+    permissions: [...membership.permissions],
     checkinEnabled: gym.checkin_enabled,
     classesEnabled: gym.classes_enabled,
     workoutsEnabled: gym.workouts_enabled,

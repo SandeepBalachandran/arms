@@ -14,7 +14,7 @@ import {
   workoutSettingsSchema,
 } from "@gymos/shared";
 import { z } from "zod";
-import { requireGym } from "@/lib/auth";
+import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type SettingsState = { error?: string; saved?: boolean } | undefined;
@@ -55,7 +55,10 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { gym } = await requireGym(slug, ["owner", "admin"]);
+  // The database checks each changed column: sections need manage_sections,
+  // everything else edit_gym_settings (see protect_gym_columns).
+  const { gym, can } = await requireGym(slug, TEAM_ROLES);
+  if (!can("edit_gym_settings") && !can("manage_sections")) return { error: "Ask the owner for access to settings" };
   const supabase = await createClient();
   const { error } = await supabase.from("gyms").update(parsed.data).eq("id", gym.id);
   if (error) return { error: error.message };

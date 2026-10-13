@@ -64,8 +64,11 @@ function EmptyRow({ cols, text }: { cols: number; text: string }) {
 export default async function MemberPage({ params, searchParams }: PageProps<"/admin/[slug]/members/[id]">) {
   const { slug, id } = await params;
   const { added } = await searchParams;
-  const { gym, role, user, memberId: myMemberId } = await requireGym(slug, TEAM_ROLES);
+  const { gym, role, user, memberId: myMemberId, can } = await requireGym(slug, TEAM_ROLES);
+  // Seeing payments and contact details is role-based; the buttons follow the owner's grid.
   const isStaff = STAFF_ROLES.includes(role);
+  const canManage = can("manage_members");
+  const canPay = can("record_payments");
   const supabase = await createClient();
 
   const { data: member } = await supabase
@@ -116,11 +119,12 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
 
   const today = todayIn(gym.timezone);
   const state = membershipState(subs.data, today);
-  // Nutrition is health data: owners/admins and the member's own PT trainer only.
+  // Nutrition is health data: whoever has "coach nutrition" in the owner's grid;
+  // trainers only for their own PT clients (the database checks the same).
   const nutritionCoach =
     gym.nutrition_enabled &&
-    (role === "owner" ||
-      role === "admin" ||
+    can("coach_nutrition") &&
+    (isStaff ||
       !!(
         await supabase
           .from("pt_subscriptions")
@@ -183,7 +187,7 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
       <Card className="mt-4 flex flex-wrap items-center gap-4">
         {member.user_id === user.id ? (
           <AvatarEditor slug={slug} name={name} src={photo} />
-        ) : isStaff && member.role === "member" ? (
+        ) : canManage && member.role === "member" ? (
           <AvatarEditor slug={slug} memberId={id} name={name} src={photo} />
         ) : (
           <Avatar name={name} src={photo} size="lg" />
@@ -222,11 +226,11 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
               <MessageCircle className="size-4" /> {remind ? "Send reminder" : "WhatsApp"}
             </a>
           )}
-          {isStaff && gym.checkin_enabled && active && <CheckInButton slug={slug} memberId={id} />}
-          {isStaff && active && (
+          {can("check_in_members") && gym.checkin_enabled && active && <CheckInButton slug={slug} memberId={id} />}
+          {canPay && active && (
             <RecordPaymentButton label="Record payment" hint={`For payments at the front desk. The new membership ${nextStartHint}.`} {...paymentProps} />
           )}
-          {isStaff && (
+          {canManage && (
             <MemberMenu
               slug={slug}
               memberId={id}
@@ -284,7 +288,7 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
                   {state.kind === "expired" && <p className="text-sm text-danger">{state.last.plan_name} ended {formatDate(state.last.ends_on)}</p>}
                   {state.kind === "none" && <p className="text-sm text-muted">No membership yet.</p>}
                 </div>
-                {isStaff && active && plans.data.length > 0 && (
+                {canPay && active && plans.data.length > 0 && (
                   <RecordPaymentButton
                     label={state.kind === "none" ? "Start membership" : "Renew"}
                     variant="secondary"
@@ -297,7 +301,7 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
               {state.kind === "active" && state.next && (
                 <p className="mt-3 text-sm text-muted">Renewed: {state.next.plan_name} from {formatDate(state.next.starts_on)}</p>
               )}
-              {isStaff && plans.data.length === 0 && (
+              {canPay && plans.data.length === 0 && (
                 <p className="mt-2 text-sm text-muted">
                   Create a plan on the <Link href={`/admin/${slug}/plans`} className="text-brand hover:underline">Plans</Link> page to record payments.
                 </p>
@@ -313,7 +317,7 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
               memberName={name}
               myMemberId={myMemberId}
               userId={user.id}
-              isStaff={isStaff}
+              isStaff={can("sell_pt")}
               today={today}
             />
           )}
@@ -348,7 +352,7 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
                                   : <Badge tone="good">Active</Badge>}
                               </td>
                               <td className="w-16 py-2 text-right">
-                                {isStaff && s.status === "active" && !expired && (
+                                {canPay && s.status === "active" && !expired && (
                                   <ActionForm action={cancelSubscription} success="Subscription cancelled" confirm="Cancel this subscription? This can't be undone.">
                                     <input type="hidden" name="slug" value={slug} />
                                     <input type="hidden" name="member_id" value={id} />

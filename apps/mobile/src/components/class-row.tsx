@@ -7,6 +7,7 @@ import { Button, Card, Text } from '@/components/ui';
 import type { Tint } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useBookClass, useCancelBooking } from '@/lib/classes';
+import { useMyPermissions } from '@/lib/gyms';
 import { confirm } from '@/lib/confirm';
 
 const TINTS: Tint[] = ['green', 'blue', 'pink', 'yellow'];
@@ -27,6 +28,7 @@ export function ClassRow({ item, timezone, cancelCutoffHours }: {
 }) {
   const theme = useTheme();
   const book = useBookClass();
+  const { memberCan } = useMyPermissions();
   const cancel = useCancelBooking();
   const started = hasStarted(item.starts_at);
   const left = spotsLeft(item);
@@ -71,6 +73,7 @@ export function ClassRow({ item, timezone, cancelCutoffHours }: {
         />
       );
     }
+    if (!memberCan('book_classes')) return <Text variant="small">Booking in the app is turned off for you. Ask the front desk.</Text>;
     return (
       <Button
         title={left > 0 ? 'Book a spot' : `Join waitlist · ${item.waitlist_count} waiting`}

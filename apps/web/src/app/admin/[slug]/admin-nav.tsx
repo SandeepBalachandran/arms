@@ -16,15 +16,17 @@ import {
   ReceiptText,
   ScanLine,
   Settings,
+  ShieldCheck,
   Users,
   X,
 } from "lucide-react";
-import type { GymRole } from "@/lib/auth";
+import type { GymRole, Permission } from "@/lib/auth";
 
 // Optional features (check-in, classes, workouts, PT, nutrition) only show when the gym turns them on.
+// `perms`: shown when the person has any of these in the owner's grid.
 const ITEMS = [
   { href: "", label: "Dashboard", short: "Home", icon: LayoutDashboard, roles: null },
-  { href: "/checkin", label: "Check-in", short: "Check-in", icon: ScanLine, roles: ["owner", "admin", "staff"], needs: "checkin" },
+  { href: "/checkin", label: "Check-in", short: "Check-in", icon: ScanLine, roles: null, perms: ["check_in_members"], needs: "checkin" },
   { href: "/members", label: "Members", short: "Members", icon: Users, roles: null },
   { href: "/classes", label: "Classes", short: "Classes", icon: CalendarDays, roles: null, needs: "classes" },
   { href: "/workouts", label: "Workouts", short: "Workouts", icon: Dumbbell, roles: null, needs: "workouts" },
@@ -32,16 +34,18 @@ const ITEMS = [
   { href: "/foods", label: "Nutrition", short: "Food", icon: Apple, roles: null, needs: "nutrition" },
   { href: "/plans", label: "Plans", short: "Plans", icon: CreditCard, roles: null },
   { href: "/payments", label: "Payments", short: "Payments", icon: ReceiptText, roles: ["owner", "admin", "staff"] },
-  { href: "/settings", label: "Settings", short: "Settings", icon: Settings, roles: ["owner", "admin"], group: "gym" },
-  { href: "/checkin/poster", label: "QR poster", short: "Poster", icon: QrCode, roles: ["owner", "admin", "staff"], needs: "poster", group: "gym" },
+  { href: "/settings", label: "Settings", short: "Settings", icon: Settings, roles: null, perms: ["edit_gym_settings", "manage_sections"], group: "gym" },
+  { href: "/roles", label: "Roles & permissions", short: "Roles", icon: ShieldCheck, roles: ["owner"], group: "gym" },
+  { href: "/checkin/poster", label: "QR poster", short: "Poster", icon: QrCode, roles: null, perms: ["check_in_members"], needs: "poster", group: "gym" },
 ] as const;
 
 // Order for the phone bottom bar: the first four that apply get a tab, the rest go under "More".
-const BOTTOM_PRIORITY = ["", "/members", "/checkin", "/payments", "/classes", "/plans", "/pt", "/workouts", "/foods", "/settings", "/checkin/poster"];
+const BOTTOM_PRIORITY = ["", "/members", "/checkin", "/payments", "/classes", "/plans", "/pt", "/workouts", "/foods", "/settings", "/roles", "/checkin/poster"];
 
 type NavProps = {
   slug: string;
   role: GymRole;
+  permissions: Permission[];
   checkinEnabled: boolean;
   classesEnabled: boolean;
   workoutsEnabled: boolean;
@@ -54,12 +58,15 @@ type NavProps = {
 
 type Item = (typeof ITEMS)[number];
 
-function useNav({ slug, role, checkinEnabled, classesEnabled, workoutsEnabled, ptEnabled, nutritionEnabled, posterEnabled }: NavProps) {
+function useNav({ slug, role, permissions, checkinEnabled, classesEnabled, workoutsEnabled, ptEnabled, nutritionEnabled, posterEnabled }: NavProps) {
   const pathname = usePathname();
   const base = `/admin/${slug}`;
   const enabled = { checkin: checkinEnabled, classes: classesEnabled, workouts: workoutsEnabled, pt: ptEnabled, nutrition: nutritionEnabled, poster: posterEnabled };
   const items = ITEMS.filter(
-    (i) => (!i.roles || (i.roles as readonly GymRole[]).includes(role)) && (!("needs" in i) || enabled[i.needs]),
+    (i) =>
+      (!i.roles || (i.roles as readonly GymRole[]).includes(role)) &&
+      (!("perms" in i) || (i.perms as readonly Permission[]).some((p) => permissions.includes(p))) &&
+      (!("needs" in i) || enabled[i.needs]),
   );
   // The longest matching link wins, so the poster page doesn't also light up Check-in.
   const active = items

@@ -14,6 +14,7 @@ export function SettingsCard({
   title,
   description,
   className,
+  readOnly,
   children,
 }: {
   slug: string;
@@ -21,6 +22,8 @@ export function SettingsCard({
   title: string;
   description?: ReactNode;
   className?: string;
+  // Shown but locked when the owner hasn't given this person the permission.
+  readOnly?: boolean;
   children: ReactNode;
 }) {
   const [state, action, pending] = useActionState(saveSettings, undefined);
@@ -33,9 +36,15 @@ export function SettingsCard({
       <form action={action} className="mt-4 space-y-4">
         <input type="hidden" name="slug" value={slug} />
         <input type="hidden" name="section" value={section} />
-        {children}
+        <fieldset disabled={readOnly} className="space-y-4 disabled:opacity-60">
+          {children}
+        </fieldset>
         <FormError message={state?.error} />
-        <Button disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
+        {readOnly ? (
+          <p className="text-xs text-muted">Only the owner, or someone they allow under Roles &amp; permissions, can change this.</p>
+        ) : (
+          <Button disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
+        )}
       </form>
     </Card>
   );

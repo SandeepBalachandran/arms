@@ -19,7 +19,7 @@ import {
 import { EyeOff, HeartHandshake, Users } from "lucide-react";
 import { ActionForm } from "@/components/action-form";
 import { Badge, Card, PageHeader } from "@/components/ui";
-import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
+import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { deletePackage, togglePackage } from "./actions";
 import { LogSessionDialog, PackageDialog, SellDialog, type PtPackage } from "./forms";
@@ -29,10 +29,10 @@ export const metadata: Metadata = { title: "Personal training" };
 export default async function PtPage({ params, searchParams }: PageProps<"/admin/[slug]/pt">) {
   const { slug } = await params;
   const { view } = await searchParams;
-  const { gym, role, memberId } = await requireGym(slug, TEAM_ROLES);
+  const { gym, role, memberId, can } = await requireGym(slug, TEAM_ROLES);
   if (!gym.pt_enabled) notFound();
-  const isStaff = STAFF_ROLES.includes(role);
-  const canEditPackages = role === "owner" || role === "admin";
+  const isStaff = can("sell_pt");
+  const canEditPackages = can("manage_plans_pricing");
   // Trainers start on their own clients.
   const mineOnly = role === "trainer" ? view !== "all" : view === "mine";
 

@@ -7,7 +7,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, Clock, Dumbbell, Smartphone, U
 import { ActionForm } from "@/components/action-form";
 import { Tooltip } from "@/components/tooltip";
 import { Card, PageHeader } from "@/components/ui";
-import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
+import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { archiveClassType } from "./actions";
 import { ClassTypeDialog, ScheduleDialog, type ClassType } from "./forms";
@@ -23,9 +23,10 @@ function mondayOf(ymd: string) {
 export default async function ClassesPage({ params, searchParams }: PageProps<"/admin/[slug]/classes">) {
   const { slug } = await params;
   const { week } = await searchParams;
-  const { gym, role } = await requireGym(slug, TEAM_ROLES);
+  const { gym, can } = await requireGym(slug, TEAM_ROLES);
   if (!gym.classes_enabled) notFound();
-  const isStaff = STAFF_ROLES.includes(role);
+  // Who runs classes is set in the owner's grid (manage_classes).
+  const isStaff = can("manage_classes");
 
   const today = todayIn(gym.timezone);
   const thisMonday = mondayOf(today);

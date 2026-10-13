@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { rupeesSchema } from "@gymos/shared";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
-import { requireGym } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type PlanState = { error?: string; saved?: boolean } | undefined;
@@ -31,7 +31,7 @@ export async function savePlan(_prev: PlanState, formData: FormData): Promise<Pl
   const parsed = planSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, id, price, ...values } = parsed.data;
-  const { gym } = await requireGym(slug, ["owner", "admin"]);
+  const { gym } = await requirePermission(slug, "manage_plans_pricing");
 
   const supabase = await createClient();
   const row = { ...values, price_paise: price };
@@ -48,7 +48,7 @@ export async function togglePlan(formData: FormData): Promise<ActionResult> {
   const { slug, id, is_active } = z
     .object({ slug: z.string(), id: z.uuid(), is_active: z.enum(["true", "false"]) })
     .parse(Object.fromEntries(formData));
-  const { gym } = await requireGym(slug, ["owner", "admin"]);
+  const { gym } = await requirePermission(slug, "manage_plans_pricing");
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -63,7 +63,7 @@ export async function togglePlan(formData: FormData): Promise<ActionResult> {
 // Only plans that were never sold can be deleted (RLS enforces this too).
 export async function deletePlan(formData: FormData): Promise<ActionResult> {
   const { slug, id } = z.object({ slug: z.string(), id: z.uuid() }).parse(Object.fromEntries(formData));
-  const { gym } = await requireGym(slug, ["owner", "admin"]);
+  const { gym } = await requirePermission(slug, "manage_plans_pricing");
 
   const supabase = await createClient();
   const { error } = await supabase.from("plans").delete().eq("id", id).eq("gym_id", gym.id);

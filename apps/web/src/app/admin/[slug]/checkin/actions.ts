@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { asCheckinResult, type CheckinResult } from "@gymos/shared";
 import { z } from "zod";
-import { requireGym, STAFF_ROLES } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { signAvatar } from "@/lib/avatars";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,7 +18,7 @@ async function withPhoto(result: CheckinResult): Promise<CheckinState> {
 
 // A scanned member QR code (from the webcam scanner).
 export async function checkInByToken(slug: string, token: string): Promise<CheckinState> {
-  await requireGym(slug, STAFF_ROLES);
+  await requirePermission(slug, "check_in_members");
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("check_in_by_token", { p_token: token });
   if (error) return { error: error.message };
@@ -31,7 +31,7 @@ export async function checkInMember(_prev: CheckinState, formData: FormData): Pr
   const { slug, member_id } = z
     .object({ slug: z.string(), member_id: z.uuid() })
     .parse(Object.fromEntries(formData));
-  await requireGym(slug, STAFF_ROLES);
+  await requirePermission(slug, "check_in_members");
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("staff_check_in", { p_member_id: member_id });
   if (error) return { error: error.message };

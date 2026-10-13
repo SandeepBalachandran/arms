@@ -299,14 +299,14 @@ isOneToOne: false
                   ]
                 },"gym_members": {
                   Row: {
-                    "gym_id": string,"id": string,"joined_at": string,"role": Database["public"]['Enums']["gym_role"],"status": Database["public"]['Enums']["member_status"],"user_id": string
+                    "extra_roles": (Database["public"]['Enums']["gym_role"])[],"gym_id": string,"id": string,"joined_at": string,"role": Database["public"]['Enums']["gym_role"],"status": Database["public"]['Enums']["member_status"],"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "gym_id": string,"id"?: string,"joined_at"?: string,"role"?: Database["public"]['Enums']["gym_role"],"status"?: Database["public"]['Enums']["member_status"],"user_id": string
+                    "extra_roles"?: (Database["public"]['Enums']["gym_role"])[],"gym_id": string,"id"?: string,"joined_at"?: string,"role"?: Database["public"]['Enums']["gym_role"],"status"?: Database["public"]['Enums']["member_status"],"user_id": string
                   }
                   Update: {
-                    "gym_id"?: string,"id"?: string,"joined_at"?: string,"role"?: Database["public"]['Enums']["gym_role"],"status"?: Database["public"]['Enums']["member_status"],"user_id"?: string
+                    "extra_roles"?: (Database["public"]['Enums']["gym_role"])[],"gym_id"?: string,"id"?: string,"joined_at"?: string,"role"?: Database["public"]['Enums']["gym_role"],"status"?: Database["public"]['Enums']["member_status"],"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -320,6 +320,26 @@ isOneToOne: false
       columns: ["user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"gym_role_permissions": {
+                  Row: {
+                    "allowed": boolean,"gym_id": string,"permission": string,"role": Database["public"]['Enums']["gym_role"],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "allowed": boolean,"gym_id": string,"permission": string,"role": Database["public"]['Enums']["gym_role"],"updated_at"?: string
+                  }
+                  Update: {
+                    "allowed"?: boolean,"gym_id"?: string,"permission"?: string,"role"?: Database["public"]['Enums']["gym_role"],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gym_role_permissions_gym_id_fkey"
+      columns: ["gym_id"]
+isOneToOne: false
+      referencedRelation: "gyms"
       referencedColumns: ["id"]
     }
                   ]
@@ -947,6 +967,9 @@ isOneToOne: false
 "auth_role_in":
 { Args: { "p_gym_id": string }; Returns: Database["public"]['Enums']["gym_role"]
                            },
+"auth_roles_in":
+{ Args: { "p_gym_id": string }; Returns: (Database["public"]['Enums']["gym_role"])[]
+                           },
 "book_class":
 { Args: { "p_session_id": string }; Returns: Database["public"]['Enums']["booking_status"]
                            },
@@ -988,6 +1011,9 @@ isOneToOne: false
 "create_class_series":
 { Args: { "p_capacity"?: number,"p_class_type_id": string,"p_duration_min"?: number,"p_local_time": string,"p_room"?: string,"p_start_date": string,"p_trainer_member_id"?: string,"p_weekdays": (number)[],"p_weeks": number }; Returns: number
                            },
+"default_permission":
+{ Args: { "p_permission": string,"p_role": Database["public"]['Enums']["gym_role"] }; Returns: boolean
+                           },
 "delete_gym":
 { Args: { "p_confirm": string,"p_gym_id": string }; Returns: undefined
                            },
@@ -1014,6 +1040,9 @@ isOneToOne: false
                            },
 "gym_today":
 { Args: { "p_gym_id": string }; Returns: string
+                           },
+"has_permission":
+{ Args: { "p_gym_id": string,"p_permission": string }; Returns: boolean
                            },
 "is_assigned_plan":
 { Args: { "p_plan_id": string }; Returns: boolean
@@ -1054,9 +1083,17 @@ isOneToOne: false
 "my_member_id":
 { Args: { "p_gym_id": string }; Returns: string
                            },
+"my_permissions":
+{ Args: { "p_gym_id": string }; Returns: (string)[]
+                           },
 "my_pt_subscriptions":
 { Args: { "p_gym_id": string }; Returns: {
               "ends_on": string,"id": string,"package_name": string,"sessions": Json,"sessions_total": number,"starts_on": string,"status": string,"trainer_avatar": string,"trainer_name": string
+            }[]
+                           },
+"permission_grid":
+{ Args: { "p_gym_id": string }; Returns: {
+              "allowed": boolean,"is_default": boolean,"permission": string,"role": Database["public"]['Enums']["gym_role"]
             }[]
                            },
 "plan_gym_id":
@@ -1097,6 +1134,9 @@ isOneToOne: false
                            },
 "sell_pt_package":
 { Args: { "p_amount_paise"?: number,"p_member_id": string,"p_method": Database["public"]['Enums']["payment_method"],"p_note"?: string,"p_package_id": string,"p_starts_on"?: string,"p_trainer_member_id": string }; Returns: string
+                           },
+"set_member_roles":
+{ Args: { "p_extra_roles": (Database["public"]['Enums']["gym_role"])[],"p_member_id": string,"p_role": Database["public"]['Enums']["gym_role"] }; Returns: undefined
                            },
 "staff_check_in":
 { Args: { "p_member_id": string }; Returns: Json

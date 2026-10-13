@@ -14,8 +14,8 @@ type Stats = { active: number; sold: number };
 
 export default async function PlansPage({ params }: PageProps<"/admin/[slug]/plans">) {
   const { slug } = await params;
-  const { gym, role } = await requireGym(slug, TEAM_ROLES);
-  const canEdit = role === "owner" || role === "admin";
+  const { gym, can } = await requireGym(slug, TEAM_ROLES);
+  const canEdit = can("manage_plans_pricing");
 
   const supabase = await createClient();
   const [plans, subs] = await Promise.all([

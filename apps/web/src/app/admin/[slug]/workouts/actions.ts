@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { groupPlanDays } from "@gymos/shared";
 import type { ActionResult } from "@/lib/action-result";
-import { requireGym, TEAM_ROLES } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 // Trainers and staff (the whole team) manage plans; RLS enforces the same.
@@ -22,7 +22,7 @@ export async function createPlan(_prev: FormState, formData: FormData): Promise<
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, ...values } = parsed.data;
-  const { gym, memberId } = await requireGym(slug, TEAM_ROLES);
+  const { gym, memberId } = await requirePermission(slug, "edit_workout_plans");
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -45,7 +45,7 @@ export async function createExercise(_prev: FormState, formData: FormData): Prom
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, ...values } = parsed.data;
-  const { gym } = await requireGym(slug, TEAM_ROLES);
+  const { gym } = await requirePermission(slug, "edit_exercises");
 
   const supabase = await createClient();
   const { error } = await supabase.from("exercises").insert({ ...values, gym_id: gym.id });
@@ -73,7 +73,7 @@ export async function addPlanItem(_prev: FormState, formData: FormData): Promise
   const parsed = itemSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, ...item } = parsed.data;
-  await requireGym(slug, TEAM_ROLES);
+  await requirePermission(slug, "edit_workout_plans");
 
   const supabase = await createClient();
   const { count } = await supabase
@@ -93,7 +93,7 @@ export async function updatePlanItem(_prev: FormState, formData: FormData): Prom
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, plan_id, id, ...values } = parsed.data;
-  await requireGym(slug, TEAM_ROLES);
+  await requirePermission(slug, "edit_workout_plans");
 
   const supabase = await createClient();
   const { error } = await supabase.from("workout_plan_items").update(values).eq("id", id).eq("plan_id", plan_id);
@@ -109,7 +109,7 @@ export async function movePlanItem(formData: FormData): Promise<ActionResult> {
   const { slug, plan_id, id, dir } = z
     .object({ slug: z.string(), plan_id: z.uuid(), id: z.uuid(), dir: z.enum(["up", "down"]) })
     .parse(Object.fromEntries(formData));
-  await requireGym(slug, TEAM_ROLES);
+  await requirePermission(slug, "edit_workout_plans");
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -140,7 +140,7 @@ export async function removePlanItem(formData: FormData): Promise<ActionResult> 
   const { slug, plan_id, id } = z
     .object({ slug: z.string(), plan_id: z.uuid(), id: z.uuid() })
     .parse(Object.fromEntries(formData));
-  await requireGym(slug, TEAM_ROLES);
+  await requirePermission(slug, "edit_workout_plans");
   const supabase = await createClient();
   const { error } = await supabase.from("workout_plan_items").delete().eq("id", id).eq("plan_id", plan_id);
   if (error) return { error: error.message };
@@ -151,7 +151,7 @@ export async function assignPlan(formData: FormData): Promise<ActionResult> {
   const { slug, plan_id, member_id } = z
     .object({ slug: z.string(), plan_id: z.uuid(), member_id: z.uuid() })
     .parse(Object.fromEntries(formData));
-  const { gym, memberId } = await requireGym(slug, TEAM_ROLES);
+  const { gym, memberId } = await requirePermission(slug, "assign_workout_plans");
   const supabase = await createClient();
   const { error } = await supabase
     .from("plan_assignments")
@@ -162,7 +162,7 @@ export async function assignPlan(formData: FormData): Promise<ActionResult> {
 
 export async function unassignPlan(formData: FormData): Promise<ActionResult> {
   const { slug, id } = z.object({ slug: z.string(), id: z.uuid() }).parse(Object.fromEntries(formData));
-  const { gym } = await requireGym(slug, TEAM_ROLES);
+  const { gym } = await requirePermission(slug, "assign_workout_plans");
   const supabase = await createClient();
   const { error } = await supabase.from("plan_assignments").delete().eq("id", id).eq("gym_id", gym.id);
   if (error) return { error: error.message };
@@ -171,7 +171,7 @@ export async function unassignPlan(formData: FormData): Promise<ActionResult> {
 
 export async function archivePlan(formData: FormData): Promise<ActionResult> {
   const { slug, id } = z.object({ slug: z.string(), id: z.uuid() }).parse(Object.fromEntries(formData));
-  const { gym } = await requireGym(slug, TEAM_ROLES);
+  const { gym } = await requirePermission(slug, "edit_workout_plans");
   const supabase = await createClient();
   const { error } = await supabase.from("workout_plans").update({ is_archived: true }).eq("id", id).eq("gym_id", gym.id);
   if (error) return { error: error.message };
@@ -183,7 +183,7 @@ export async function setExerciseHidden(formData: FormData): Promise<ActionResul
   const { slug, exercise_id, hidden } = z
     .object({ slug: z.string(), exercise_id: z.uuid(), hidden: z.enum(["true", "false"]) })
     .parse(Object.fromEntries(formData));
-  const { gym } = await requireGym(slug, TEAM_ROLES);
+  const { gym } = await requirePermission(slug, "edit_exercises");
   const supabase = await createClient();
   const { error } =
     hidden === "true"

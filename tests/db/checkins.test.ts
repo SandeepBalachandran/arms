@@ -164,10 +164,11 @@ describe("poster check-in", () => {
     });
   });
 
-  it("old posters stop working after a reprint, and only owners/admins can reprint", async () => {
+  it("old posters stop working after a reprint; reprinting is a gym setting (owner, or whoever they allow)", async () => {
     const oldKey = await posterKey();
     expect((await as.staff.rpc("rotate_checkin_poster", { p_gym_id: gymId })).error?.message).toMatch(/Not allowed/);
-    expect((await as.admin.rpc("rotate_checkin_poster", { p_gym_id: gymId })).error?.message).toBeUndefined();
+    expect((await as.admin.rpc("rotate_checkin_poster", { p_gym_id: gymId })).error?.message).toMatch(/Not allowed/);
+    expect((await as.owner.rpc("rotate_checkin_poster", { p_gym_id: gymId })).error?.message).toBeUndefined();
     const { error } = await as.member.rpc("poster_check_in", { p_slug: fx.gym.slug, p_key: oldKey });
     expect(error?.message).toMatch(/out of date/);
   });

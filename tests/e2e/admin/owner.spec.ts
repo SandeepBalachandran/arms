@@ -15,14 +15,24 @@ test("create a plan", async ({ page }) => {
   noErrors();
 });
 
-test("role changes save on their own", async ({ page }) => {
+test("give someone a main role and an extra role", async ({ page }) => {
+  const noErrors = watchErrors(page);
+  const roles = async () => (await service.from("gym_members").select("role, extra_roles").eq("id", fx.users.member2.memberId!).single()).data;
   await page.goto(`${admin}/members`);
-  const select = page.getByLabel(`Role for ${fx.users.member2.name}`);
-  await select.selectOption("trainer");
-  await expect(page.getByLabel("Saving")).toBeHidden();
-  await expect.poll(async () => (await service.from("gym_members").select("role").eq("id", fx.users.member2.memberId!).single()).data!.role).toBe("trainer");
-  await select.selectOption("member");
-  await expect.poll(async () => (await service.from("gym_members").select("role").eq("id", fx.users.member2.memberId!).single()).data!.role).toBe("member");
+  const picker = page.locator("details", { has: page.getByLabel(new RegExp(`^Roles for ${fx.users.member2.name}`)) });
+  await picker.locator("summary").click();
+  await picker.getByRole("combobox", { name: "Main role" }).selectOption("trainer");
+  await picker.getByRole("checkbox", { name: "Staff" }).check();
+  await picker.getByRole("button", { name: "Save" }).click();
+  await expect(picker.locator("summary")).toContainText("Trainer + Staff");
+  await expect.poll(roles).toEqual({ role: "trainer", extra_roles: ["staff"] });
+
+  await picker.locator("summary").click();
+  await picker.getByRole("combobox", { name: "Main role" }).selectOption("member");
+  await picker.getByRole("checkbox", { name: "Staff" }).uncheck();
+  await picker.getByRole("button", { name: "Save" }).click();
+  await expect.poll(roles).toEqual({ role: "member", extra_roles: [] });
+  noErrors();
 });
 
 test.describe("settings", () => {

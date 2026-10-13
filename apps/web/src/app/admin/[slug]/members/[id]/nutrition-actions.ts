@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
-import { requireGym, TEAM_ROLES } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type TargetState = { error?: string; saved?: boolean } | undefined;
@@ -21,7 +21,7 @@ export async function saveTargets(_prev: TargetState, formData: FormData): Promi
   const parsed = targetSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { slug, member_id, ...target } = parsed.data;
-  const { gym, user } = await requireGym(slug, TEAM_ROLES);
+  const { gym, user } = await requirePermission(slug, "coach_nutrition");
 
   const supabase = await createClient();
   const { error } = await supabase.from("nutrition_targets").upsert({
@@ -40,7 +40,7 @@ export async function addNutritionComment(formData: FormData): Promise<ActionRes
   const { slug, member_id, day, body } = z
     .object({ slug: z.string(), member_id: z.uuid(), day: z.iso.date(), body: z.string().trim().min(1, "Write a comment").max(500) })
     .parse(Object.fromEntries(formData));
-  const { gym, memberId } = await requireGym(slug, TEAM_ROLES);
+  const { gym, memberId } = await requirePermission(slug, "coach_nutrition");
   const supabase = await createClient();
   const { error } = await supabase
     .from("nutrition_comments")
@@ -51,7 +51,7 @@ export async function addNutritionComment(formData: FormData): Promise<ActionRes
 
 export async function deleteNutritionComment(formData: FormData): Promise<ActionResult> {
   const { slug, id, member_id } = z.object({ slug: z.string(), id: z.uuid(), member_id: z.uuid() }).parse(Object.fromEntries(formData));
-  await requireGym(slug, TEAM_ROLES);
+  await requirePermission(slug, "coach_nutrition");
   const supabase = await createClient();
   const { error } = await supabase.from("nutrition_comments").delete().eq("id", id);
   if (error) return { error: error.message };

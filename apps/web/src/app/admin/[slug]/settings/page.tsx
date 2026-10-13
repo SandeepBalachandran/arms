@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { Apple, Printer } from "lucide-react";
 import {
   CHECKIN_EARLY_MIN,
@@ -12,7 +13,7 @@ import {
   timezoneOptions,
 } from "@gymos/shared";
 import { Field, Input, PageHeader, Select } from "@/components/ui";
-import { requireGym } from "@/lib/auth";
+import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteGymCard } from "./delete-gym";
 import { LocationField } from "./location-field";
@@ -38,7 +39,13 @@ function Toggle({ name, label, hint, defaultChecked }: { name: string; label: st
 
 export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/settings">) {
   const { slug } = await params;
-  const { gym, role } = await requireGym(slug, ["owner", "admin"]);
+  const { gym, role, can } = await requireGym(slug, TEAM_ROLES);
+  const canSettings = can("edit_gym_settings");
+  const canSections = can("manage_sections");
+  if (!canSettings && !canSections) notFound();
+  // Cards that mix section switches with other settings open for either;
+  // the database still checks each changed field.
+  const locked = { settings: !canSettings, mixed: !canSettings && !canSections };
   const supabase = await createClient();
   const { data: g, error } = await supabase.from("gyms").select("*").eq("id", gym.id).single();
   if (error) throw error;
@@ -47,8 +54,16 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
   return (
     <>
       <PageHeader title="Settings" />
+      {(!canSettings || !canSections) && (
+        <p className="-mt-2 mb-6 max-w-5xl rounded-lg border border-border bg-surface px-4 py-3 text-sm text-muted">
+          {canSettings
+            ? "You can change gym settings. Turning sections on or off (check-in, classes, workouts, PT, nutrition) stays with the owner."
+            : "You can turn sections on or off. Other gym settings stay with the owner."}{" "}
+          The owner can change this under Roles &amp; permissions.
+        </p>
+      )}
       <div className="grid max-w-5xl gap-6 lg:grid-cols-2">
-        <SettingsCard slug={slug} section="general" title="Gym profile">
+        <SettingsCard slug={slug} section="general" readOnly={locked.settings} title="Gym profile">
           <LogoUploader slug={slug} gymName={g.name} logoUrl={g.logo_url} />
           <Field label="Name">
             <Input name="name" defaultValue={g.name} required />
@@ -78,7 +93,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
 
         <SettingsCard
           slug={slug}
-          section="hours"
+          section="hours" readOnly={locked.settings}
           title="Opening hours"
           description="Shown to members in the app with “Open now” or when you open next. Untick a session to close it that day."
           className="lg:col-span-2"
@@ -89,7 +104,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
           </Field>
         </SettingsCard>
 
-        <SettingsCard slug={slug} section="memberships" title="Memberships & joining">
+        <SettingsCard slug={slug} section="memberships" readOnly={locked.mixed} title="Memberships & joining">
           <Field label="Warn before expiry (days)" hint={`Members are flagged as “expiring soon” this many days before their plan ends. Default ${GYM_DEFAULTS.expiry_warning_days}`}>
             <Input name="expiry_warning_days" type="number" min={1} max={60} defaultValue={g.expiry_warning_days} required />
           </Field>
@@ -129,7 +144,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
 
         <SettingsCard
           slug={slug}
-          section="upi"
+          section="upi" readOnly={locked.settings}
           title="UPI payments"
           description={
             g.currency === "INR"
@@ -145,7 +160,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
           </Field>
         </SettingsCard>
 
-        <SettingsCard slug={slug} section="checkin" title="Check-in" description="Optional. Expired memberships are only flagged, never turned away.">
+        <SettingsCard slug={slug} section="checkin" readOnly={locked.mixed} title="Check-in" description="Optional. Expired memberships are only flagged, never turned away.">
           <Toggle name="checkin_enabled" label="Use check-in" defaultChecked={g.checkin_enabled} />
           <Toggle
             name="checkin_self_allowed"
@@ -166,7 +181,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
 
         <SettingsCard
           slug={slug}
-          section="poster"
+          section="poster" readOnly={locked.mixed}
           title="QR poster check-in"
           description="Optional. Print a QR poster for the entrance; members scan it with the app when they arrive. No staff needed."
         >
@@ -193,7 +208,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
           )}
         </SettingsCard>
 
-        <SettingsCard slug={slug} section="classes" title="Classes" description="Optional. Group classes members book in the app.">
+        <SettingsCard slug={slug} section="classes" readOnly={locked.mixed} title="Classes" description="Optional. Group classes members book in the app.">
           <Toggle name="classes_enabled" label="Run classes" defaultChecked={g.classes_enabled} />
           <div className="grid grid-cols-2 gap-3">
             <Field label="Booking opens (days ahead)" hint={`Default ${GYM_DEFAULTS.classes_booking_window_days}`}>
@@ -213,7 +228,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
 
         <SettingsCard
           slug={slug}
-          section="workouts"
+          section="workouts" readOnly={locked.mixed}
           title="Workouts & progress"
           description="Optional. Trainers build and assign plans; members log workouts and measurements. Choose which built-in exercises to offer on the Workouts page."
         >
@@ -222,7 +237,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
 
         <SettingsCard
           slug={slug}
-          section="pt"
+          section="pt" readOnly={locked.mixed}
           title="Personal training"
           description="Optional. Sell PT packages (a number of sessions, or unlimited for a period), assign a trainer, and track sessions used. Set up packages on the Personal training page."
         >
@@ -240,7 +255,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
 
         <SettingsCard
           slug={slug}
-          section="nutrition"
+          section="nutrition" readOnly={locked.mixed}
           title="Nutrition"
           description="Optional. Members log what they eat against calorie and protein targets their trainer sets. Food logs are private: only the member, their trainer, and owners or admins see them."
         >

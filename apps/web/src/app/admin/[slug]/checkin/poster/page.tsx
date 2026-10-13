@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import QRCode from "qrcode";
 import { posterCheckinUrl } from "@gymos/shared";
-import { requireGym, STAFF_ROLES } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { SITE_URL } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import { PosterActions } from "./poster-actions";
@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: "Check-in poster" };
 // A4 poster for the entrance. Print it, or show this page on a tablet.
 export default async function PosterPage({ params }: PageProps<"/admin/[slug]/checkin/poster">) {
   const { slug } = await params;
-  const { gym, role } = await requireGym(slug, STAFF_ROLES);
+  const { gym, can } = await requirePermission(slug, "check_in_members");
   if (!gym.checkin_enabled || !gym.checkin_poster_enabled) notFound();
 
   const supabase = await createClient();
@@ -33,7 +33,7 @@ export default async function PosterPage({ params }: PageProps<"/admin/[slug]/ch
         <Link href={`/admin/${slug}/settings`} className="inline-flex items-center gap-1 text-sm text-muted hover:text-foreground">
           <ArrowLeft className="size-4" /> Settings
         </Link>
-        <PosterActions slug={slug} canRotate={role === "owner" || role === "admin"} />
+        <PosterActions slug={slug} canRotate={can("edit_gym_settings")} />
       </div>
 
       <article className="poster mx-auto flex aspect-[1/1.414] w-full max-w-[560px] flex-col items-center justify-between rounded-3xl border border-border bg-white p-10 text-center text-[#111] shadow-sm print:max-w-none print:rounded-none print:border-0 print:shadow-none">

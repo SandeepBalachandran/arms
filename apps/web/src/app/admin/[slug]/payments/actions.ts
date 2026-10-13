@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
-import { requireGym, STAFF_ROLES } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 const reviewSchema = z.object({
@@ -17,7 +17,7 @@ const reviewSchema = z.object({
 // the member why.
 export async function reviewUpiPayment(formData: FormData): Promise<ActionResult> {
   const { slug, id, decision, reason } = reviewSchema.parse(Object.fromEntries(formData));
-  await requireGym(slug, STAFF_ROLES);
+  await requirePermission(slug, "confirm_upi");
 
   const supabase = await createClient();
   const { error } =

@@ -35,6 +35,7 @@ import {
   useWater,
   useWaterSettings,
 } from '@/lib/nutrition';
+import { useMyPermissions } from '@/lib/gyms';
 
 export default function FoodScreen() {
   const theme = useTheme();
@@ -282,6 +283,7 @@ function WaterRow({ day }: { day: string }) {
 type Log = NonNullable<ReturnType<typeof useFoodLogs>['data']>[number];
 
 function MealCard({ meal, day, items }: { meal: MealSlot; day: string; items: Log[] }) {
+  const { memberCan } = useMyPermissions();
   const theme = useTheme();
   const router = useRouter();
   const remove = useDeleteFoodLog();
@@ -300,6 +302,7 @@ function MealCard({ meal, day, items }: { meal: MealSlot; day: string; items: Lo
           <Text style={{ fontWeight: '700', fontSize: 16 }}>{MEAL_LABELS[meal]}</Text>
           {items.length > 0 && <Text variant="small">{kcal} kcal</Text>}
         </View>
+        {memberCan('log_food') ? (
         <Pressable
           onPress={() => router.push({ pathname: '/food/add', params: { meal, day } })}
           accessibilityRole="button"
@@ -308,6 +311,9 @@ function MealCard({ meal, day, items }: { meal: MealSlot; day: string; items: Lo
           <Plus size={16} color={theme.accentText} />
           <Text style={{ color: theme.accentText, fontWeight: '700', fontSize: 13 }}>Add</Text>
         </Pressable>
+        ) : (
+          <Text variant="small">Logging is turned off for you</Text>
+        )}
       </View>
       {items.map((l) => (
         <View key={l.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, borderTopWidth: 1, borderColor: theme.border, paddingTop: 8 }}>
