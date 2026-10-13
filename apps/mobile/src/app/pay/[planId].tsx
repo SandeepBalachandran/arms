@@ -2,11 +2,13 @@ import { formatDuration, formatMoney, upiPayLink, utrSchema } from '@gymos/share
 import { useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { Check, CircleAlert, Clock, Copy, ShieldCheck, type LucideIcon } from 'lucide-react-native';
+import { useState, type ReactNode } from 'react';
 import { Linking, Pressable, View } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 
 import { Button, Card, Input, Loading, Screen, Text } from '@/components/ui';
-import { Spacing } from '@/constants/theme';
+import { Spacing, type Tint } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useActiveGym } from '@/lib/gyms';
 import { usePaymentClaims, usePlans } from '@/lib/memberships';
@@ -35,37 +37,36 @@ export default function PayScreen() {
   if (plans.isPending || claims.isPending) return <Loading />;
   if (!gym || !plan) {
     return (
-      <Screen>
-        <Text variant="heading">Plan not available</Text>
+      <Notice icon={CircleAlert} tint="pink" title="Plan not available" text="This plan may have been changed or removed by the gym.">
         <Button title="Back" variant="secondary" onPress={() => router.back()} />
-      </Screen>
+      </Notice>
     );
   }
   if (!gym.upi_id || gym.currency !== 'INR') {
     return (
-      <Screen>
-        <Text variant="heading">UPI isn’t set up</Text>
-        <Text variant="muted">{gym.name} doesn’t take UPI in the app yet. Please pay at the front desk.</Text>
-      </Screen>
+      <Notice icon={CircleAlert} tint="yellow" title="UPI isn’t set up" text={`${gym.name} doesn’t take UPI in the app yet. Please pay at the front desk.`}>
+        <Button title="Back" variant="secondary" onPress={() => router.back()} />
+      </Notice>
     );
   }
   if (claims.data?.pending) {
     return (
-      <Screen>
-        <Text variant="heading">A payment is already waiting</Text>
-        <Text variant="muted">
-          {gym.name} hasn’t confirmed your earlier payment of {formatMoney(claims.data.pending.amount_paise, gym.currency)} yet.
-          You can start a new one after they confirm or reject it.
-        </Text>
+      <Notice
+        icon={Clock}
+        tint="yellow"
+        title="A payment is already waiting"
+        text={`${gym.name} hasn’t confirmed your earlier payment of ${formatMoney(claims.data.pending.amount_paise, gym.currency)} yet. You can start a new one after they confirm or reject it.`}>
         <Button title="Back" variant="secondary" onPress={() => router.back()} />
-      </Screen>
+      </Notice>
     );
   }
 
   const memberName = profile.data?.full_name || 'Member';
+  const payee = gym.upi_payee_name ?? gym.name;
+  const amount = formatMoney(plan.price_paise, gym.currency);
   const link = upiPayLink({
     upiId: gym.upi_id,
-    payeeName: gym.upi_payee_name ?? gym.name,
+    payeeName: payee,
     amountPaise: plan.price_paise,
     note: `${plan.name} - ${memberName}`,
   });
@@ -105,47 +106,124 @@ export default function PayScreen() {
 
   return (
     <Screen>
-      <Card style={{ alignItems: 'center', paddingVertical: Spacing.four }}>
-        <Text variant="muted">
-          {plan.name} · {formatDuration(plan.duration_days)}
+      <View style={{ backgroundColor: theme.hero, borderRadius: 24, padding: 20, gap: 4 }}>
+        <Text style={{ color: theme.heroMuted, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+          {gym.name} · {plan.name}
         </Text>
-        <Text style={{ fontSize: 40, fontWeight: '700' }}>{formatMoney(plan.price_paise, gym.currency)}</Text>
+        <Text style={{ color: theme.heroText, fontSize: 38, fontWeight: '800', letterSpacing: -0.5 }}>{amount}</Text>
+        <Text style={{ color: theme.heroMuted, fontSize: 13 }}>
+          {formatDuration(plan.duration_days)} membership · paid straight to the gym, no gateway fee
+        </Text>
+      </View>
+
+      <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14 }}>
+        <View style={{ backgroundColor: '#fff', padding: 8, borderRadius: 14, borderWidth: 1, borderColor: theme.border }}>
+          <QRCode value={link} size={96} />
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text variant="small">UPI ID</Text>
+          <Text style={{ fontSize: 15, fontWeight: '700' }} numberOfLines={1} adjustsFontSizeToFit>
+            {gym.upi_id}
+          </Text>
+          <Text variant="small" numberOfLines={1}>
+            {payee}
+          </Text>
+          <Pressable
+            onPress={copyUpiId}
+            accessibilityRole="button"
+            accessibilityLabel={copied ? 'UPI ID copied' : 'Copy UPI ID'}
+            style={({ pressed }) => ({
+              alignSelf: 'flex-start',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              marginTop: 6,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 999,
+              backgroundColor: copied ? theme.tints.green.bg : theme.surfaceMuted,
+              opacity: pressed ? 0.6 : 1,
+            })}>
+            {copied ? <Check size={14} color={theme.tints.green.fg} /> : <Copy size={14} color={theme.text} />}
+            <Text style={{ fontSize: 13, fontWeight: '600', color: copied ? theme.tints.green.fg : theme.text }}>
+              {copied ? 'Copied' : 'Copy'}
+            </Text>
+          </Pressable>
+        </View>
       </Card>
 
-      <Card>
-        <Text variant="small">Pay to</Text>
-        <Text variant="heading">{gym.upi_payee_name ?? gym.name}</Text>
-        <Pressable onPress={copyUpiId} accessibilityHint="Copies the UPI ID">
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ fontFamily: 'monospace' }}>{gym.upi_id}</Text>
-            <Text style={{ color: theme.brand, fontWeight: '600' }}>{copied ? 'Copied' : 'Copy'}</Text>
-          </View>
-        </Pressable>
+      <Step n={1} title={`Pay ${amount}`} done={opened}>
+        <Button title="Open UPI app" variant="dark" onPress={openUpiApp} />
+        <Text variant="small">
+          Opens GPay, PhonePe or Paytm with the amount filled in. If it won’t open, pay the UPI ID above by hand, or scan
+          the code from another phone.
+        </Text>
+      </Step>
+
+      <Step n={2} title={`Tell ${gym.name}`}>
+        <Input
+          label="UPI reference number (optional)"
+          value={utr}
+          onChangeText={setUtr}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          keyboardType="default"
+          placeholder="12-digit UTR from your UPI app"
+        />
+        {error && <Text variant="error">{error}</Text>}
+        <Button title="I’ve paid" onPress={claim} loading={submitting} disabled={!opened && !utr} />
+      </Step>
+
+      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start', paddingHorizontal: Spacing.one }}>
+        <ShieldCheck size={16} color={theme.textSecondary} style={{ marginTop: 2 }} />
+        <Text variant="small" style={{ flex: 1 }}>
+          Your membership starts once the gym confirms the payment reached them. Adding the reference number makes that
+          faster.
+        </Text>
+      </View>
+    </Screen>
+  );
+}
+
+// A numbered step: a lime badge (a tick once done) beside its title.
+function Step({ n, title, done, children }: { n: number; title: string; done?: boolean; children: ReactNode }) {
+  const theme = useTheme();
+  return (
+    <View style={{ gap: Spacing.two }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: done ? theme.tints.green.bg : theme.accent, alignItems: 'center', justifyContent: 'center' }}>
+          {done ? (
+            <Check size={16} color={theme.tints.green.fg} />
+          ) : (
+            <Text style={{ fontSize: 14, fontWeight: '800', color: theme.accentText }}>{n}</Text>
+          )}
+        </View>
+        <Text variant="heading" style={{ flex: 1 }} numberOfLines={1}>
+          {title}
+        </Text>
+      </View>
+      {children}
+    </View>
+  );
+}
+
+// Full-screen message for when payment can't go ahead.
+function Notice({ icon: Icon, tint, title, text, children }: { icon: LucideIcon; tint: Tint; title: string; text: string; children?: ReactNode }) {
+  const theme = useTheme();
+  return (
+    <Screen>
+      <Card style={{ alignItems: 'center', gap: 10, paddingVertical: 32, paddingHorizontal: 20 }}>
+        <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: theme.tints[tint].bg, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon size={26} color={theme.tints[tint].fg} />
+        </View>
+        <Text variant="heading" style={{ textAlign: 'center' }}>
+          {title}
+        </Text>
+        <Text variant="muted" style={{ textAlign: 'center' }}>
+          {text}
+        </Text>
       </Card>
-
-      <Text variant="heading">1. Pay</Text>
-      <Button title="Open UPI app" onPress={openUpiApp} variant={opened ? 'secondary' : 'primary'} />
-      <Text variant="small">
-        If your UPI app won’t accept the link, pay {formatMoney(plan.price_paise, gym.currency)} to the UPI ID above
-        manually.
-      </Text>
-
-      <Text variant="heading">2. Tell {gym.name}</Text>
-      <Input
-        label="UPI reference number (optional)"
-        value={utr}
-        onChangeText={setUtr}
-        autoCapitalize="characters"
-        autoCorrect={false}
-        keyboardType="default"
-        placeholder="12-digit UTR from your UPI app"
-      />
-      {error && <Text variant="error">{error}</Text>}
-      <Button title="I’ve paid" onPress={claim} loading={submitting} disabled={!opened && !utr} />
-      <Text variant="small">
-        Your membership starts once the gym confirms the payment reached them. Adding the reference number makes that
-        faster.
-      </Text>
+      {children}
     </Screen>
   );
 }

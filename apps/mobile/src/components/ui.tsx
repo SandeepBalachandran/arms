@@ -55,26 +55,22 @@ export function Button({
   disabled,
   style,
   ...props
-}: PressableProps & { title: string; variant?: 'primary' | 'secondary'; loading?: boolean; style?: ViewProps['style'] }) {
+}: PressableProps & { title: string; variant?: 'primary' | 'secondary' | 'dark'; loading?: boolean; style?: ViewProps['style'] }) {
   const theme = useTheme();
-  const primary = variant === 'primary';
+  const look =
+    variant === 'primary' ? { box: { backgroundColor: theme.accent }, color: theme.accentText }
+    : variant === 'dark' ? { box: { backgroundColor: theme.hero }, color: theme.heroText }
+    : { box: { backgroundColor: theme.surface, borderColor: theme.text, borderWidth: 1 }, color: theme.text };
   return (
     <Pressable
       accessibilityRole="button"
       disabled={disabled || loading}
-      style={({ pressed }) => [
-        styles.button,
-        primary
-          ? { backgroundColor: theme.accent }
-          : { backgroundColor: theme.surface, borderColor: theme.text, borderWidth: 1 },
-        (pressed || disabled || loading) && { opacity: 0.7 },
-        style,
-      ]}
+      style={({ pressed }) => [styles.button, look.box, (pressed || disabled || loading) && { opacity: 0.7 }, style]}
       {...props}>
       {loading ? (
-        <ActivityIndicator color={primary ? theme.accentText : theme.text} />
+        <ActivityIndicator color={look.color} />
       ) : (
-        <RNText style={[styles.buttonText, { color: primary ? theme.accentText : theme.text }]}>{title}</RNText>
+        <RNText style={[styles.buttonText, { color: look.color }]}>{title}</RNText>
       )}
     </Pressable>
   );
