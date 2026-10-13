@@ -294,10 +294,12 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #f
 .ring-wrap .c { position: absolute; text-align: center; line-height: 1.1; }
 .ring-wrap .c b { font-size: 22px; font-weight: 800; display: block; }
 .ring-wrap .c small { font-size: 11px; opacity: .75; }
-.water { display: flex; gap: 6px; }
-.water button { width: 30px; height: 36px; border-radius: 9px; border: 1.5px solid #93c5fd; display: flex; align-items: flex-end; overflow: hidden; }
-.water button i { display: block; width: 100%; background: #60a5fa; height: 0; transition: height .2s; }
-.water button.on i { height: 100%; }
+.water-bar { height: 10px; border-radius: 5px; background: var(--t-blue-bg); overflow: hidden; margin-bottom: 10px; }
+.water-bar i { display: block; height: 100%; border-radius: 5px; background: #60a5fa; transition: width .25s; }
+.water { display: flex; flex-wrap: wrap; gap: 8px; }
+.water button { border: 0; border-radius: 999px; padding: 7px 12px; background: var(--t-blue-bg); color: var(--t-blue); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.water button span { font-weight: 400; }
+.water button.undo { background: var(--p-muted, #f4f5f1); color: inherit; }
 .week { display: flex; justify-content: space-between; }
 .week div { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--p-sec); }
 .week i { width: 30px; height: 30px; border-radius: 50%; background: var(--p-muted); display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 13px; }
@@ -380,6 +382,8 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #f
 --------------------------------------------------------------------------- */
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const litres = (ml) => `${Number((ml / 1000).toFixed(2))} L`;
+const cupSize = (ml) => (ml >= 1000 && ml % 100 === 0 ? litres(ml) : `${ml} ml`);
 const inr = (paise) => "₹" + Math.round(paise / 100).toLocaleString("en-IN");
 const z2 = (n) => String(n).padStart(2, "0");
 const ymd = (d) => `${d.getFullYear()}-${z2(d.getMonth() + 1)}-${z2(d.getDate())}`;
@@ -607,7 +611,7 @@ function initState() {
     members: [...team, ...mem, ...pending],
     plans, subs, payments, checkins, visitHistory, sessions, wplans, lastKg, history, ptPackages, pt,
     gymFoods: [{ id: "g1", name: "Arms protein shake", serving: "1 bottle", kcal: 180, p: 25 }, { id: "g2", name: "Sprouts salad (café)", serving: "1 bowl", kcal: 140, p: 9 }],
-    food: { log: foodLog, target: { kcal: 1800, p: 110, goal: "lose" }, water: 5, week: [1720, 1890, 1650, 1810, 2050, 1760], pref: "egg" },
+    food: { log: foodLog, target: { kcal: 1800, p: 110, goal: "lose" }, water: 1250, waterGoal: 2500, waterAdds: [], cups: [["Glass", 250], ["Bottle", 500], ["Big bottle", 1000]], week: [1720, 1890, 1650, 1810, 2050, 1760], pref: "egg" },
     comments: [{ id: uid("nc"), by: "t2", day: addDays(TODAY, -1), body: "Great protein yesterday 👍 Add a boiled egg at breakfast." }],
     notifs: [
       { id: uid("n"), kind: "comment", title: "Tara Mathew commented on your food log", body: "Great protein yesterday 👍 Add a boiled egg at breakfast.", link: "food", at: minsAgo(300), unread: true },
@@ -1151,7 +1155,7 @@ const SCREENS = {
         <div style="display:flex;gap:16px;align-items:center;margin-top:10px"><div class="ring-wrap">${ring(tot.kcal / tg.kcal, 112, 11, left < 0 ? "#f87171" : "#c8f04b", "rgba(255,255,255,.12)")}<div class="c" style="color:#fff"><b>${Math.abs(left)}</b><small>${left < 0 ? "kcal over" : "kcal left"}</small></div></div>
         <div style="flex:1;font-size:12.5px"><div style="display:flex;justify-content:space-between"><span>Eaten</span><b>${tot.kcal} kcal</b></div><div style="display:flex;justify-content:space-between;margin-bottom:10px"><span>Target</span><b>${tg.kcal}</b></div>
         <div style="display:flex;justify-content:space-between"><span>Protein</span><b>${tot.p} / ${tg.p} g</b></div><div class="pbar" style="background:rgba(255,255,255,.12);margin-top:5px"><i style="width:${Math.min(100, (tot.p / tg.p) * 100)}%;background:#7dd3fc"></i></div></div></div></div>
-      <div class="p-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>${ic("drop")} Water</b><span class="p-sec">${S.food.water} of 8 glasses</span></div><div class="water">${[...Array(8)].map((_, i) => `<button class="${i < S.food.water ? "on" : ""}" data-a="water" data-i="${i}" aria-label="Glass ${i + 1}"><i></i></button>`).join("")}</div></div>
+      <div class="p-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><b>${ic("drop")} Water</b><div class="p-sec">${S.food.water >= S.food.waterGoal ? "Goal reached" : litres(S.food.waterGoal - S.food.water) + " to go"}</div></div><b class="tabnum">${litres(S.food.water)}<span class="p-sec"> / ${litres(S.food.waterGoal)}</span></b></div><div class="water-bar"><i style="width:${Math.min(100, (S.food.water / S.food.waterGoal) * 100)}%"></i></div><div class="water">${S.food.cups.map(([l, ml], i) => `<button data-a="water" data-i="${i}" aria-label="Add ${l}, ${cupSize(ml)}">+ ${l} <span>${cupSize(ml)}</span></button>`).join("")}${S.food.waterAdds.length ? `<button class="undo" data-a="waterUndo">Undo</button>` : ""}</div></div>
       ${latest ? `<div class="p-card tint-blue" style="display:flex;gap:10px;border:0">${av(M(latest.by), 34)}<div><b style="font-size:13.5px">${esc(latest.body)}</b><div class="p-sec">${esc(M(latest.by).name)} · your trainer · ${relDay(latest.day)}</div></div></div>` : ""}
       ${MEALS.map(([k, l]) => { const items = S.food.log.filter((x) => x.meal === k); const kc = items.reduce((t, x) => t + x.kcal, 0); return `<div class="p-card"><div style="display:flex;justify-content:space-between;align-items:center"><div><b>${l}</b>${kc ? `<span class="p-sec"> · ${kc} kcal</span>` : ""}</div><button class="p-btn sm sec" data-a="addFoodSheet" data-m="${k}" aria-label="Add to ${l}">${ic("plus")} Add</button></div>${items.map((x) => `<div class="food-item"><div>${esc(x.name)}<small>${x.servings !== 1 ? x.servings + " × " : ""}≈${x.kcal} kcal · ${x.p} g protein</small></div><button data-a="rmFood" data-id="${x.id}" style="color:var(--p-sec)" aria-label="Remove">${ic("x")}</button></div>`).join("")}</div>`; }).join("")}
       <div class="p-card"><b>Last 7 days</b><div class="p-sec" style="margin-bottom:8px">Calories against your target</div>${bars(week, week.map((_, i) => dayName(addDays(TODAY, i - 6)).slice(0, 2)), { h: 110, color: "#65a30d", fmt: (v) => v + " kcal", target: tg.kcal })}</div>
@@ -1379,7 +1383,8 @@ const A = {
   wkFinish: () => { const wk = S.p.wk; let sets = 0, vol = 0; for (const e of wk.ex) for (const s of e.sets) if (s.done) { sets++; vol += (+s.kg || 0) * (+s.reps || 0); } S.history.unshift({ id: uid("wl"), day: TODAY, label: wk.label, sets, vol: Math.round(vol), mins: Math.max(1, Math.round((Date.now() - wk.start) / 60000)) }); S.p.wk = null; S.p.rest = null; S.p.route = "wkdone"; },
   wkDiscard: () => { S.p.wk = null; S.p.rest = null; S.p.route = "workouts"; },
 
-  water: (d) => { S.food.water = S.food.water === +d.i + 1 ? +d.i : +d.i + 1; },
+  water: (d) => { const ml = S.food.cups[+d.i][1]; if (S.food.water + ml > 10000) return; S.food.water += ml; S.food.waterAdds.push(ml); },
+  waterUndo: () => { const ml = S.food.waterAdds.pop(); if (ml) S.food.water = Math.max(0, S.food.water - ml); },
   addFoodSheet: (d) => { S.p.foodQuery = ""; S.p.pick = null; S.p.meal = d.m; pSheet(`Add to ${MEALS.find((x) => x[0] === d.m)[1]}`, foodSheet()); },
   pickFood: (d) => { S.p.pick = d.id ? { id: d.id, servings: 1 } : null; S.p.sheet.html = foodSheet(); },
   servings: (d) => { S.p.pick.servings = Math.max(0.5, S.p.pick.servings + +d.v); S.p.sheet.html = foodSheet(); },

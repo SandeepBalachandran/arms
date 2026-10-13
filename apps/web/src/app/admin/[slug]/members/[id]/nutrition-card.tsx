@@ -8,6 +8,7 @@ import {
   dayTotals,
   FOOD_TYPE_LABELS,
   formatDay,
+  formatLitres,
   GOAL_LABELS,
   MEAL_LABELS,
   MEALS,
@@ -36,7 +37,7 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
     supabase.from("nutrition_profiles").select("*").eq("member_id", memberId).maybeSingle(),
     supabase.from("nutrition_targets").select("*").eq("member_id", memberId).maybeSingle(),
     supabase.from("food_logs").select("*").eq("member_id", memberId).gte("logged_on", from).order("created_at"),
-    supabase.from("water_logs").select("logged_on, glasses").eq("member_id", memberId).gte("logged_on", from),
+    supabase.from("water_logs").select("logged_on, ml").eq("member_id", memberId).gte("logged_on", from),
     supabase
       .from("nutrition_comments")
       .select("id, day, body, created_at, author_member_id, author:gym_members!nutrition_comments_author_member_id_fkey(profiles!inner(full_name))")
@@ -60,7 +61,7 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
 
   const days = Array.from({ length: DAYS }, (_, i) => addDays(today, -i));
   const byDay = new Map(days.map((d) => [d, logs.filter((l) => l.logged_on === d)]));
-  const water = new Map((waterRes.data ?? []).map((w) => [w.logged_on, w.glasses]));
+  const water = new Map((waterRes.data ?? []).map((w) => [w.logged_on, w.ml]));
   const logged = days.filter((d) => byDay.get(d)!.length > 0);
   // Today is still in progress, so only finished days count towards "on target".
   const finished = logged.filter((d) => d !== today);
@@ -148,7 +149,7 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
                     {items.length ? <>{Math.round(t.protein_g)} g{target && <span className="text-muted"> / {target.protein_g}</span>}</> : "—"}
                   </td>
                   <td className="py-2 pr-3">
-                    {water.get(d) ? <span className="inline-flex items-center gap-1"><Droplets className="size-3.5 text-sky-500" />{water.get(d)}</span> : "—"}
+                    {water.get(d) ? <span className="inline-flex items-center gap-1"><Droplets className="size-3.5 text-sky-500" />{formatLitres(water.get(d)!)}</span> : "—"}
                   </td>
                   <td className="py-2">
                     <span className={status.cls}>{status.text}</span>

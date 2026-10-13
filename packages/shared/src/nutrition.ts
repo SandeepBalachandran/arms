@@ -80,3 +80,38 @@ export function nutritionAvailable(
 export function ageFrom(birthYear: number | null | undefined, today = new Date()) {
   return birthYear ? today.getFullYear() - birthYear : null;
 }
+
+// Water -----------------------------------------------------------------------
+
+export type WaterContainer = { label: string; ml: number };
+
+export const DEFAULT_WATER_GOAL_ML = 2500;
+export const DEFAULT_WATER_CONTAINERS: WaterContainer[] = [
+  { label: "Glass", ml: 250 },
+  { label: "Bottle", ml: 500 },
+  { label: "Big bottle", ml: 1000 },
+];
+export const MAX_WATER_ML = 10000;
+
+// Validates a member's containers (as saved in water_settings.containers).
+export function parseWaterContainers(value: unknown): WaterContainer[] | null {
+  if (!Array.isArray(value) || value.length < 1 || value.length > 5) return null;
+  const list: WaterContainer[] = [];
+  for (const item of value) {
+    const label = typeof item?.label === "string" ? item.label.trim() : "";
+    const ml = Number(item?.ml);
+    if (label.length < 1 || label.length > 20 || !Number.isInteger(ml) || ml < 50 || ml > 3000) return null;
+    list.push({ label, ml });
+  }
+  return list;
+}
+
+// 1250 → "1.25 L", 500 → "0.5 L", 2000 → "2 L".
+export function formatLitres(ml: number) {
+  return `${Number((ml / 1000).toFixed(2))} L`;
+}
+
+// 250 → "250 ml", 1000 → "1 L".
+export function formatContainer(ml: number) {
+  return ml >= 1000 && ml % 100 === 0 ? formatLitres(ml) : `${ml} ml`;
+}

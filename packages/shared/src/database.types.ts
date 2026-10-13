@@ -737,14 +737,14 @@ isOneToOne: false
                   ]
                 },"water_logs": {
                   Row: {
-                    "glasses": number,"gym_id": string,"logged_on": string,"member_id": string
+                    "glasses": number,"gym_id": string,"logged_on": string,"member_id": string,"ml": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "glasses"?: number,"gym_id": string,"logged_on": string,"member_id": string
+                    "glasses"?: number,"gym_id": string,"logged_on": string,"member_id": string,"ml"?: number
                   }
                   Update: {
-                    "glasses"?: number,"gym_id"?: string,"logged_on"?: string,"member_id"?: string
+                    "glasses"?: number,"gym_id"?: string,"logged_on"?: string,"member_id"?: string,"ml"?: number
                   }
                   Relationships: [
                     {
@@ -757,6 +757,32 @@ isOneToOne: false
       foreignKeyName: "water_logs_member_id_fkey"
       columns: ["member_id"]
 isOneToOne: false
+      referencedRelation: "gym_members"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"water_settings": {
+                  Row: {
+                    "containers": NonNullable<Json>,"goal_ml": number,"gym_id": string,"member_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "containers"?: NonNullable<Json>,"goal_ml"?: number,"gym_id": string,"member_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "containers"?: NonNullable<Json>,"goal_ml"?: number,"gym_id"?: string,"member_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "water_settings_gym_id_fkey"
+      columns: ["gym_id"]
+isOneToOne: false
+      referencedRelation: "gyms"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "water_settings_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: true
       referencedRelation: "gym_members"
       referencedColumns: ["id"]
     }

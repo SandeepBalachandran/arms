@@ -26,7 +26,7 @@ describe("member", () => {
   it("logs food, water and their details", async () => {
     expect((await as.member.from("nutrition_profiles").upsert({ member_id: mid(), gym_id: gymId, consent_at: new Date().toISOString(), height_cm: 172, notes: "TEST lactose intolerant" })).error?.message).toBeUndefined();
     expect((await as.member.from("food_logs").insert({ gym_id: gymId, member_id: mid(), logged_on: today, meal: "breakfast", name: "Puttu", kcal: 170, protein_g: 3.5 })).error?.message).toBeUndefined();
-    expect((await as.member.from("water_logs").upsert({ member_id: mid(), gym_id: gymId, logged_on: today, glasses: 3 })).error?.message).toBeUndefined();
+    expect((await as.member.from("water_logs").upsert({ member_id: mid(), gym_id: gymId, logged_on: today, ml: 750 })).error?.message).toBeUndefined();
   });
 
   it("can't log food for someone else", async () => {
@@ -64,11 +64,39 @@ describe("trainer", () => {
   });
 });
 
+describe("water", () => {
+  it("keeps glasses and ml in step for older app versions", async () => {
+    const day = "2001-01-01";
+    // An old app writes glasses only; ml follows.
+    expect((await as.member.from("water_logs").upsert({ member_id: mid(), gym_id: gymId, logged_on: day, glasses: 3 })).error?.message).toBeUndefined();
+    expect((await as.member.from("water_logs").select("ml, glasses").eq("member_id", mid()).eq("logged_on", day).single()).data).toEqual({ ml: 750, glasses: 3 });
+    // The new app writes ml; glasses is rounded from it.
+    expect((await as.member.from("water_logs").update({ ml: 1600 }).eq("member_id", mid()).eq("logged_on", day)).error?.message).toBeUndefined();
+    expect((await as.member.from("water_logs").select("ml, glasses").eq("member_id", mid()).eq("logged_on", day).single()).data).toEqual({ ml: 1600, glasses: 6 });
+    await as.member.from("water_logs").delete().eq("member_id", mid()).eq("logged_on", day);
+  });
+
+  it("member saves a goal and containers; their coach can read them, others can't", async () => {
+    const containers = [{ label: "Steel bottle", ml: 750 }];
+    expect((await as.member.from("water_settings").upsert({ member_id: mid(), gym_id: gymId, goal_ml: 3000, containers })).error?.message).toBeUndefined();
+    expect((await as.trainer.from("water_settings").select("goal_ml").eq("member_id", mid())).data).toEqual([{ goal_ml: 3000 }]);
+    for (const role of ["staff", "member2", "outsider"] as const) {
+      expect((await as[role].from("water_settings").select("goal_ml").eq("member_id", mid())).data).toEqual([]);
+    }
+    expect(refused(await as.member2.from("water_settings").upsert({ member_id: mid(), gym_id: gymId, goal_ml: 500 }).select("member_id"))).toBe(true);
+  });
+
+  it("rejects too many containers", async () => {
+    const containers = Array.from({ length: 6 }, () => ({ label: "Glass", ml: 250 }));
+    expect((await as.member.from("water_settings").upsert({ member_id: mid(), gym_id: gymId, containers })).error).not.toBeNull();
+  });
+});
+
 describe("everyone else", () => {
   it.each(["staff", "member2", "outsider"] as const)("%s can't see the food log or health notes", async (role) => {
     expect((await as[role].from("food_logs").select("id").eq("member_id", mid())).data).toEqual([]);
     expect((await as[role].from("nutrition_profiles").select("member_id").eq("member_id", mid())).data).toEqual([]);
-    expect((await as[role].from("water_logs").select("glasses").eq("member_id", mid())).data).toEqual([]);
+    expect((await as[role].from("water_logs").select("ml").eq("member_id", mid())).data).toEqual([]);
   });
 
   it("staff can't comment or set targets", async () => {
@@ -78,7 +106,7 @@ describe("everyone else", () => {
 
   it("owner and admin can read it", async () => {
     expect((await as.owner.from("food_logs").select("id").eq("member_id", mid())).data!.length).toBeGreaterThan(0);
-    expect((await as.admin.from("water_logs").select("glasses").eq("member_id", mid())).data).toHaveLength(1);
+    expect((await as.admin.from("water_logs").select("ml").eq("member_id", mid())).data).toHaveLength(1);
   });
 
   it("a trainer who isn't the member's coach can't see it", async () => {
