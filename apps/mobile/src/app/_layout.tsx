@@ -136,6 +136,7 @@ function RootNavigator() {
             <Stack.Screen name="checkin-scan" options={{ headerShown: true, title: 'Scan to check in' }} />
             <Stack.Screen name="staff/scan" options={{ headerShown: true, title: 'Front desk scan' }} />
             <Stack.Screen name="workout/log" options={{ headerShown: true, title: 'Log workout', gestureEnabled: false }} />
+            <Stack.Screen name="workout/[logId]" options={{ headerShown: true, title: 'Edit workout', gestureEnabled: false }} />
             <Stack.Screen name="progress" options={{ headerShown: true, title: 'Progress' }} />
             <Stack.Screen name="receipt/[id]" options={{ headerShown: true, title: 'Receipt' }} />
             <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications' }} />

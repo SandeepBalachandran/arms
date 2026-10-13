@@ -6,8 +6,8 @@ import { ActionForm } from "@/components/action-form";
 import { Card, PageHeader, Select } from "@/components/ui";
 import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { archivePlan, assignPlan, removePlanItem, unassignPlan } from "../actions";
-import { AddItemForm } from "../forms";
+import { archivePlan, assignPlan, unassignPlan } from "../actions";
+import { AddItemForm, PlanItemRow } from "../forms";
 
 export const metadata: Metadata = { title: "Workout plan" };
 
@@ -85,22 +85,15 @@ export default async function PlanPage({ params }: PageProps<"/admin/[slug]/work
               <h2 className="border-b border-border p-3 font-medium">{day.label}</h2>
               <ol className="divide-y divide-border text-sm">
                 {day.items.map((item, i) => (
-                  <li key={item.id} className="flex items-center justify-between gap-2 p-3">
-                    <div>
-                      <p className="font-medium">{i + 1}. {item.exercises.name}</p>
-                      <p className="text-muted">
-                        {item.sets} × {item.reps}
-                        {item.rest_sec != null && ` · rest ${item.rest_sec}s`}
-                        {item.notes && ` · ${item.notes}`}
-                      </p>
-                    </div>
-                    <ActionForm action={removePlanItem} success="Exercise removed">
-                      <input type="hidden" name="slug" value={slug} />
-                      <input type="hidden" name="plan_id" value={planId} />
-                      <input type="hidden" name="id" value={item.id} />
-                      <button className="text-xs text-muted hover:text-danger">Remove</button>
-                    </ActionForm>
-                  </li>
+                  <PlanItemRow
+                    key={item.id}
+                    slug={slug}
+                    planId={planId}
+                    item={item}
+                    index={i}
+                    isFirst={i === 0}
+                    isLast={i === day.items.length - 1}
+                  />
                 ))}
               </ol>
             </Card>
@@ -120,7 +113,7 @@ export default async function PlanPage({ params }: PageProps<"/admin/[slug]/work
                   <Link href={`/admin/${slug}/members/${a.member_id}`} className="hover:underline">
                     {a.gym_members.profiles.full_name || "Unnamed member"}
                   </Link>
-                  <ActionForm action={unassignPlan} success="Plan unassigned">
+                  <ActionForm action={unassignPlan} success="Plan unassigned" confirm={`Remove this plan from ${a.gym_members.profiles.full_name || "this member"}?`}>
                     <input type="hidden" name="slug" value={slug} />
                     <input type="hidden" name="id" value={a.id} />
                     <button className="text-xs text-muted hover:text-danger">Remove</button>

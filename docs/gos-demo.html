@@ -222,7 +222,12 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #f
 .wa-preview { background: #e7ffdb; border-radius: 12px; padding: 12px; font-size: 12.5px; white-space: pre-wrap; border: 1px solid #c4f1a8; }
 .plan-day { border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
 .plan-day h4 { margin: 0 0 8px; font-size: 13.5px; display: flex; justify-content: space-between; align-items: center; }
-.ex-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-top: 1px dashed var(--border); }
+.ex-row { display: flex; flex-direction: column; gap: 4px; padding: 7px 0; font-size: 13px; border-top: 1px dashed var(--border); }
+.ex-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+.ex-edit { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.ex-edit .mini { width: 38px; min-width: 0; padding: 3px 4px; border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 12.5px; text-align: center; background: var(--surface); color: var(--text); }
+.chip-x { border: 0; background: none; color: var(--muted); font-size: 15px; line-height: 1; padding: 0 2px; cursor: pointer; }
+.chip-x:hover { color: var(--danger); }
 .import-prev td.badrow { color: var(--danger); }
 
 /* ===================== MEMBER APP ===================== */
@@ -877,8 +882,8 @@ const PAGES = {
       <div class="a-card" style="padding:8px;align-self:start">${S.wplans.map((w) => `<button class="a-nav ${w.id === plan.id ? "on" : ""}" data-a="planSel" data-id="${w.id}">${ic("dumb")} <span style="flex:1">${esc(w.name)}<small class="muted" style="display:block;font-weight:400;font-size:11px">${w.assigned.length} assigned · by ${esc(firstName(M(w.by).name))}</small></span></button>`).join("")}</div>
       <div class="grid">
         <div class="a-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">${esc(plan.name)}</h2><form data-submit="assign" class="row-actions"><select class="sel" name="member" style="width:200px" aria-label="Member">${opts || "<option>Everyone is assigned</option>"}</select><button class="btn sm" ${opts ? "" : "disabled"}>Assign</button></form></div>
-          <div class="chips" style="margin-top:10px">${plan.assigned.map((id) => `<span class="chip" style="display:inline-flex;gap:6px;align-items:center">${av(M(id), 20)} ${esc(M(id).name)}</span>`).join("") || `<span class="small muted">Not assigned yet</span>`}</div></div>
-        <div class="grid g3">${plan.days.map((d, di) => `<div class="plan-day"><h4>${esc(d.label)}<span class="b">${d.items.length}</span></h4>${d.items.map(([n, s, r]) => `<div class="ex-row"><span>${esc(n)}</span><span class="muted tabnum">${s} × ${esc(r)}</span></div>`).join("")}
+          <div class="chips" style="margin-top:10px">${plan.assigned.map((id) => `<span class="chip" style="display:inline-flex;gap:6px;align-items:center">${av(M(id), 20)} ${esc(M(id).name)}<button class="chip-x" data-a="unassign" data-id="${id}" aria-label="Unassign ${esc(M(id).name)}">×</button></span>`).join("") || `<span class="small muted">Not assigned yet</span>`}</div></div>
+        <div class="grid g3">${plan.days.map((d, di) => `<div class="plan-day"><h4>${esc(d.label)}<span class="b">${d.items.length}</span></h4>${d.items.map(([n, s, r], ii) => `<div class="ex-row"><div class="ex-top"><span>${esc(n)}</span><button class="chip-x" data-a="rmEx" data-d="${di}" data-i="${ii}" aria-label="Remove ${esc(n)}">×</button></div><span class="ex-edit"><input class="mini" inputmode="numeric" maxlength="2" value="${s}" data-change="exSets" data-d="${di}" data-i="${ii}" aria-label="${esc(n)} sets"> sets × <input class="mini" value="${esc(r)}" maxlength="10" data-change="exReps" data-d="${di}" data-i="${ii}" aria-label="${esc(n)} reps"> reps</span></div>`).join("")}
           <form data-submit="addEx" data-d="${di}" class="row-actions" style="margin-top:8px"><select class="sel" name="ex" style="flex:1" aria-label="Exercise">${EXERCISES.map((e) => `<option>${e}</option>`).join("")}</select><button class="btn sec sm">${ic("plus")}</button></form></div>`).join("")}</div>
       </div>
     </div>`;
@@ -1340,6 +1345,8 @@ const A = {
 
   newPlan: () => { const w = { id: uid("w"), name: "New plan " + (S.wplans.length + 1), by: "t2", days: [{ label: "Day 1", items: [] }, { label: "Day 2", items: [] }], assigned: [] }; S.wplans.push(w); S.a.planSel = w.id; },
   addEx: (f, el) => { const w = S.wplans.find((x) => x.id === S.a.planSel); w.days[+el.dataset.d].items.push([f.ex, 3, "10"]); },
+  rmEx: (d) => { const w = S.wplans.find((x) => x.id === S.a.planSel); const [n] = w.days[+d.d].items.splice(+d.i, 1)[0]; toast(`${n} removed from ${w.days[+d.d].label}`, "from-admin"); },
+  unassign: (d) => { const w = S.wplans.find((x) => x.id === S.a.planSel); w.assigned = w.assigned.filter((x) => x !== d.id); toast(`${w.name} removed from ${M(d.id).name}`, "from-admin"); },
   assign: (f) => { const w = S.wplans.find((x) => x.id === S.a.planSel); if (!f.member || !M(f.member)) return; w.assigned.push(f.member); notify(f.member, { kind: "plan", title: `New workout plan: ${w.name}`, body: `From ${M(w.by).name}`, link: "workouts" }); toast(`${w.name} assigned to ${M(f.member).name}`, "from-admin"); },
   addFood: (f) => { S.gymFoods.push({ id: uid("g"), name: f.name, serving: f.serving, kcal: +f.kcal, p: +f.p }); toast("Food added. Members can log it now.", "from-admin"); },
   addPlan: (f) => { S.plans.push({ id: uid("pl"), name: f.name, price: Math.round(+f.price * 100), days: +f.days, active: true }); toast("Plan added. It shows in the app now.", "from-admin"); },
@@ -1409,6 +1416,8 @@ const CHANGE = {
   gymField: (el) => { S.gym[el.dataset.k] = el.value; if (el.dataset.k === "name") S.gym.short = initials(el.value); },
   method: (el) => { S.gym.methods[el.dataset.k] = el.checked; },
   planActive: (el) => { S.plans.find((p) => p.id === el.dataset.k).active = el.checked; },
+  exSets: (el) => { const n = Math.min(20, Math.max(1, Math.round(+el.value) || 1)); S.wplans.find((x) => x.id === S.a.planSel).days[+el.dataset.d].items[+el.dataset.i][1] = n; },
+  exReps: (el) => { const v = el.value.trim(); if (!v) return false; S.wplans.find((x) => x.id === S.a.planSel).days[+el.dataset.d].items[+el.dataset.i][2] = v; },
   planPrice: (el) => { S.plans.find((p) => p.id === el.dataset.k).price = Math.round(+el.value * 100); toast("Price updated in the app", "from-admin"); },
   role: (el) => { M(el.dataset.k).role = el.value; },
   uspHighlight: (el) => { document.body.classList.toggle("usp-on", el.checked); return false; },
@@ -1452,6 +1461,14 @@ function renderChrome() {
    Render loop and events
 --------------------------------------------------------------------------- */
 function render() {
+  // Replacing the DOM blurs a focused input, which fires "change" and would
+  // render again mid-render; that nested change still updates state.
+  if (render.busy) return;
+  render.busy = true;
+  try { renderNow(); } finally { render.busy = false; }
+}
+
+function renderNow() {
   const aScroll = $("#a-content")?.scrollTop ?? 0, aRoute = render.aRoute;
   const pScroll = $("#p-body")?.scrollTop ?? 0, pRoute = render.pRoute;
   renderAdmin(); renderApp();

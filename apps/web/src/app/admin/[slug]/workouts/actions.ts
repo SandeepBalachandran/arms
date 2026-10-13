@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { groupPlanDays } from "@gymos/shared";
 import type { ActionResult } from "@/lib/action-result";
 import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -83,6 +84,56 @@ export async function addPlanItem(_prev: FormState, formData: FormData): Promise
   if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}/workouts/${item.plan_id}`);
   return { message: "Added." };
+}
+
+export async function updatePlanItem(_prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = itemSchema
+    .pick({ slug: true, plan_id: true, sets: true, reps: true, rest_sec: true, notes: true })
+    .extend({ id: z.uuid() })
+    .safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const { slug, plan_id, id, ...values } = parsed.data;
+  await requireGym(slug, TEAM_ROLES);
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("workout_plan_items").update(values).eq("id", id).eq("plan_id", plan_id);
+  if (error) return { error: error.message };
+  revalidatePath(`/admin/${slug}/workouts/${plan_id}`);
+  return { message: "Exercise updated." };
+}
+
+// Moves an exercise one place up or down within its day, then renumbers the
+// whole plan 0..n-1 (days keep their order) so earlier deletes can't leave
+// two items on the same position.
+export async function movePlanItem(formData: FormData): Promise<ActionResult> {
+  const { slug, plan_id, id, dir } = z
+    .object({ slug: z.string(), plan_id: z.uuid(), id: z.uuid(), dir: z.enum(["up", "down"]) })
+    .parse(Object.fromEntries(formData));
+  await requireGym(slug, TEAM_ROLES);
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("workout_plan_items")
+    .select("id, day_label, position")
+    .eq("plan_id", plan_id);
+  if (error) return { error: error.message };
+  const days = groupPlanDays([...data].sort((a, b) => a.position - b.position || a.id.localeCompare(b.id)));
+  const day = days.find((d) => d.items.some((i) => i.id === id));
+  if (!day) return;
+  const from = day.items.findIndex((i) => i.id === id);
+  const to = dir === "up" ? from - 1 : from + 1;
+  if (to < 0 || to >= day.items.length) return;
+  [day.items[from], day.items[to]] = [day.items[to], day.items[from]];
+
+  const updates = days
+    .flatMap((d) => d.items)
+    .map((item, position) => ({ id: item.id, position, changed: item.position !== position }))
+    .filter((u) => u.changed);
+  for (const u of updates) {
+    const { error: moveError } = await supabase.from("workout_plan_items").update({ position: u.position }).eq("id", u.id);
+    if (moveError) return { error: moveError.message };
+  }
+  revalidatePath(`/admin/${slug}/workouts/${plan_id}`);
 }
 
 export async function removePlanItem(formData: FormData): Promise<ActionResult> {

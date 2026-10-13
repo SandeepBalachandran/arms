@@ -284,10 +284,15 @@ function PlanDayRow({ day, tint, number, isNext, doneOn, onStart }: {
 
 function HistoryRow({ log, first }: { log: WorkoutHistoryItem; first: boolean }) {
   const theme = useTheme();
+  const router = useRouter();
   const d = new Date(log.performed_at);
   const details = [`${log.sets} sets`, log.duration_min ? `${log.duration_min} min` : null, log.volumeKg ? `${kg(log.volumeKg)} kg` : null].filter(Boolean);
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderTopWidth: first ? 0 : 1, borderColor: theme.border }}>
+    <Pressable
+      onPress={() => router.push({ pathname: '/workout/[logId]', params: { logId: log.id } })}
+      accessibilityRole="button"
+      accessibilityLabel={`${log.day_label ?? 'Workout'} on ${d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}, ${details.join(', ')}. Edit`}
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderTopWidth: first ? 0 : 1, borderColor: theme.border, opacity: pressed ? 0.6 : 1 })}>
       <View style={{ width: 46, alignItems: 'center', borderRadius: 14, paddingVertical: 6, backgroundColor: theme.surfaceMuted }}>
         <Text style={{ fontSize: 11, fontWeight: '600', color: theme.textSecondary }}>
           {d.toLocaleDateString('en-IN', { weekday: 'short' }).toUpperCase()}
@@ -298,6 +303,7 @@ function HistoryRow({ log, first }: { log: WorkoutHistoryItem; first: boolean })
         <Text style={{ fontWeight: '700' }} numberOfLines={1}>{log.day_label ?? 'Workout'}</Text>
         <Text variant="small" numberOfLines={1}>{details.join(' · ')}</Text>
       </View>
-    </View>
+      <ChevronRight size={18} color={theme.textSecondary} />
+    </Pressable>
   );
 }

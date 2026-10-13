@@ -121,7 +121,14 @@ export function useLastSets(exerciseIds: string[]) {
   });
 }
 
-export type DraftSet = { reps: string; weight: string; seconds: string; done: boolean };
+// `id` is set for sets that already exist in a saved workout.
+export type DraftSet = { id?: string; reps: string; weight: string; seconds: string; done: boolean };
+
+const toSetValues = (s: DraftSet) => ({
+  reps: s.reps ? Number(s.reps) : null,
+  weight_kg: s.weight ? Number(s.weight.replace(',', '.')) : null,
+  duration_sec: s.seconds ? Number(s.seconds) : null,
+});
 export type DraftExercise = { exercise: ExerciseInfo; restSec: number | null; target?: string; sets: DraftSet[] };
 
 export function useSaveWorkout() {
@@ -137,13 +144,7 @@ export function useSaveWorkout() {
       const sets = draft.exercises.flatMap((ex) =>
         ex.sets
           .filter((s) => s.done)
-          .map((s, i) => ({
-            exercise_id: ex.exercise.id,
-            set_no: i + 1,
-            reps: s.reps ? Number(s.reps) : null,
-            weight_kg: s.weight ? Number(s.weight.replace(',', '.')) : null,
-            duration_sec: s.seconds ? Number(s.seconds) : null,
-          })),
+          .map((s, i) => ({ exercise_id: ex.exercise.id, set_no: i + 1, ...toSetValues(s) })),
       );
       if (sets.length === 0) throw new Error('Tick at least one set as done before finishing.');
 
@@ -175,6 +176,96 @@ export function useSaveWorkout() {
       queryClient.invalidateQueries({ queryKey: ['last-sets'] });
       queryClient.invalidateQueries({ queryKey: ['personal-records'] });
     },
+  });
+}
+
+const invalidateWorkouts = (queryClient: ReturnType<typeof useQueryClient>) =>
+  Promise.all(
+    ['workout-history', 'workout-log', 'last-sets', 'personal-records'].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
+  );
+
+// One saved workout as editable drafts, one entry per exercise. Sets have no
+// stored exercise order, so exercises keep the order they were first logged
+// in by set number, then name.
+export function useWorkoutLog(logId: string) {
+  const memberId = useActiveGym()?.memberId;
+  return useQuery({
+    queryKey: ['workout-log', logId],
+    enabled: !!memberId && !!logId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('workout_logs')
+        .select(
+          'id, performed_at, day_label, duration_min, notes, workout_plans(name), workout_log_sets(id, set_no, reps, weight_kg, duration_sec, exercises(id, name, muscle_group, measure))',
+        )
+        .eq('id', logId)
+        .eq('member_id', memberId!)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+      const byExercise = new Map<string, DraftExercise>();
+      const sets = [...data.workout_log_sets].sort((a, b) => a.set_no - b.set_no || a.exercises.name.localeCompare(b.exercises.name));
+      for (const s of sets) {
+        const entry = byExercise.get(s.exercises.id) ?? { exercise: s.exercises as ExerciseInfo, restSec: null, sets: [] };
+        entry.sets.push({
+          id: s.id,
+          reps: s.reps != null ? String(s.reps) : '',
+          weight: s.weight_kg != null ? String(num(s.weight_kg)) : '',
+          seconds: s.duration_sec != null ? String(s.duration_sec) : '',
+          done: true,
+        });
+        byExercise.set(s.exercises.id, entry);
+      }
+      return { ...data, exercises: [...byExercise.values()] };
+    },
+  });
+}
+
+// Saves edits to a logged workout: removed sets are deleted, existing ones
+// updated, new ones added, and set numbers renumbered per exercise.
+export function useUpdateWorkout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (edit: { logId: string; durationMin: number | null; notes: string; exercises: DraftExercise[]; originalSetIds: string[] }) => {
+      const rows = edit.exercises.flatMap((ex) =>
+        ex.sets.map((s, i) => ({ id: s.id, exercise_id: ex.exercise.id, set_no: i + 1, ...toSetValues(s) })),
+      );
+      if (rows.length === 0) throw new Error('A workout needs at least one set. Delete the workout instead.');
+
+      const { error } = await supabase
+        .from('workout_logs')
+        .update({ duration_min: edit.durationMin, notes: edit.notes.trim() || null })
+        .eq('id', edit.logId);
+      if (error) throw error;
+
+      const kept = new Set(rows.flatMap((r) => (r.id ? [r.id] : [])));
+      const removed = edit.originalSetIds.filter((id) => !kept.has(id));
+      if (removed.length) {
+        const { error: deleteError } = await supabase.from('workout_log_sets').delete().in('id', removed);
+        if (deleteError) throw deleteError;
+      }
+      for (const { id, ...values } of rows.filter((r) => r.id)) {
+        const { error: updateError } = await supabase.from('workout_log_sets').update(values).eq('id', id!);
+        if (updateError) throw updateError;
+      }
+      const added = rows.filter((r) => !r.id).map(({ id: _id, ...values }) => ({ ...values, log_id: edit.logId }));
+      if (added.length) {
+        const { error: insertError } = await supabase.from('workout_log_sets').insert(added);
+        if (insertError) throw insertError;
+      }
+    },
+    onSuccess: () => invalidateWorkouts(queryClient),
+  });
+}
+
+export function useDeleteWorkout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (logId: string) => {
+      const { error } = await supabase.from('workout_logs').delete().eq('id', logId);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateWorkouts(queryClient),
   });
 }
 
