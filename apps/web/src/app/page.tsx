@@ -24,7 +24,7 @@ export default async function Home() {
         <nav className="flex items-center gap-4 text-sm">
           <ThemeToggle initial={await getTheme()} />
           {user ? (
-            <Link href="/admin" className="hover:underline">Admin</Link>
+            <Link href="/go" className="hover:underline">Open GOS</Link>
           ) : (
             <Link href="/login" className="hover:underline">Sign in</Link>
           )}

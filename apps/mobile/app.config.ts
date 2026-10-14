@@ -6,6 +6,12 @@ const linkHost = process.env.EXPO_PUBLIC_APP_LINK_HOST ?? "gymos.app";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...(config as ExpoConfig),
+  // The web build is served by the admin site under /app (one origin, one PWA).
+  // Set only when exporting for that (scripts/build-site.mjs); the dev server stays at the root.
+  experiments: {
+    ...config.experiments,
+    ...(process.env.EXPO_PUBLIC_WEB_BASE ? { baseUrl: process.env.EXPO_PUBLIC_WEB_BASE } : {}),
+  },
   android: {
     ...config.android,
     // https://<host>/join/<slug> opens the app (verified via

@@ -1,9 +1,9 @@
 {
   "name": "GOS — your gym",
   "short_name": "GOS",
-  "description": "Your membership, check-ins, classes, workouts and food log.",
+  "description": "Memberships, check-ins, classes and workouts. Members and gym staff sign in here.",
   "id": "/",
-  "start_url": "/",
+  "start_url": "/go",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

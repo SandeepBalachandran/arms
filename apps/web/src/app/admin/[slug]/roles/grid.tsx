@@ -22,6 +22,7 @@ export function PermissionGrid({ slug, cells, sectionsOff }: {
 }) {
   const [state, action, pending] = useActionState(saveGrid, undefined);
   useSavedToast(state, "Permissions saved");
+  const [phoneRole, setPhoneRole] = useState<GridRole>(GRID_ROLES[0]);
   const [ticked, setTicked] = useState(() => new Set(Object.entries(cells).filter(([, c]) => c.allowed).map(([id]) => id)));
   const initial = Object.entries(cells).filter(([, c]) => c.allowed).map(([id]) => id).sort().join();
   const dirty = [...ticked].sort().join() !== initial;
@@ -37,17 +38,35 @@ export function PermissionGrid({ slug, cells, sectionsOff }: {
   // Team permissions don't apply to members, and the in-app ones are what members do.
   const applies = (p: PermissionInfo, role: GridRole) => (role === "member" ? p.group === MEMBER_GROUP : true);
 
+  // Phones show one role at a time (the table is too wide for five columns).
+  const phoneHide = (role: GridRole) => (role === phoneRole ? "" : "hidden md:table-cell");
+
   return (
-    <form action={action}>
+    <form action={action} className="min-w-0">
       <input type="hidden" name="slug" value={slug} />
       {[...ticked].map((id) => <input key={id} type="hidden" name="cell" value={id} />)}
+      <div role="tablist" aria-label="Role" className="mb-3 flex gap-2 overflow-x-auto md:hidden">
+        {GRID_ROLES.map((r) => (
+          <button
+            key={r}
+            type="button"
+            role="tab"
+            aria-selected={r === phoneRole}
+            onClick={() => setPhoneRole(r)}
+            className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium ${r === phoneRole ? "border-brand bg-brand text-brand-fg" : "border-border bg-surface"}`}
+          >
+            {ROLE_TITLES[r]}
+          </button>
+        ))}
+      </div>
+      <p className="mb-3 text-xs text-muted md:hidden">The owner can always do everything.</p>
       <Card className="overflow-x-auto p-0">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="w-full text-sm md:min-w-[640px]">
           <thead>
             <tr className="border-b border-border text-left">
               <th className="p-3 font-medium">Can…</th>
-              <th className="w-20 p-3 text-center font-medium">{ROLE_TITLES.owner}</th>
-              {GRID_ROLES.map((r) => <th key={r} className="w-20 p-3 text-center font-medium">{ROLE_TITLES[r]}</th>)}
+              <th className="hidden w-20 p-3 text-center font-medium md:table-cell">{ROLE_TITLES.owner}</th>
+              {GRID_ROLES.map((r) => <th key={r} className={`w-20 p-3 text-center font-medium ${phoneHide(r)}`}>{ROLE_TITLES[r]}</th>)}
             </tr>
           </thead>
           {GROUPS.map((group) => (
@@ -63,18 +82,18 @@ export function PermissionGrid({ slug, cells, sectionsOff }: {
                       <p className="font-medium">{p.label}</p>
                       <p className="text-xs text-muted">{off ? `${off} is turned off` : p.hint}</p>
                     </td>
-                    <td className="p-3 text-center" title="The owner can always do everything">
+                    <td className="hidden p-3 text-center md:table-cell" title="The owner can always do everything">
                       <span className="inline-flex size-6 items-center justify-center rounded-md bg-border/60 text-muted">
                         <Lock className="size-3.5" aria-label="Always allowed" />
                       </span>
                     </td>
                     {GRID_ROLES.map((role) => {
                       const id = `${role}:${p.key}`;
-                      if (!applies(p, role) || !(id in cells)) return <td key={role} className="p-3 text-center text-muted">–</td>;
+                      if (!applies(p, role) || !(id in cells)) return <td key={role} className={`p-3 text-center text-muted ${phoneHide(role)}`}>–</td>;
                       const on = ticked.has(id);
                       const changed = on !== cells[id].allowed || !cells[id].isDefault;
                       return (
-                        <td key={role} className="p-3 text-center">
+                        <td key={role} className={`p-3 text-center ${phoneHide(role)}`}>
                           <label className="inline-flex cursor-pointer items-center justify-center">
                             <input
                               type="checkbox"

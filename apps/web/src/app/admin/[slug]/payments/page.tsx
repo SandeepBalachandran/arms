@@ -63,8 +63,8 @@ export default async function PaymentsPage({ params, searchParams }: PageProps<"
 
       {can("confirm_upi") && <PendingPayments slug={slug} gymId={gym.id} currency={gym.currency} timezone={gym.timezone} />}
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <Card className="col-span-2 sm:col-span-1">
           <p className="text-sm text-muted">Collected</p>
           <p className="mt-1 text-3xl font-semibold tabular-nums">{formatMoney(total, gym.currency)}</p>
           <p className="text-xs text-muted">{payments.length} payments</p>

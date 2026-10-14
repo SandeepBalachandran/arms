@@ -49,6 +49,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Skip static files, images and webhooks.
-    "/((?!_next/static|_next/image|favicon.ico|icons/|api/webhooks|.well-known|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icons/|app/|sw.js|manifest.webmanifest|api/webhooks|.well-known|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

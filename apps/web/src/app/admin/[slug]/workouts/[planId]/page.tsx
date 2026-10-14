@@ -77,7 +77,7 @@ export default async function PlanPage({ params }: PageProps<"/admin/[slug]/work
       />
       {plan.description && <p className="-mt-4 mb-6 text-sm text-muted">{plan.description}</p>}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-4">
           {days.length === 0 && <Card className="text-sm text-muted">Add the first exercise on the right.</Card>}
           {days.map((day) => (

@@ -4,5 +4,5 @@
 import { setZXingModuleOverrides } from 'barcode-detector/polyfill';
 
 setZXingModuleOverrides({
-  locateFile: (path: string, prefix: string) => (path.endsWith('.wasm') ? '/zxing_reader.wasm' : prefix + path),
+  locateFile: (path: string, prefix: string) => (path.endsWith('.wasm') ? `${process.env.EXPO_PUBLIC_WEB_BASE ?? ''}/zxing_reader.wasm` : prefix + path),
 });

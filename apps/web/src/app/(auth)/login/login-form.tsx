@@ -11,7 +11,7 @@ type Mode = "signin" | "signup" | "magic";
 
 const ACTIONS = { signin: signIn, signup: signUp, magic: sendMagicLink };
 const COPY = {
-  signin: { title: "Welcome back", subtitle: "Sign in to manage your gym.", submit: "Sign in" },
+  signin: { title: "Welcome back", subtitle: "Members and gym staff sign in here.", submit: "Sign in" },
   signup: { title: "Create your account", subtitle: "Then register your gym or open an invite.", submit: "Create account" },
   magic: { title: "Sign in with email", subtitle: "We'll email you a link. No password needed.", submit: "Email me a link" },
 };

@@ -1,7 +1,7 @@
-import { rolesLabel } from '@gymos/shared';
+import { rolesLabel, TEAM_ROLES } from '@gymos/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Apple, Camera, Check, ChevronRight, LogOut, Moon, Pencil, Plus, ScanLine, Sun, Trash2, type LucideIcon } from 'lucide-react-native';
+import { Apple, Camera, Check, ChevronRight, LayoutDashboard, LogOut, Moon, Pencil, Plus, ScanLine, Sun, Trash2, type LucideIcon } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import { z } from 'zod';
@@ -21,6 +21,7 @@ import { useActiveGym, useMyGyms, useMyPermissions, useSetActiveGym } from '@/li
 import { useNutritionAccess } from '@/lib/nutrition';
 import { profileKey, useProfile, useSetLanguage } from '@/lib/profile';
 import { useSession } from '@/lib/session';
+import { openAdmin } from '@/lib/site-view';
 import { saveSplashBrand } from '@/lib/splash-brand';
 import { supabase } from '@/lib/supabase';
 
@@ -37,6 +38,7 @@ export default function ProfileScreen() {
   const [editing, setEditing] = useState(false);
   const nutrition = useNutritionAccess();
   const { can } = useMyPermissions();
+  const isTeam = !!useMyGyms().data?.some((m) => TEAM_ROLES.includes(m.role));
   const canScan = !!active?.gym.checkin_enabled && can('check_in_members');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string>();
@@ -98,6 +100,7 @@ export default function ProfileScreen() {
           <GymSwitcher />
           {nutrition.available && <Row icon={Apple} tint="yellow" label="Nutrition details" detail="Height, weight, food preference" onPress={() => router.push('/food/setup')} />}
           {canScan && <Row icon={ScanLine} tint="blue" label="Front desk: scan check-ins" onPress={() => router.push('/staff/scan')} />}
+          {openAdmin && isTeam && <Row icon={LayoutDashboard} tint="blue" label="Open the admin" detail="Run the gym from your phone" onPress={openAdmin} />}
           <Row icon={Plus} tint="green" label="Join another gym" onPress={() => router.push('/join')} />
         </Card>
       </Appear>

@@ -271,7 +271,7 @@ export default async function MemberPage({ params, searchParams }: PageProps<"/a
         {progress && <Stat label="Workouts (30 days)" value={progress[1].count ?? 0} sub={progress[2].data ? `${num(progress[2].data.weight_kg)} kg` : undefined} />}
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-6">
           {/* Current membership */}
           {member.role === "member" && (

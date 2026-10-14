@@ -51,7 +51,7 @@ export default async function ExerciseGuidePage({ params }: PageProps<"/admin/[s
         )}
       </p>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Card>
           <h2 className="mb-3 font-medium">Photos</h2>
           <GuidePhotos slug={slug} exerciseId={exercise.id} exerciseName={exercise.name} photos={guide?.photo_urls ?? []} />

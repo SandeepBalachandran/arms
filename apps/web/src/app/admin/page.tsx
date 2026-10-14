@@ -29,8 +29,11 @@ export default async function AdminIndex({ searchParams }: PageProps<"/admin">) 
   // Right after a delete the cached gym list (loaded by the delete action in
   // this same request) still has the deleted gym, so leave it out here.
   const deletedIds = new Set(recentlyDeleted.map((g) => g.id));
-  const gyms = (await getMyGyms()).filter((m) => TEAM_ROLES.includes(m.role) && !deletedIds.has(m.gym.id));
+  const memberships = await getMyGyms();
+  const gyms = memberships.filter((m) => TEAM_ROLES.includes(m.role) && !deletedIds.has(m.gym.id));
 
+  // A member who isn't on any gym's team belongs in the member app, not here.
+  if (!gyms.length && memberships.length && !recentlyDeleted.length && !deleted) redirect("/app");
   if (gyms.length === 1 && !recentlyDeleted.length && !deleted) redirect(`/admin/${gyms[0].gym.slug}`);
 
   return (

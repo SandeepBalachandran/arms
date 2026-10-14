@@ -30,7 +30,7 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) return { error: friendly(error.message) };
 
-  redirect(safeNextPath(formData.get("next") as string, "/admin"));
+  redirect(safeNextPath(formData.get("next") as string, "/go"));
 }
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -39,7 +39,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const next = safeNextPath(formData.get("next") as string, "/admin");
+  const next = safeNextPath(formData.get("next") as string, "/go");
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
@@ -59,7 +59,7 @@ export async function sendMagicLink(_prev: AuthState, formData: FormData): Promi
   const email = z.email().safeParse(formData.get("email"));
   if (!email.success) return { error: "Enter a valid email" };
 
-  const next = safeNextPath(formData.get("next") as string, "/admin");
+  const next = safeNextPath(formData.get("next") as string, "/go");
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
     email: email.data,

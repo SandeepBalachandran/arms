@@ -62,7 +62,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
           The owner can change this under Roles &amp; permissions.
         </p>
       )}
-      <div className="grid max-w-5xl gap-6 lg:grid-cols-2">
+      <div className="grid max-w-5xl grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2">
         <SettingsCard slug={slug} section="general" readOnly={locked.settings} title="Gym profile">
           <LogoUploader slug={slug} gymName={g.name} logoUrl={g.logo_url} />
           <Field label="Name">
@@ -74,7 +74,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
           <Field label="Phone">
             <Input name="phone" type="tel" defaultValue={g.phone ?? ""} />
           </Field>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
             <Field label="Currency" hint={`Default ${GYM_DEFAULTS.currency}`}>
               <Select name="currency" defaultValue={g.currency}>
                 {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -210,7 +210,7 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
 
         <SettingsCard slug={slug} section="classes" readOnly={locked.mixed} title="Classes" description="Optional. Group classes members book in the app.">
           <Toggle name="classes_enabled" label="Run classes" defaultChecked={g.classes_enabled} />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
             <Field label="Booking opens (days ahead)" hint={`Default ${GYM_DEFAULTS.classes_booking_window_days}`}>
               <Input name="classes_booking_window_days" type="number" min={1} max={60} defaultValue={g.classes_booking_window_days} required />
             </Field>

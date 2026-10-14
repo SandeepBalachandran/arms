@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Poppins } from "next/font/google";
+import { RegisterPwa } from "@/components/register-pwa";
 import { Toaster } from "@/components/toaster";
 import { TooltipProvider } from "@/components/tooltip";
 import { getTheme } from "@/lib/theme";
@@ -20,6 +21,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: { default: "GOS", template: "%s · GOS" },
   description: "Run your gym: memberships, check-ins, classes and workouts.",
+  // One installable app for members and gym staff (see public/manifest.webmanifest).
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "GOS", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
@@ -39,6 +43,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col font-sans">
         <TooltipProvider>{children}</TooltipProvider>
         <Toaster />
+        <RegisterPwa />
+        {/* Chrome fires this once, early: keep it for the install banner (components/install-banner.tsx). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__gosInstallPrompt=e;window.dispatchEvent(new Event('gos-installable'))})",
+          }}
+        />
       </body>
     </html>
   );

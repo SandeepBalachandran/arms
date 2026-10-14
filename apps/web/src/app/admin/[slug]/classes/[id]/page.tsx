@@ -53,7 +53,7 @@ export default async function SessionPage({ params }: PageProps<"/admin/[slug]/c
       <Link href={`/admin/${slug}/classes?week=${day}`} className="text-sm text-muted hover:underline">← Classes</Link>
       <PageHeader title={`${session.class_types.name} · ${formatDay(day)} ${formatTime(session.starts_at, gym.timezone)}`} />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
           <Card className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
             <div><span className="text-muted">Trainer </span>{session.trainer?.profiles.full_name ?? "—"}</div>

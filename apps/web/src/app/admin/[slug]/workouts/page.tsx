@@ -45,7 +45,7 @@ export default async function WorkoutsPage({ params }: PageProps<"/admin/[slug]/
   return (
     <>
       <PageHeader title="Workouts" />
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-3">
           <h2 className="font-medium">Plans</h2>
           {plans.data.length === 0 && (

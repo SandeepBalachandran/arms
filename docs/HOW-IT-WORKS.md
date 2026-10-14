@@ -380,6 +380,16 @@ Logic both apps need lives here so it behaves identically:
 3. `npm run db:push`, then `npm run db:types`.
 4. Use the new types in both apps. Add new gym settings to `settings.ts` (schema plus default) and to the Settings page.
 
+## One web app for everyone (Vercel)
+
+On the web, GOS is one site and one installable app (PWA), named "GOS". Members and gym staff use the same sign-in page.
+- **Where things live:** the admin is at `/admin` and the member app at `/app` (the Expo web build, served by the Next.js site). There is one manifest and one service worker (`apps/web/public`). The service worker keeps the member app's files for offline use and never stores admin pages.
+- **One sign-in:** on the web the member app keeps its session in cookies, like the admin (`apps/mobile/src/lib/supabase.web.ts`), so signing in to one signs in to both.
+- **Where people land:** `/go` (the installed app's start page) sends people on a gym's team to the admin and everyone else to the member app. "Open the member app" (admin profile menu) and "Open the admin" (app Profile tab) switch views and remember the choice.
+- **Installing:** the sign-in page shows an install banner on phones. Chrome and Edge on Android get an Install button; iPhone gets the Add to Home Screen steps. The Android and iOS apps stay available for people who prefer them.
+
+To deploy on Vercel, import the repo with `apps/web` as the root directory and set the build command to `cd ../.. && npm run build:site`. That builds the member app into `apps/web/public/app`, then the admin. It needs the same environment variables as `apps/web/.env.local` (the member build reuses `NEXT_PUBLIC_SUPABASE_*`).
+
 ## Building and releasing the app
 
 The app supports **Android 7.0+** and targets Android 16.

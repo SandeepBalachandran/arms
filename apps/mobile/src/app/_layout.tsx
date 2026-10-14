@@ -19,7 +19,9 @@ import { ConfirmHost } from '@/lib/confirm';
 import { installCrashRecorder, recordCrash } from '@/lib/crash-log';
 import { useScheme } from '@/lib/appearance';
 import { ActiveGymProvider, checkInstallReferrer, takePendingJoin, useMyGyms } from '@/lib/gyms';
+import { TEAM_ROLES } from '@gymos/shared';
 import { SessionProvider, useSession } from '@/lib/session';
+import { useLandOnAdmin } from '@/lib/site-view';
 import { hasSeenWelcome } from '@/lib/welcome';
 
 installCrashRecorder();
@@ -131,6 +133,8 @@ function RootNavigator() {
   // Signed in and the user's gyms are known. Until then, stay where we are
   // (the sign-in screen shows its spinner) rather than flashing "Join a gym".
   const inApp = signedIn && !gyms.isPending;
+  // On the web, gym staff land on the admin (same site, same sign-in).
+  useLandOnAdmin(!!gyms.data?.some((m) => TEAM_ROLES.includes(m.role)), inApp);
 
   useEffect(() => {
     checkInstallReferrer();

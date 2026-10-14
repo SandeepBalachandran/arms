@@ -68,7 +68,7 @@ export default async function CheckinPage({ params, searchParams }: PageProps<"/
           )
         }
       />
-      <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[420px_minmax(0,1fr)]">
         <div className="space-y-6">
           <Card>
             <h2 className="mb-3 font-medium">Scan member QR</h2>
