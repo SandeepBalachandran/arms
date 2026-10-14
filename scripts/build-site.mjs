@@ -2,6 +2,10 @@
 // public/app folder, then Next.js builds around it. Used by Vercel
 // (`npm run build:site`). Needs the NEXT_PUBLIC_SUPABASE_* variables.
 import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
+
+// Locally the settings live in apps/web/.env.local; on Vercel they're environment variables.
+if (existsSync("apps/web/.env.local")) process.loadEnvFile("apps/web/.env.local");
 
 const env = {
   ...process.env,
