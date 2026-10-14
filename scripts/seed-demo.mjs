@@ -21,7 +21,7 @@ const USERS = {
   admin: { email: "manager@gymos.test", password: "GymOS-manager-2026", full_name: "Meera Manager" },
   staff: { email: "staff@gymos.test", password: "GymOS-staff-2026", full_name: "Suresh Staff" },
   trainer: { email: "trainer@gymos.test", password: "GymOS-trainer-2026", full_name: "Tara Trainer" },
-  member: { email: "member@gymos.test", password: "GymOS-member-2026", full_name: "Ravi Member" },
+  member: { email: "member@gymos.test", password: "member123", full_name: "Ravi Member" },
 };
 
 const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });

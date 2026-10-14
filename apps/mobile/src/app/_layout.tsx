@@ -10,16 +10,19 @@ import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { Component, useEffect, useState, type ReactNode } from 'react';
 import { AppState, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { LastCrashNotice } from '@/components/last-crash';
 import { SplashView } from '@/components/splash-view';
 import { ConfirmHost } from '@/lib/confirm';
+import { installCrashRecorder, recordCrash } from '@/lib/crash-log';
 import { useScheme } from '@/lib/appearance';
 import { ActiveGymProvider, checkInstallReferrer, takePendingJoin, useMyGyms } from '@/lib/gyms';
 import { SessionProvider, useSession } from '@/lib/session';
 import { hasSeenWelcome } from '@/lib/welcome';
 
+installCrashRecorder();
 SplashScreen.preventAutoHideAsync();
 SplashScreen.setOptions({ fade: true, duration: 300 });
 
@@ -35,32 +38,58 @@ if (Platform.OS !== 'web') {
 export default function RootLayout() {
   const scheme = useScheme();
   return (
-    <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <QueryClientProvider client={queryClient}>
-        <SessionProvider>
-          <ActiveGymProvider>
-            <RootNavigator />
-            <ConfirmHost />
-          </ActiveGymProvider>
-        </SessionProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <RootErrorBoundary>
+      <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+        <QueryClientProvider client={queryClient}>
+          <SessionProvider>
+            <ActiveGymProvider>
+              <RootNavigator />
+              <ConfirmHost />
+            </ActiveGymProvider>
+          </SessionProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+      <LastCrashNotice />
+    </RootErrorBoundary>
   );
 }
 
 // A screen threw while rendering. Release builds would otherwise close the
 // app; show what went wrong so it can be reported, and offer a retry.
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return <CrashScreen error={error} retry={retry} />;
+}
+
+// Same, for errors above the screens (the providers and the navigator below),
+// which expo-router's ErrorBoundary doesn't cover.
+class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  componentDidCatch(error: Error) {
+    recordCrash(error, false);
+  }
+  render() {
+    if (this.state.error) return <CrashScreen error={this.state.error} retry={() => this.setState({ error: null })} />;
+    return this.props.children;
+  }
+}
+
+function CrashScreen({ error, retry }: { error: Error; retry: () => void }) {
+  useEffect(() => recordCrash(error, false), [error]);
   return (
     <View style={{ flex: 1, backgroundColor: '#1f2a10', padding: 24, paddingTop: 80, gap: 16 }}>
       <Text style={{ color: '#ffffff', fontSize: 26, fontWeight: '800' }}>Something went wrong</Text>
       <Text style={{ color: '#c3cdb2', fontSize: 15 }}>
-        Try again. If it keeps happening, send a screenshot of this screen to your gym.
+        Try again. If it keeps happening, send a screenshot of this screen to the GOS team.
       </Text>
-      <ScrollView style={{ maxHeight: 220, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.08)' }} contentContainerStyle={{ padding: 12 }}>
+      <ScrollView style={{ maxHeight: 260, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.08)' }} contentContainerStyle={{ padding: 12 }}>
         <Text selectable style={{ color: '#ffffff', fontSize: 12, fontFamily: Platform.select({ ios: 'Menlo', default: 'monospace' }) }}>
           {error.name}: {error.message}
+          {'\n\n'}
+          {(error.stack ?? '').slice(0, 1500)}
         </Text>
       </ScrollView>
       <Pressable
@@ -94,6 +123,14 @@ function RootNavigator() {
   const loaded = !isLoading && (!signedIn || !gyms.isPending);
   // The animated splash stays at least this long so it reads as a moment, not a flicker.
   const [minShown, setMinShown] = useState(false);
+  // The animated splash is for app start only. Afterwards (signing in, out)
+  // the navigator stays mounted: tearing the native stack down and building it
+  // again mid-transition can crash Android.
+  const [booted, setBooted] = useState(false);
+  if (!booted && fontsReady && loaded && minShown) setBooted(true);
+  // Signed in and the user's gyms are known. Until then, stay where we are
+  // (the sign-in screen shows its spinner) rather than flashing "Join a gym".
+  const inApp = signedIn && !gyms.isPending;
 
   useEffect(() => {
     checkInstallReferrer();
@@ -108,19 +145,19 @@ function RootNavigator() {
   }, [fontsReady]);
 
   if (!fontsReady) return null; // native splash is still showing
-  if (!loaded || !minShown) return <SplashView />;
+  if (!booted) return <SplashView />;
 
   return (
     <>
-      <PendingJoinHandler enabled={signedIn} />
+      <PendingJoinHandler enabled={inApp} />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected guard={!signedIn}>
+        <Stack.Protected guard={!inApp}>
           <Stack.Protected guard={!welcomed}>
             <Stack.Screen name="welcome" />
           </Stack.Protected>
           <Stack.Screen name="sign-in" />
         </Stack.Protected>
-        <Stack.Protected guard={signedIn}>
+        <Stack.Protected guard={inApp}>
           <Stack.Protected guard={hasGym}>
             <Stack.Screen name="(gym)" />
             <Stack.Screen
