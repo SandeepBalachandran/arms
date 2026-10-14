@@ -775,7 +775,6 @@ function renderAdmin() {
         <div class="row" style="cursor:default"><span class="b good">Owner</span> ${esc(S.gym.name)}</div>
         <button class="row" data-a="aGo" data-r="profile">${ic("user")} My profile</button>
         <button class="row" data-a="aGo" data-r="settings">${ic("sliders")} Gym settings</button>
-        <button class="row" data-a="toastOnly" data-t="Opens the member app with the same sign-in. Switch back from Profile → Open the admin.">${ic("user")} Open the member app</button>
         <div class="row small muted" style="cursor:default">Signed in as owner. Front desk and trainers see fewer pages.</div></div>` : ""}
     ${S.a.modal ? `<div class="a-modal-back" data-a="aClose" data-self="1"><div class="a-modal" style="${S.a.modal.wide ? "width:min(760px,100%)" : ""}" role="dialog" aria-label="${esc(S.a.modal.title)}"><header>${esc(S.a.modal.title)}<button class="btn ghost sm" data-a="aClose" aria-label="Close">${ic("x")}</button></header><div class="body">${S.a.modal.html}</div></div></div>` : ""}
   </div>`;
@@ -1304,7 +1303,7 @@ const SCREENS = {
 
   signedout() {
     return `<div class="p-signed"><div style="font-size:34px;font-weight:800">G<span style="color:var(--p-brand)">OS</span></div>${S.p.deleted ? `<div class="p-card"><b>Your account has been deleted.</b><div class="p-sec" style="margin-top:4px">Name, phone, photo, workouts and food log are gone. The gym keeps its payment and visit records as "Deleted member". Look at the admin's Members page.</div></div><button class="p-btn" data-a="reset">Reset demo</button>`
-      : `<div class="p-sec">One GOS app for members and gym staff. Sign in with an email code or password: members open their app, owners and staff open the admin.</div><input class="p-inp" value="anjali.menon@gmail.com" aria-label="Email"><button class="p-btn" data-a="signIn">Send me a code</button><button class="p-btn sec" data-a="pJoinScreen">I have a gym's join link</button>`}</div>`;
+      : `<div class="p-sec">One GOS app for members and gym staff. Sign in with an email code or password: members open their app, owners and staff open the admin. To use the other side, sign out and sign in with that account.</div><input class="p-inp" value="anjali.menon@gmail.com" aria-label="Email"><button class="p-btn" data-a="signIn">Send me a code</button><button class="p-btn sec" data-a="pJoinScreen">I have a gym's join link</button>`}</div>`;
   },
 };
 

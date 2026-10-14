@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, Check, ChevronDown, LogOut, Plus, Settings, Smartphone, UserRound } from "lucide-react";
+import { Bell, Check, ChevronDown, LogOut, Plus, Settings, UserRound } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
 import { initials } from "@gymos/shared";
 import { Avatar } from "@/components/avatar";
@@ -129,14 +129,6 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
             <Link href="/register-gym" role="menuitem" className={menuItemClass}>
               <Plus className="size-4 text-muted" /> Register a new gym
             </Link>
-          </MenuSection>
-
-          <MenuSection>
-            {/* A route handler that remembers the choice: needs a full page load, not next/link. */}
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a href="/switch/member" role="menuitem" className={menuItemClass}>
-              <Smartphone className="size-4 text-muted" /> Open the member app
-            </a>
           </MenuSection>
 
           <MenuSection>
