@@ -1,4 +1,4 @@
-# Squatfit mobile (Expo)
+# Squatpress mobile (Expo)
 
 Member app. See the root README for setup.
 

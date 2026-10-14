@@ -4,22 +4,23 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { GRID_ROLES, PERMISSIONS } from "@gymos/shared";
 import type { ActionResult } from "@/lib/action-result";
-import { requireGym } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type GridState = { error?: string; saved?: boolean } | undefined;
 
-// The owner's grid. Only cells that differ from the defaults are stored, so
-// "Reset to defaults" is just clearing them. RLS lets only the owner write.
+// The grid. Only cells that differ from the defaults are stored, so "Reset to
+// defaults" is just clearing them. The database lets the owner change any cell,
+// and people with manage_roles only the cells it marks editable.
 export async function saveGrid(_prev: GridState, formData: FormData): Promise<GridState> {
   const slug = z.string().parse(formData.get("slug"));
-  const { gym } = await requireGym(slug, ["owner"]);
+  const { gym } = await requirePermission(slug, "manage_roles");
   const supabase = await createClient();
 
   const { data: grid, error } = await supabase.rpc("permission_grid", { p_gym_id: gym.id });
   if (error) return { error: error.message };
   // Stored cells always differ from the default, so a stored cell's default is its opposite.
-  const defaults = new Map(grid.map((c) => [`${c.role}:${c.permission}`, c.is_default ? c.allowed : !c.allowed]));
+  const defaults = new Map(grid.filter((c) => c.editable).map((c) => [`${c.role}:${c.permission}`, c.is_default ? c.allowed : !c.allowed]));
 
   const ticked = new Set(formData.getAll("cell").map(String));
   const keep: { gym_id: string; role: (typeof GRID_ROLES)[number]; permission: string; allowed: boolean; updated_at: string }[] = [];
@@ -54,8 +55,9 @@ export async function saveGrid(_prev: GridState, formData: FormData): Promise<Gr
 
 export async function resetGrid(formData: FormData): Promise<ActionResult> {
   const slug = z.string().parse(formData.get("slug"));
-  const { gym } = await requireGym(slug, ["owner"]);
+  const { gym } = await requirePermission(slug, "manage_roles");
   const supabase = await createClient();
+  // Only the cells this person may change are cleared (the database skips the rest).
   const { error } = await supabase.from("gym_role_permissions").delete().eq("gym_id", gym.id);
   if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}`, "layout");

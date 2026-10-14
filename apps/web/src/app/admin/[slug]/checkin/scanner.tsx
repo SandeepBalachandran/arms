@@ -31,7 +31,8 @@ export function Scanner({ slug }: { slug: string }) {
           lastRef.current = { token: data, at: now };
           setState(await checkInByToken(slug, data));
         },
-        { returnDetailedScanResult: true, highlightScanRegion: true, maxScansPerSecond: 4 },
+        // Back camera on phones: the front desk points it at the member's screen.
+        { returnDetailedScanResult: true, highlightScanRegion: true, maxScansPerSecond: 4, preferredCamera: "environment" },
       );
     }
     try {
@@ -49,10 +50,12 @@ export function Scanner({ slug }: { slug: string }) {
 
   return (
     <div className="space-y-3">
-      <div className="overflow-hidden rounded-xl border border-border bg-black">
-        <video ref={videoRef} className={running ? "aspect-video w-full object-cover" : "hidden"} muted playsInline />
+      {/* The video always keeps its size: the scanner measures it when the camera
+          starts (a hidden video gave a blank box with only the scan outline). */}
+      <div className="relative aspect-4/3 overflow-hidden rounded-xl border border-border bg-black sm:aspect-video">
+        <video ref={videoRef} className="absolute inset-0 size-full object-cover" muted playsInline />
         {!running && (
-          <div className="flex aspect-video items-center justify-center text-sm text-zinc-400">Camera is off</div>
+          <div className="absolute inset-0 flex items-center justify-center bg-black text-sm text-zinc-400">Camera is off</div>
         )}
       </div>
       <Button variant={running ? "secondary" : "primary"} onClick={running ? stop : start} className="w-full">

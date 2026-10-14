@@ -1013,6 +1013,9 @@ isOneToOne: false
 "can_coach":
 { Args: { "p_member_id": string }; Returns: boolean
                            },
+"can_edit_grid_cell":
+{ Args: { "p_gym_id": string,"p_permission": string,"p_role": Database["public"]['Enums']["gym_role"] }; Returns: boolean
+                           },
 "can_see_avatar":
 { Args: { "p_folder": string }; Returns: boolean
                            },
@@ -1130,7 +1133,7 @@ isOneToOne: false
                            },
 "permission_grid":
 { Args: { "p_gym_id": string }; Returns: {
-              "allowed": boolean,"is_default": boolean,"permission": string,"role": Database["public"]['Enums']["gym_role"]
+              "allowed": boolean,"editable": boolean,"is_default": boolean,"permission": string,"role": Database["public"]['Enums']["gym_role"]
             }[]
                            },
 "plan_gym_id":

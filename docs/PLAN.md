@@ -1,4 +1,4 @@
-# Squatfit — Plan and Milestones
+# Squatpress — Plan and Milestones
 
 Multi-tenant gym SaaS: a **Next.js web admin** for gym owners and staff, and an **Expo (React Native) member app** that gyms share on WhatsApp. One shared app; each member joins their gym by link or gym code.
 
@@ -8,7 +8,7 @@ Repo: https://github.com/SandeepBalachandran/arms
 
 | Area | Decision |
 |---|---|
-| Product | One shared app ("Squatfit") for all gyms; gyms share a join link on WhatsApp |
+| Product | One shared app ("Squatpress") for all gyms; gyms share a join link on WhatsApp |
 | Admin | Stays in the browser (Next.js), works on phones with a bottom nav |
 | Member app | React Native with Expo (not Flutter): same TypeScript/React, shared types, EAS builds iOS from Windows |
 | Platforms | Android first, iOS next |
@@ -133,7 +133,7 @@ Conventions: money in paise; dates as `YYYY-MM-DD` in the gym's timezone; secret
 - Supports Android 7.0+ (minSdk 24) and targets Android 16 (SDK 36).
 
 ### M19. Polish, roles and rename
-- Product renamed from GymOS to **Squatfit** (visible names only; internal IDs unchanged).
+- Product renamed from GymOS to **Squatpress** (visible names only; internal IDs unchanged).
 - Poppins on web and mobile; redesigned sign-in and register pages; role changes autosave.
 - One demo account per role.
 - **Delete gym** (owners, Settings): type-to-confirm, CSV download of members and payments, 30-day restore from the admin home, then a daily job removes the gym's data.

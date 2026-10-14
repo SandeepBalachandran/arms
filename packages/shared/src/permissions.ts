@@ -23,6 +23,7 @@ export type Permission =
   | "view_reports"
   | "edit_gym_settings"
   | "manage_sections"
+  | "manage_roles"
   | "self_check_in"
   | "book_classes"
   | "log_food"
@@ -53,6 +54,7 @@ export const PERMISSIONS: PermissionInfo[] = [
   { key: "coach_nutrition", label: "Coach nutrition", hint: "See food logs and set targets. Trainers: only their own PT clients", group: "Nutrition", section: "nutrition_enabled" },
   { key: "edit_gym_settings", label: "Change gym settings", hint: "Name, address, hours, UPI ID, logo, QR poster", group: "Gym" },
   { key: "manage_sections", label: "Turn sections on or off", hint: "Check-in, classes, workouts, PT, nutrition and joining rules", group: "Gym" },
+  { key: "manage_roles", label: "Change roles & permissions", hint: "This page, for roles they don't hold themselves. Only the owner changes this row", group: "Gym" },
   { key: "self_check_in", label: "Check in from the app", hint: "With the app or by scanning the gym's poster", group: "In the member app", section: "checkin_enabled" },
   { key: "book_classes", label: "Book classes", hint: "Book and join waitlists in the app", group: "In the member app", section: "classes_enabled" },
   { key: "log_workouts", label: "Log workouts", hint: "Record sets and reps in the app", group: "In the member app", section: "workouts_enabled" },

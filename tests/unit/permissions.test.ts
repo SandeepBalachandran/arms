@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { highestRole, PERMISSIONS, rolesLabel } from "@gymos/shared";
 
@@ -19,9 +19,17 @@ describe("roles", () => {
 
 describe("permission list", () => {
   it("matches the database's list exactly", () => {
-    const sql = readFileSync("supabase/migrations/20261030000000_roles_permissions.sql", "utf8");
-    const grid = sql.match(/create table public\.gym_role_permissions[\s\S]*?permission in \(([\s\S]*?)\)\),/)![1];
-    const dbKeys = [...grid.matchAll(/'(\w+)'/g)].map((m) => m[1]).sort();
+    // The newest migration that sets the allowed list (the table's check constraint).
+    const dir = "supabase/migrations";
+    const lists = readdirSync(dir)
+      .sort()
+      .map((f) => readFileSync(`${dir}/${f}`, "utf8"))
+      .map((sql) =>
+        sql.match(/gym_role_permissions_permission_check check \(permission in \(([\s\S]*?)\)\)/)?.[1] ??
+        sql.match(/create table public\.gym_role_permissions[\s\S]*?permission in \(([\s\S]*?)\)\),/)?.[1],
+      )
+      .filter(Boolean);
+    const dbKeys = [...lists.at(-1)!.matchAll(/'(\w+)'/g)].map((m) => m[1]).sort();
     expect(PERMISSIONS.map((p) => p.key).sort()).toEqual(dbKeys);
   });
 

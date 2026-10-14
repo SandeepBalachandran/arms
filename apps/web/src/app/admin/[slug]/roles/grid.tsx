@@ -7,7 +7,8 @@ import { Button, Card, FormError } from "@/components/ui";
 import { useSavedToast } from "@/lib/use-saved-toast";
 import { saveGrid } from "./actions";
 
-export type Cell = { allowed: boolean; isDefault: boolean };
+// editable: the signed-in person may change this cell (the database decides).
+export type Cell = { allowed: boolean; isDefault: boolean; editable: boolean };
 
 const GROUPS = [...new Set(PERMISSIONS.map((p) => p.group))];
 const MEMBER_GROUP = "In the member app";
@@ -92,6 +93,15 @@ export function PermissionGrid({ slug, cells, sectionsOff }: {
                       if (!applies(p, role) || !(id in cells)) return <td key={role} className={`p-3 text-center text-muted ${phoneHide(role)}`}>–</td>;
                       const on = ticked.has(id);
                       const changed = on !== cells[id].allowed || !cells[id].isDefault;
+                      if (!cells[id].editable) {
+                        return (
+                          <td key={role} className={`p-3 text-center ${phoneHide(role)}`} title="Only the owner can change this">
+                            <span className={`inline-flex size-6 items-center justify-center rounded-md border opacity-60 ${on ? "border-brand bg-brand text-brand-fg" : "border-border bg-surface text-muted"}`}>
+                              {on ? <Check className="size-4" aria-label={`${ROLE_TITLES[role]}: ${p.label} (allowed, locked)`} /> : <Lock className="size-3" aria-label={`${ROLE_TITLES[role]}: ${p.label} (not allowed, locked)`} />}
+                            </span>
+                          </td>
+                        );
+                      }
                       return (
                         <td key={role} className={`p-3 text-center ${phoneHide(role)}`}>
                           <label className="inline-flex cursor-pointer items-center justify-center">

@@ -394,7 +394,7 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #f
 
 <script>
 // The product's name (the real app reads packages/shared/src/brand.json). Change it here for the demo.
-const BRAND = { name: "Squatfit", logo: ["Squat", "fit"] };
+const BRAND = { name: "Squatpress", logo: ["Squat", "press"] };
 document.title = `${BRAND.name} Demo`;
 document.querySelectorAll("[data-brand]").forEach((el) => (el.textContent = BRAND.name));
 document.querySelectorAll("[data-logo]").forEach((el) => (el.innerHTML = `${BRAND.logo[0]}<b>${BRAND.logo[1]}</b>`));
@@ -527,7 +527,7 @@ const PERMS = [
   ["Classes", [["manage_classes", "Run classes"]]],
   ["Workouts", [["edit_workout_plans", "Build workout plans"], ["assign_workout_plans", "Assign workout plans"], ["edit_exercises", "Edit the exercise library"]]],
   ["Nutrition", [["manage_food_list", "Edit the food list"], ["coach_nutrition", "Coach nutrition"]]],
-  ["Gym", [["edit_gym_settings", "Change gym settings"], ["manage_sections", "Turn sections on or off"]]],
+  ["Gym", [["edit_gym_settings", "Change gym settings"], ["manage_sections", "Turn sections on or off"], ["manage_roles", "Change roles &amp; permissions"]]],
   ["In the member app", [["self_check_in", "Check in from the app"], ["book_classes", "Book classes"], ["log_workouts", "Log workouts"], ["log_food", "Log food"]]],
 ];
 const PERM_DEFAULTS = {

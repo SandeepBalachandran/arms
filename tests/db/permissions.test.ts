@@ -36,7 +36,7 @@ describe("defaults", () => {
 
   it("the owner has everything; settings and sections are owner-only by default", async () => {
     const owner = (await as.owner.rpc("my_permissions", { p_gym_id: gymId })).data!;
-    expect(owner).toHaveLength(19);
+    expect(owner).toHaveLength(20);
     const admin = (await as.admin.rpc("my_permissions", { p_gym_id: gymId })).data!;
     expect(admin).not.toContain("edit_gym_settings");
     expect(admin).not.toContain("manage_sections");
@@ -66,9 +66,34 @@ describe("the owner's grid", () => {
     expect((await as.owner.rpc("has_permission", { p_gym_id: gymId, p_permission: "manage_sections" })).data).toBe(true);
   });
 
-  it("the full grid is only for the owner", async () => {
-    expect((await as.owner.rpc("permission_grid", { p_gym_id: gymId })).data).toHaveLength(4 * 19);
+  it("the full grid is only for the owner, unless they let someone manage roles", async () => {
+    expect((await as.owner.rpc("permission_grid", { p_gym_id: gymId })).data).toHaveLength(4 * 20);
     expect((await as.admin.rpc("permission_grid", { p_gym_id: gymId })).data).toEqual([]);
+    await setPermission("admin", "manage_roles", true);
+    expect((await as.admin.rpc("permission_grid", { p_gym_id: gymId })).data).toHaveLength(4 * 20);
+  });
+
+  it("someone who manages roles can't change their own role's column or who manages roles", async () => {
+    await setPermission("admin", "manage_roles", true);
+    const cell = async (role: "admin" | "staff" | "trainer", permission: string) =>
+      (await as.admin.rpc("permission_grid", { p_gym_id: gymId })).data!.find((c) => c.role === role && c.permission === permission)!.editable;
+    expect(await cell("staff", "record_payments")).toBe(true);
+    expect(await cell("admin", "record_payments")).toBe(false);
+    expect(await cell("trainer", "manage_roles")).toBe(false);
+
+    const staffCell = await as.admin.from("gym_role_permissions").upsert({ gym_id: gymId, role: "staff", permission: "record_payments", allowed: false }).select("gym_id");
+    expect(staffCell.error?.message).toBeUndefined();
+    expect((await as.staff.rpc("has_permission", { p_gym_id: gymId, p_permission: "record_payments" })).data).toBe(false);
+
+    expect(refused(await as.admin.from("gym_role_permissions").upsert({ gym_id: gymId, role: "admin", permission: "edit_gym_settings", allowed: true }).select("gym_id"))).toBe(true);
+    expect(refused(await as.admin.from("gym_role_permissions").upsert({ gym_id: gymId, role: "staff", permission: "manage_roles", allowed: true }).select("gym_id"))).toBe(true);
+    expect((await as.admin.rpc("has_permission", { p_gym_id: gymId, p_permission: "edit_gym_settings" })).data).toBe(false);
+  });
+
+  it("the owner can take it away again", async () => {
+    await setPermission("admin", "manage_roles", true);
+    await setPermission("admin", "manage_roles", false);
+    expect(refused(await as.admin.from("gym_role_permissions").upsert({ gym_id: gymId, role: "staff", permission: "manage_members", allowed: false }).select("gym_id"))).toBe(true);
   });
 });
 

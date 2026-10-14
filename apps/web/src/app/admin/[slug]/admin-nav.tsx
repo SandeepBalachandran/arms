@@ -39,7 +39,7 @@ const ITEMS = [
   { href: "/join", label: "Join link", short: "Join", icon: Link2, roles: null, perms: ["manage_members"], group: "gym" },
   { href: "/settings", label: "Settings", short: "Settings", icon: Settings, roles: null, perms: ["edit_gym_settings", "manage_sections"], group: "gym" },
   { href: "/activity", label: "Activity", short: "Activity", icon: History, roles: ["owner"], group: "gym" },
-  { href: "/roles", label: "Roles & permissions", short: "Roles", icon: ShieldCheck, roles: ["owner"], group: "gym" },
+  { href: "/roles", label: "Roles & permissions", short: "Roles", icon: ShieldCheck, roles: null, perms: ["manage_roles"], group: "gym" },
   { href: "/checkin/poster", label: "QR poster", short: "Poster", icon: QrCode, roles: null, perms: ["check_in_members"], needs: "poster", group: "gym" },
 ] as const;
 

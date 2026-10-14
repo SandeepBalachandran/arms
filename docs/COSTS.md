@@ -1,6 +1,6 @@
-# Squatfit — What It Costs to Run
+# Squatpress — What It Costs to Run
 
-Everything you pay for to take Squatfit live: the web admin, the member app, the database, messaging and the app stores, with the costs that are easy to miss.
+Everything you pay for to take Squatpress live: the web admin, the member app, the database, messaging and the app stores, with the costs that are easy to miss.
 
 - **Prices checked:** October 2026. Providers change prices often, so check each link in [Sources](#sources) before paying.
 - **Exchange rate:** about **₹88 per US dollar**. Most of these services bill in dollars.
@@ -12,7 +12,7 @@ Everything you pay for to take Squatfit live: the web admin, the member app, the
 
 ### Monthly, at launch (1–10 gyms, under 2,000 members)
 
-| Service | What it does in Squatfit | Plan | Per month |
+| Service | What it does in Squatpress | Plan | Per month |
 |---|---|---|---|
 | Supabase | Database, logins, file storage (logos), scheduled jobs | Pro | $25 (≈ ₹2,200) |
 | Vercel | Hosts the web admin, join pages and posters | Pro, 1 seat | $20 (≈ ₹1,760) |
@@ -39,9 +39,9 @@ Everything you pay for to take Squatfit live: the web admin, the member app, the
 
 ### Supabase: database, logins and storage
 
-Squatfit keeps everything here: gyms, members, payments, check-ins, and logins.
+Squatpress keeps everything here: gyms, members, payments, check-ins, and logins.
 
-| Plan | Price | Limits that matter for Squatfit |
+| Plan | Price | Limits that matter for Squatpress |
 |---|---|---|
 | Free | $0 | **Pauses after 1 week without activity**, 500 MB database, 1 GB files, no backups. **Not for real gyms.** |
 | **Pro** | **$25/month** | 8 GB database, 100 GB files, 250 GB transfer, 100,000 monthly users, daily backups kept 7 days, never pauses. $10 of server credit covers the smallest server (Micro). |
@@ -53,13 +53,13 @@ Squatfit keeps everything here: gyms, members, payments, check-ins, and logins.
 | Bigger server (Small) | $15/month (−$10 credit = **+$5**) | Around 50+ gyms, or if the app feels slow |
 | Bigger server (Medium) | $60/month | Hundreds of gyms |
 | Database over 8 GB | $0.125 per GB | Years of check-ins at many gyms |
-| Transfer over 250 GB | $0.09 per GB | Very unlikely at Squatfit's size |
+| Transfer over 250 GB | $0.09 per GB | Very unlikely at Squatpress's size |
 | Monthly users over 100,000 | $0.00325 each | ≈ 100,000 members using the app each month |
 | Custom domain (e.g. `api.gos.in`) | $10/month | Optional: makes login emails and links show your domain |
 | Point-in-time recovery | $100/month | Optional: restore to any minute. Daily backups are included anyway |
 | Dedicated IPv4 address | ≈ $4/month | Only if you connect to the database from an IPv4-only network; the free "session pooler" avoids this |
 
-**Squatfit estimate:** **$25/month** for a long time. A gym with 300 members produces a few MB of data a month, so 8 GB covers hundreds of gyms.
+**Squatpress estimate:** **$25/month** for a long time. A gym with 300 members produces a few MB of data a month, so 8 GB covers hundreds of gyms.
 
 ### Vercel: web admin hosting
 
@@ -68,9 +68,9 @@ Hosts the admin panel, sign-in, join pages (`/join/<gym>`) and check-in posters.
 | Plan | Price | Notes |
 |---|---|---|
 | Hobby | $0 | **Not allowed for commercial use** under Vercel's terms. Fine while testing. |
-| **Pro** | **$20 per team member per month** | Covers about 1 TB of transfer, which Squatfit won't come close to. Overages are billed unless you set a spend limit. |
+| **Pro** | **$20 per team member per month** | Covers about 1 TB of transfer, which Squatpress won't come close to. Overages are billed unless you set a spend limit. |
 
-**Squatfit estimate:** **$20/month** with one seat (you). Each extra developer adds $20.
+**Squatpress estimate:** **$20/month** with one seat (you). Each extra developer adds $20.
 
 **Cheaper alternatives:** Cloudflare Pages, Netlify or a small VPS (about ₹500–1,000/month) can host the admin. They need some setup changes; Vercel is the simplest for Next.js.
 
@@ -84,7 +84,7 @@ Turns the code into an APK/AAB (Android) and IPA (iPhone).
 | Starter | $19/month | Faster builds and over-the-air updates for 3,000 users. |
 | Production | $199/month | Only at large scale. |
 
-**Squatfit estimate:** **₹0**. You build only when releasing. Upgrade to Starter ($19) when you want instant bug fixes without a store update ("EAS Update") for more than 1,000 members.
+**Squatpress estimate:** **₹0**. You build only when releasing. Upgrade to Starter ($19) when you want instant bug fixes without a store update ("EAS Update") for more than 1,000 members.
 
 ### Domain name
 
@@ -105,7 +105,7 @@ Supabase's built-in email sender is limited to a handful of emails per hour and 
 | **Resend** | 3,000 emails/month (100 a day) | $20/month for 50,000 |
 | Brevo, Amazon SES | Similar free tiers | SES ≈ $0.10 per 1,000 |
 
-**Squatfit estimate:** **₹0** at first. Email is only used for sign-in and account confirmation. If logins move to WhatsApp or SMS codes, email use falls further. Over 100 sign-ins a day needs the $20 plan.
+**Squatpress estimate:** **₹0** at first. Email is only used for sign-in and account confirmation. If logins move to WhatsApp or SMS codes, email use falls further. Over 100 sign-ins a day needs the $20 plan.
 
 ### WhatsApp Business API: login codes, reminders, offers
 
@@ -140,7 +140,7 @@ Meta charges **per delivered message** (India, before 18% GST):
 | OTP SMS via MSG91 or similar | ≈ ₹0.13–0.20 per SMS |
 | **DLT registration** (required for business SMS in India) | One time, ≈ ₹0–6,000 depending on operator; plus template approval time (days) |
 
-**Squatfit estimate:** small, only for members whose WhatsApp code doesn't arrive.
+**Squatpress estimate:** small, only for members whose WhatsApp code doesn't arrive.
 
 ### App stores
 
@@ -149,7 +149,7 @@ Meta charges **per delivered message** (India, before 18% GST):
 | **Google Play** | **$25 once** | A **personal** account must run a closed test with **12 testers for 14 days** before going public. A **company** account needs a D-U-N-S number (free) instead. |
 | **Apple App Store** | **$99 every year** | A company account needs a D-U-N-S number, a website and an email on your domain. Builds and submission work from Windows via EAS, but you need an iPhone to test. |
 
-**Store commission:** none for Squatfit. Gym fees are paid outside the app (UPI or cash), and the gym subscription would be billed outside the stores. That's allowed for a business tool, but read the store rules before adding in-app purchases.
+**Store commission:** none for Squatpress. Gym fees are paid outside the app (UPI or cash), and the gym subscription would be billed outside the stores. That's allowed for a business tool, but read the store rules before adding in-app purchases.
 
 ---
 
@@ -166,7 +166,7 @@ Meta charges **per delivered message** (India, before 18% GST):
 | 7 | **Built-in email sender** isn't for production | Logins fail | Resend (free) before launch |
 | 8 | **Play Store 12-tester closed test** for personal accounts | 2+ weeks delay | Start it early, or use a company account |
 | 9 | **Apple renews yearly** | $99 every year | Launch Android first (as planned) |
-| 10 | **Usage overages** on Vercel/Supabase | Usually ₹0 at Squatfit's size | Set spend limits and billing alerts on both |
+| 10 | **Usage overages** on Vercel/Supabase | Usually ₹0 at Squatpress's size | Set spend limits and billing alerts on both |
 | 11 | **Backups beyond 7 days** | $100/month for point-in-time recovery | Weekly CSV/SQL export as a free extra copy |
 | 12 | **Privacy policy and terms** (required by stores and India's DPDP Act) | ₹0 with a template, ₹5,000–20,000 with a lawyer | Template first, lawyer before scaling |
 | 13 | **Business registration** (to sign up gyms, and for D-U-N-S/GST) | ₹1,000–8,000 (sole proprietorship/MSME to private limited) | Start as a proprietor if you like |
@@ -194,7 +194,7 @@ All monthly, including GST and card fees. Messaging assumes WhatsApp login codes
 | **All in** | **≈ ₹5,600–7,100** | **≈ ₹12,300** | **≈ ₹34,000** |
 | **Cost per gym** | ₹1,100–7,000 | ≈ ₹600 | ≈ ₹340 |
 
-At 20+ gyms, the platform costs **about ₹300–600 per gym per month**, so a Squatfit subscription of ₹999–1,999 per gym leaves a healthy margin.
+At 20+ gyms, the platform costs **about ₹300–600 per gym per month**, so a Squatpress subscription of ₹999–1,999 per gym leaves a healthy margin.
 
 ---
 
@@ -202,11 +202,11 @@ At 20+ gyms, the platform costs **about ₹300–600 per gym per month**, so a S
 
 | Cost | Who pays | How |
 |---|---|---|
-| Hosting, database, builds, domain, email | **You (Squatfit)** | Covered by the monthly gym subscription |
+| Hosting, database, builds, domain, email | **You (Squatpress)** | Covered by the monthly gym subscription |
 | WhatsApp **login codes and reminders** | **You** | Small (≈ ₹0.14 each); include in the subscription with a fair-use limit |
 | WhatsApp **offer campaigns** | **The gym** | Prepaid message credits, e.g. sell 1,000 credits for ₹1,500 |
 | SMS | You (fallback only) | — |
-| Gym's own UPI payments | Nobody | Squatfit uses no payment gateway, so there are no fees |
+| Gym's own UPI payments | Nobody | Squatpress uses no payment gateway, so there are no fees |
 
 ---
 
