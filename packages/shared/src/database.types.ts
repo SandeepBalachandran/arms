@@ -19,6 +19,32 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"audit_log": {
+                  Row: {
+                    "action": string,"actor_id": string | null,"actor_platform": boolean,"created_at": string,"details": NonNullable<Json>,"gym_id": string | null,"id": number,"target_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "action": string,"actor_id"?: string | null,"actor_platform"?: boolean,"created_at"?: string,"details"?: NonNullable<Json>,"gym_id"?: string | null,"id"?: never,"target_id"?: string | null
+                  }
+                  Update: {
+                    "action"?: string,"actor_id"?: string | null,"actor_platform"?: boolean,"created_at"?: string,"details"?: NonNullable<Json>,"gym_id"?: string | null,"id"?: never,"target_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "audit_log_actor_id_fkey"
+      columns: ["actor_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "audit_log_gym_id_fkey"
+      columns: ["gym_id"]
+isOneToOne: false
+      referencedRelation: "gyms"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"body_metrics": {
                   Row: {
                     "body_fat_pct": number | null,"created_at": string,"gym_id": string,"id": string,"measured_on": string,"member_id": string,"notes": string | null,"waist_cm": number | null,"weight_kg": number | null
@@ -964,6 +990,17 @@ isOneToOne: false
             "assert_checkin_hours":
 { Args: { "p_gym_id": string }; Returns: undefined
                            },
+"audit":
+{ Args: { "p_action": string,"p_details": Json,"p_gym_id": string,"p_target_id": string }; Returns: undefined
+                           },
+"audit_entries":
+{ Args: { "p_before"?: number,"p_gym_id": string,"p_limit"?: number }; Returns: {
+              "action": string,"actor_name": string,"actor_platform": boolean,"created_at": string,"details": Json,"gym_id": string,"gym_name": string,"id": number,"target_id": string
+            }[]
+                           },
+"audit_member_name":
+{ Args: { "p_member_id": string }; Returns: string
+                           },
 "auth_role_in":
 { Args: { "p_gym_id": string }; Returns: Database["public"]['Enums']["gym_role"]
                            },
@@ -1099,6 +1136,22 @@ isOneToOne: false
 "plan_gym_id":
 { Args: { "p_plan_id": string }; Returns: string
                            },
+"platform_find_people":
+{ Args: { "p_query": string }; Returns: {
+              "email": string,"extra_roles": (Database["public"]['Enums']["gym_role"])[],"full_name": string,"gym_id": string,"gym_name": string,"gym_slug": string,"last_sign_in_at": string,"member_status": Database["public"]['Enums']["member_status"],"phone": string,"role": Database["public"]['Enums']["gym_role"],"signed_up_at": string,"user_id": string
+            }[]
+                           },
+"platform_gym":
+{ Args: { "p_gym_id": string }; Returns: Json
+                           },
+"platform_gyms":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "active_memberships": number,"checkins_7d": number,"collected_30d_paise": number,"created_at": string,"currency": string,"deleted_at": string,"id": string,"last_activity": string,"members": number,"name": string,"owner_email": string,"owner_name": string,"owner_phone": string,"payments_30d": number,"pending_joins": number,"platform_plan": string,"slug": string,"status": Database["public"]['Enums']["gym_status"],"team": number
+            }[]
+                           },
+"platform_set_gym_status":
+{ Args: { "p_gym_id": string,"p_status": Database["public"]['Enums']["gym_status"] }; Returns: undefined
+                           },
 "poster_check_in":
 { Args: { "p_accuracy_m"?: number,"p_key": string,"p_lat"?: number,"p_lng"?: number,"p_slug": string }; Returns: Json
                            },
@@ -1119,6 +1172,9 @@ isOneToOne: false
                            },
 "reject_upi_payment":
 { Args: { "p_payment_id": string,"p_reason"?: string }; Returns: undefined
+                           },
+"require_platform_admin":
+{ Args: Record<PropertyKey, never>; Returns: undefined
                            },
 "restore_gym":
 { Args: { "p_gym_id": string }; Returns: undefined

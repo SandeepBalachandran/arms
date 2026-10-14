@@ -16,3 +16,4 @@ export * from "./notifications";
 export * from "./exercise-media";
 export * from "./permissions";
 export * from "./brand";
+export * from "./audit";

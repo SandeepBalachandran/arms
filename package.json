@@ -13,6 +13,7 @@
     "mobile:pwa": "node scripts/build-site.mjs",
     "build:site": "node scripts/build-site.mjs",
     "brand": "node scripts/apply-brand.mjs",
+    "platform-admin": "node scripts/platform-admin.mjs",
     "typecheck": "npm run typecheck --workspaces --if-present && tsc -p tests/tsconfig.json",
     "lint": "npm run lint --workspaces --if-present",
     "db:start": "supabase start",

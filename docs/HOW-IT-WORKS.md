@@ -380,6 +380,18 @@ Logic both apps need lives here so it behaves identically:
 3. `npm run db:push`, then `npm run db:types`.
 4. Use the new types in both apps. Add new gym settings to `settings.ts` (schema plus default) and to the Settings page.
 
+## Developer view and activity log
+
+**Developer view (`/platform`, web only).** Developers sign in on the normal sign-in page; accounts marked as platform admins land on `/platform`. Nobody can mark an account from the app. Use `npm run platform-admin -- you@example.com` (`--off` to remove it). The test account is `dev@gymos.test` / `dev12345`.
+- **Gyms:** every gym with its owner, status, members, active plans, check-ins (7 days), money collected (30 days) and last activity. Gyms with no activity for two weeks show as "Quiet".
+- **One gym:** team with contacts and last sign-in, usage counts, money by month (cash and UPI), recent activity, and Suspend, Make active again or Restore.
+- **People:** find anyone by name, email or phone, with their gyms and roles.
+- **Activity:** every gym's log.
+
+It shows counts and totals, not members' personal details. Opening a gym and searching for people are logged, and owners see "<name> support looked at this gym's details" in their own Activity.
+
+**Activity log.** Database triggers record payments (recorded, UPI claimed, confirmed, rejected, refunded, deleted), cancelled memberships, people (joined, approved, roles changed, removed), the permission grid, plans and prices, and gym settings. Nobody can edit or delete entries. Owners read their gym's log on the admin's **Activity** page; developers read every gym's.
+
 ## Renaming the product
 
 The name is set in one file, `packages/shared/src/brand.json`: the name, the two halves of the two-colour logo, and a short tagline. The admin site, the member app (including its name on the phone and its permission prompts), install banners, the web app manifest, WhatsApp messages and renewal reminders all read it. Saved renewal messages say `{app}`, which is filled in when they're sent.

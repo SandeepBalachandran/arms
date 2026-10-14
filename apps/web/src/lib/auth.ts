@@ -55,6 +55,14 @@ export async function requireUser(next: string) {
   return user;
 }
 
+// The developers' view (/platform): only accounts with profiles.is_platform_admin.
+// The database checks the same flag in every platform_* function.
+export async function requirePlatformAdmin(next = "/platform") {
+  const user = await requireUser(next);
+  if (!user.isPlatformAdmin) notFound();
+  return user;
+}
+
 // Every active gym the user belongs to, with their role in it.
 export const getMyGyms = cache(async (): Promise<GymMembership[]> => {
   const user = await getCurrentUser();

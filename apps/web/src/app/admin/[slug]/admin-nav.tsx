@@ -15,6 +15,7 @@ import {
   Link2,
   QrCode,
   ReceiptText,
+  History,
   ScanLine,
   Settings,
   ShieldCheck,
@@ -37,12 +38,13 @@ const ITEMS = [
   { href: "/payments", label: "Payments", short: "Payments", icon: ReceiptText, roles: ["owner", "admin", "staff"] },
   { href: "/join", label: "Join link", short: "Join", icon: Link2, roles: null, perms: ["manage_members"], group: "gym" },
   { href: "/settings", label: "Settings", short: "Settings", icon: Settings, roles: null, perms: ["edit_gym_settings", "manage_sections"], group: "gym" },
+  { href: "/activity", label: "Activity", short: "Activity", icon: History, roles: ["owner"], group: "gym" },
   { href: "/roles", label: "Roles & permissions", short: "Roles", icon: ShieldCheck, roles: ["owner"], group: "gym" },
   { href: "/checkin/poster", label: "QR poster", short: "Poster", icon: QrCode, roles: null, perms: ["check_in_members"], needs: "poster", group: "gym" },
 ] as const;
 
 // Order for the phone bottom bar: the first four that apply get a tab, the rest go under "More".
-const BOTTOM_PRIORITY = ["", "/members", "/checkin", "/payments", "/classes", "/plans", "/pt", "/workouts", "/foods", "/settings", "/join", "/roles", "/checkin/poster"];
+const BOTTOM_PRIORITY = ["", "/members", "/checkin", "/payments", "/classes", "/plans", "/pt", "/workouts", "/foods", "/settings", "/join", "/activity", "/roles", "/checkin/poster"];
 
 type NavProps = {
   slug: string;
