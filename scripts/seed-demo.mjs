@@ -17,10 +17,10 @@ if (!url || !publishable || !secret) {
 const GYM = { name: "Demo Fitness", slug: "demo-fitness" };
 // The owner keeps the original admin@ login so existing test notes still work.
 const USERS = {
-  owner: { email: "admin@gymos.test", password: "GymOS-admin-2026", full_name: "Asha Owner" },
-  admin: { email: "manager@gymos.test", password: "GymOS-manager-2026", full_name: "Meera Manager" },
-  staff: { email: "staff@gymos.test", password: "GymOS-staff-2026", full_name: "Suresh Staff" },
-  trainer: { email: "trainer@gymos.test", password: "GymOS-trainer-2026", full_name: "Tara Trainer" },
+  owner: { email: "admin@gymos.test", password: "admin123", full_name: "Asha Owner" },
+  admin: { email: "manager@gymos.test", password: "manager123", full_name: "Meera Manager" },
+  staff: { email: "staff@gymos.test", password: "staff123", full_name: "Suresh Staff" },
+  trainer: { email: "trainer@gymos.test", password: "trainer123", full_name: "Tara Trainer" },
   member: { email: "member@gymos.test", password: "member123", full_name: "Ravi Member" },
 };
 
@@ -34,6 +34,16 @@ async function ensureUser({ email, password, full_name }) {
     user_metadata: { full_name },
   });
   if (error && !/already/i.test(error.message)) throw error;
+  // Already there: make sure the password is the one listed below.
+  if (error) {
+    const { data: list, error: listError } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    if (listError) throw listError;
+    const existing = list.users.find((u) => u.email === email);
+    if (existing) {
+      const { error: pwError } = await admin.auth.admin.updateUserById(existing.id, { password });
+      if (pwError) throw pwError;
+    }
+  }
   // Sign in as the user so RPCs run with their identity (auth.uid()).
   const client = createClient(url, publishable, { auth: { persistSession: false } });
   const { data, error: signInError } = await client.auth.signInWithPassword({ email, password });

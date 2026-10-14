@@ -366,10 +366,10 @@ Logic both apps need lives here so it behaves identically:
 | `npm run typecheck` / `npm run lint` | Check both apps |
 
 **Demo accounts:**
-- Owner: `admin@gymos.test` / `GymOS-admin-2026`
-- Admin: `manager@gymos.test` / `GymOS-manager-2026`
-- Staff: `staff@gymos.test` / `GymOS-staff-2026`
-- Trainer: `trainer@gymos.test` / `GymOS-trainer-2026`
+- Owner: `admin@gymos.test` / `admin123`
+- Admin: `manager@gymos.test` / `manager123`
+- Staff: `staff@gymos.test` / `staff123`
+- Trainer: `trainer@gymos.test` / `trainer123`
 - Member: `member@gymos.test` / `member123`
 - Gym code: `demo-fitness`
 
