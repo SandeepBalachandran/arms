@@ -54,3 +54,11 @@ body {
   body:has(.poster) .poster * { visibility: visible; }
   .poster { position: absolute; inset: 0; margin: auto; }
 }
+
+/* Rows of pills or tabs that scroll sideways on phones: swipeable, no scrollbar. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

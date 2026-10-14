@@ -54,7 +54,7 @@ export function ActivityList({
 
   return (
     <>
-      <div className="mb-4 flex gap-2 overflow-x-auto">
+      <div className="no-scrollbar mb-4 flex gap-2 overflow-x-auto">
         {[null, ...(Object.keys(AUDIT_GROUP_LABELS) as AuditGroup[])].map((g) => (
           <Link
             key={g ?? "all"}

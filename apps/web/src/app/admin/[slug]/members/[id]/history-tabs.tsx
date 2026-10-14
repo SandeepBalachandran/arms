@@ -9,7 +9,7 @@ export function HistoryTabs({ tabs }: { tabs: { id: string; label: string; count
   const current = tabs.find((t) => t.id === active) ?? tabs[0];
   return (
     <div>
-      <div role="tablist" className="mb-3 flex gap-1 overflow-x-auto border-b border-border">
+      <div role="tablist" className="no-scrollbar mb-3 flex gap-1 overflow-x-auto border-b border-border">
         {tabs.map((t) => (
           <button
             key={t.id}

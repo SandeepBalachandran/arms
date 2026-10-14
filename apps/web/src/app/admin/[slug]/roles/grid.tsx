@@ -46,7 +46,7 @@ export function PermissionGrid({ slug, cells, sectionsOff }: {
     <form action={action} className="min-w-0">
       <input type="hidden" name="slug" value={slug} />
       {[...ticked].map((id) => <input key={id} type="hidden" name="cell" value={id} />)}
-      <div role="tablist" aria-label="Role" className="mb-3 flex gap-2 overflow-x-auto md:hidden">
+      <div role="tablist" aria-label="Role" className="no-scrollbar mb-3 flex gap-2 overflow-x-auto md:hidden">
         {GRID_ROLES.map((r) => (
           <button
             key={r}
