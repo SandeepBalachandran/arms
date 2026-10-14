@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import clsx from "clsx";
 import { CalendarCheck, CreditCard, QrCode, Users, type LucideIcon } from "lucide-react";
+import { BRAND } from "@gymos/shared";
 
 const FEATURES = [
   { icon: Users, text: "Members, plans and renewals in one list" },
@@ -74,7 +75,7 @@ export function AuthHeading({ title, subtitle }: { title: string; subtitle?: Rea
 function Logo({ dark }: { dark?: boolean }) {
   return (
     <Link href="/" className="relative text-xl font-bold">
-      G<span className={dark ? "text-[#c8f04b]" : "text-brand"}>OS</span>
+      {BRAND.logo[0]}<span className={dark ? "text-[#c8f04b]" : "text-brand"}>{BRAND.logo[1]}</span>
     </Link>
   );
 }

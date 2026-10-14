@@ -7,6 +7,7 @@ import { Modal } from "@/components/modal";
 import { Button, Field, FormError, Input } from "@/components/ui";
 import { CopyJoinLink } from "../copy-join-link";
 import { addMember } from "./actions";
+import { BRAND } from "@gymos/shared";
 
 type Tab = "manual" | "invite";
 
@@ -59,7 +60,7 @@ export function AddMember({
         ) : (
           <div className="space-y-4 text-sm">
             <p className="text-muted">
-              Send this link on WhatsApp. It opens the GOS app (or the Play Store) and joins {gymName}.
+              Send this link on WhatsApp. It opens the {BRAND.name} app (or the Play Store) and joins {gymName}.
             </p>
             <CopyJoinLink path={`/join/${slug}`} />
             <a

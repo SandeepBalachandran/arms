@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GOS Demo</title>
-<meta name="description" content="Clickable demo of GOS: the gym admin and the member app, with sample data. Nothing is saved.">
+<title>Demo</title>
+<meta name="description" content="Clickable demo: the gym admin and the member app, with sample data. Nothing is saved.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* GOS demo: one file, no server. The admin (left) and the member app (right)
+/* Demo: one file, no server. The admin (left) and the member app (right)
    share one in-memory state, so an action on one side shows up on the other. */
 :root {
   --page: #eef0e8; --bg: #f7f8f3; --surface: #ffffff; --border: #e4e7dc; --text: #18181b; --muted: #6b7068;
@@ -362,15 +362,15 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #f
 <body data-view="both">
 
 <div class="top">
-  <div class="logo">G<b>OS</b></div>
-  <div class="tag">Gym Operating System · <b style="color:#fff">clickable demo</b> with sample data. Nothing is saved; try anything.</div>
+  <div class="logo" data-logo></div>
+  <div class="tag">Gym app · <b style="color:#fff">clickable demo</b> with sample data. Nothing is saved; try anything.</div>
   <div class="seg" role="group" aria-label="What to show">
     <button data-a="view" data-v="both" class="on">Both</button>
     <button data-a="view" data-v="admin">Gym admin</button>
     <button data-a="view" data-v="app">Member app</button>
   </div>
   <label class="switch-usp"><span class="toggle"><input type="checkbox" id="usp-toggle" data-change="uspHighlight"><span></span></span> Highlight USPs</label>
-  <button class="tbtn usp-btn" data-a="drawer"><svg class="i" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2 2 9.3l6.9-1z"/></svg> Why GOS (8 USPs)</button>
+  <button class="tbtn usp-btn" data-a="drawer"><svg class="i" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2 2 9.3l6.9-1z"/></svg> Why <span data-brand></span> (8 USPs)</button>
   <button class="tbtn" data-a="reset">Reset demo</button>
 </div>
 
@@ -388,11 +388,16 @@ table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #f
   </div>
 </div>
 
-<aside class="drawer" id="drawer" aria-label="Why GOS"></aside>
+<aside class="drawer" id="drawer" aria-label="Why us"></aside>
 <section class="guide" id="guide"></section>
 <div id="toasts" aria-live="polite"></div>
 
 <script>
+// The product's name (the real app reads packages/shared/src/brand.json). Change it here for the demo.
+const BRAND = { name: "Squatfit", logo: ["Squat", "fit"] };
+document.title = `${BRAND.name} Demo`;
+document.querySelectorAll("[data-brand]").forEach((el) => (el.textContent = BRAND.name));
+document.querySelectorAll("[data-logo]").forEach((el) => (el.innerHTML = `${BRAND.logo[0]}<b>${BRAND.logo[1]}</b>`));
 "use strict";
 /* ---------------------------------------------------------------------------
    Helpers
@@ -459,7 +464,7 @@ const USPS = [
   { n: 1, t: "WhatsApp join link", d: "The owner shares one link in the gym's WhatsApp group; members install and join themselves.", vs: "Others: staff type in every member by hand.", go: { admin: "members", app: "join" } },
   { n: 2, t: "UPI payments, no gateway", d: "Members pay the gym's own UPI ID in the app; staff tap Confirm. No gateway fee, no KYC, no 2% cut.", vs: "Others: a payment gateway with fees, or cash noted by hand.", go: { admin: "payments", app: "membership" } },
   { n: 3, t: "Check-in without a biometric machine", d: "Members scan a printed QR poster (with an optional location check) or show their QR at the desk. The desk sees their photo.", vs: "Others: a ₹8,000–20,000 fingerprint device.", go: { admin: "checkin", app: "home" } },
-  { n: 4, t: "Switch from a register or Excel in minutes", d: "Paste members from a spreadsheet; GOS understands \"paid 01/10, valid till 31/10\" and shows a checked preview.", vs: "Others: manual entry, or the vendor imports for you.", go: { admin: "members", modal: "import" } },
+  { n: 4, t: "Switch from a register or Excel in minutes", d: "Paste members from a spreadsheet; " + BRAND.name + " understands \"paid 01/10, valid till 31/10\" and shows a checked preview.", vs: "Others: manual entry, or the vendor imports for you.", go: { admin: "members", modal: "import" } },
   { n: 5, t: "Only the features a gym uses", d: "Classes, PT, workouts, nutrition and check-in are switches. Off means hidden everywhere, so the app stays simple.", vs: "Others: every feature visible, so the software feels complicated.", go: { admin: "settings" } },
   { n: 6, t: "A modern member app", d: "Streaks, workout logging, progress, a membership pass, receipts and notifications, with the gym's own logo.", vs: "Others: dated apps, or the member app only on expensive plans.", go: { app: "workouts" } },
   { n: 7, t: "Nutrition coaching with Kerala foods", d: "PT clients log puttu, appam, fish curry… in home portions. The trainer sets calories and protein, sees the log and comments.", vs: "Others: a diet-chart PDF, with no idea what the member ate.", go: { admin: "member:m1", app: "food" } },
@@ -646,7 +651,7 @@ function initState() {
   return {
     gym: { name: "Arms Fitness", short: "AF", slug: "arms-fitness", address: "2nd floor, Pallath Arcade, MG Road, Ernakulam, Kochi 682016", phone: "98470 12345", upi: "armsfitness@okaxis", payee: "Arms Fitness", receiptPrefix: "AF-", receiptSeq, warnDays: 7,
       hours: [["Mon–Sat", "5:30 am", "10:00 pm"], ["Sunday", "6:00 am", "12:00 pm"]], methods: { cash: true, upi: true, card: true, bank: false },
-      renewal: "Hi {name}, your {plan} membership at {gym} ends on {date}. Renew in the GOS app or at the desk. See you at the gym! 💪",
+      renewal: "Hi {name}, your {plan} membership at {gym} ends on {date}. Renew in the " + BRAND.name + " app or at the desk. See you at the gym! 💪",
       f: { checkin: true, selfCheckin: true, poster: true, onlyOpen: true, location: true, classes: true, workouts: true, pt: true, nutrition: true, nutritionAll: false, approval: true },
       simulateClosed: false, deleted: false },
     viewer: "t1",
@@ -755,7 +760,7 @@ function renderAdmin() {
     expiring().length && { r: "dashboard", t: `${expiring().length} memberships ending this week`, i: "alert" },
   ].filter(Boolean);
   $("#admin").innerHTML = `<div class="a-app">
-    <aside class="a-side"><div class="brand">G<b>OS</b></div>${nav}
+    <aside class="a-side"><div class="brand">${BRAND.logo[0]}<b>${BRAND.logo[1]}</b></div>${nav}
       <div class="sep">Gym</div>
       <button class="a-nav ${base === "joinlink" ? "on" : ""}" data-a="aGo" data-r="joinlink">${ic("link")} Join link</button>
       <button class="a-nav ${base === "settings" ? "on" : ""}" data-a="aGo" data-r="settings">${ic("sliders")} Settings</button>
@@ -835,9 +840,9 @@ const PAGES = {
   },
 
   poster() {
-    return `${title("Check-in QR poster", "Print it and stick it at the entrance. Members scan it with the GOS app to check in.", `<button class="btn" data-a="printPoster">${ic("printer")} Print poster</button>`, usp(3))}
+    return `${title("Check-in QR poster", `Print it and stick it at the entrance. Members scan it with the ${BRAND.name} app to check in.`, `<button class="btn" data-a="printPoster">${ic("printer")} Print poster</button>`, usp(3))}
     <div class="grid g2">
-      <div class="poster uz"><div style="font-size:13px;color:var(--hero-muted);font-weight:600;letter-spacing:1px">SCAN TO CHECK IN</div><div style="font-size:24px;font-weight:800;margin-top:4px">${esc(S.gym.name)}</div><div class="qr">${qr("poster" + S.gym.slug, 200)}</div><div style="font-size:13px">Open the <b style="color:var(--accent)">GOS</b> app → Check in → Scan</div><div style="font-size:12px;color:var(--hero-muted);margin-top:6px">Not a member yet? Ask at the desk.</div></div>
+      <div class="poster uz"><div style="font-size:13px;color:var(--hero-muted);font-weight:600;letter-spacing:1px">SCAN TO CHECK IN</div><div style="font-size:24px;font-weight:800;margin-top:4px">${esc(S.gym.name)}</div><div class="qr">${qr("poster" + S.gym.slug, 200)}</div><div style="font-size:13px">Open the <b style="color:var(--accent)">${BRAND.name}</b> app → Check in → Scan</div><div style="font-size:12px;color:var(--hero-muted);margin-top:6px">Not a member yet? Ask at the desk.</div></div>
       <div class="a-card"><h2>How it stays honest</h2>
         <div class="set-row"><div class="grow"><b>${ic("pin")} Location check</b><small>The phone must be within 150 m of the gym when scanning.</small></div>${toggle("location", S.gym.f.location)}</div>
         <div class="set-row"><div class="grow"><b>${ic("clock")} Only during opening hours</b><small>Outside hours, the app says the gym is closed.</small></div>${toggle("onlyOpen", S.gym.f.onlyOpen)}</div>
@@ -978,13 +983,13 @@ const PAGES = {
 
   joinlink() {
     const link = `https://gos.app/join/${S.gym.slug}`;
-    return `${title("Join link", "One link for new members. It opens the GOS app, or offers the install first.")}
+    return `${title("Join link", `One link for new members. It opens the ${BRAND.name} app, or offers the install first.`)}
     <div class="a-grid2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px;align-items:start">
       <div>
         <div class="a-card"><h2>Your join link</h2>
           <div class="row-actions" style="margin-top:8px"><input class="inp" style="flex:1;min-width:0" readonly value="${link}" aria-label="Join link"><button class="btn sec" data-a="toastOnly" data-t="Link copied">${ic("link")} Copy</button></div>
           <p class="small" style="margin:14px 0 4px"><b>Message to send with it</b></p>
-          <textarea class="inp" rows="4" style="width:100%;box-sizing:border-box" aria-label="Message">💪 ${esc(S.gym.name)} is on the GOS app! Book classes, check in with your phone, pay by UPI and track workouts.
+          <textarea class="inp" rows="4" style="width:100%;box-sizing:border-box" aria-label="Message">💪 ${esc(S.gym.name)} is on the ${BRAND.name} app! Book classes, check in with your phone, pay by UPI and track workouts.
 
 Join here 👉</textarea>
           <div class="row-actions" style="margin-top:10px"><button class="btn wa" data-a="toastOnly" data-t="Opens WhatsApp with your message and the link.">${ic("msg")} Send on WhatsApp</button><button class="btn sec" data-a="toastOnly" data-t="Message copied">Copy message</button></div>
@@ -1296,14 +1301,14 @@ const SCREENS = {
 
   join() {
     return `<div class="p-body"><div class="p-hero" style="text-align:center;padding:26px 18px"><div class="k">Link from the gym's WhatsApp group ${usp(1)}</div><span class="gym-logo" style="width:64px;height:64px;font-size:20px;border-radius:18px;margin:14px auto 8px">${S.gym.short}</span><h3>Join ${esc(S.gym.name)}</h3><div style="color:#c3cdb2;font-size:12.5px">${esc(S.gym.address)}</div></div>
-      <div class="p-card"><b>How it works</b><div class="p-sec" style="margin-top:6px">1. The owner shares one link in the gym's WhatsApp group.<br>2. Members install GOS and tap Join.<br>3. The gym approves them. Nobody types member details.</div></div>
+      <div class="p-card"><b>How it works</b><div class="p-sec" style="margin-top:6px">1. The owner shares one link in the gym's WhatsApp group.<br>2. Members install ${BRAND.name} and tap Join.<br>3. The gym approves them. Nobody types member details.</div></div>
       <div class="p-card"><div class="p-sec" style="margin-bottom:6px">Your name</div><input class="p-inp" id="join-name" value="Adithya Rajan" aria-label="Your name"><div class="p-sec" style="margin:10px 0 6px">Phone</div><input class="p-inp" value="95440 76543" aria-label="Phone"></div>
       <button class="p-btn" data-a="joinGym">Join ${esc(S.gym.name)}</button><button class="p-btn sec" data-a="pGo" data-r="home">Back to Anjali's app</button></div>`;
   },
 
   signedout() {
-    return `<div class="p-signed"><div style="font-size:34px;font-weight:800">G<span style="color:var(--p-brand)">OS</span></div>${S.p.deleted ? `<div class="p-card"><b>Your account has been deleted.</b><div class="p-sec" style="margin-top:4px">Name, phone, photo, workouts and food log are gone. The gym keeps its payment and visit records as "Deleted member". Look at the admin's Members page.</div></div><button class="p-btn" data-a="reset">Reset demo</button>`
-      : `<div class="p-sec">One GOS app for members and gym staff. Sign in with an email code or password: members open their app, owners and staff open the admin. To use the other side, sign out and sign in with that account.</div><input class="p-inp" value="anjali.menon@gmail.com" aria-label="Email"><button class="p-btn" data-a="signIn">Send me a code</button><button class="p-btn sec" data-a="pJoinScreen">I have a gym's join link</button>`}</div>`;
+    return `<div class="p-signed"><div style="font-size:34px;font-weight:800">${BRAND.logo[0]}<span style="color:var(--p-brand)">${BRAND.logo[1]}</span></div>${S.p.deleted ? `<div class="p-card"><b>Your account has been deleted.</b><div class="p-sec" style="margin-top:4px">Name, phone, photo, workouts and food log are gone. The gym keeps its payment and visit records as "Deleted member". Look at the admin's Members page.</div></div><button class="p-btn" data-a="reset">Reset demo</button>`
+      : `<div class="p-sec">One ${BRAND.name} app for members and gym staff. Sign in with an email code or password: members open their app, owners and staff open the admin. To use the other side, sign out and sign in with that account.</div><input class="p-inp" value="anjali.menon@gmail.com" aria-label="Email"><button class="p-btn" data-a="signIn">Send me a code</button><button class="p-btn sec" data-a="pJoinScreen">I have a gym's join link</button>`}</div>`;
   },
 };
 
@@ -1385,7 +1390,7 @@ const A = {
   classDay: (d) => { S.a.classDay = +d.i; },
   planSel: (d) => { S.a.planSel = d.id; },
 
-  shareJoin: () => aModal("Share your join link", `<p class="small muted" style="margin-top:0">Paste this in your gym's WhatsApp group. Members tap it, install GOS and join. You approve them on the Members page. ${usp(1)}</p><div class="wa-preview">💪 ${esc(S.gym.name)} is now on the GOS app!\nBook classes, check in with your phone, pay by UPI and track workouts.\n\nJoin here 👉 https://gos.app/join/${S.gym.slug}</div><div class="row-actions" style="margin-top:12px"><button class="btn wa" data-a="toastOnly" data-t="Opens WhatsApp to pick the group.">${ic("msg")} Open WhatsApp</button><button class="btn sec" data-a="toastOnly" data-t="Link copied">${ic("link")} Copy link</button><button class="btn sec" data-a="seeJoin">See what members see →</button></div>`),
+  shareJoin: () => aModal("Share your join link", `<p class="small muted" style="margin-top:0">Paste this in your gym's WhatsApp group. Members tap it, install ${BRAND.name} and join. You approve them on the Members page. ${usp(1)}</p><div class="wa-preview">💪 ${esc(S.gym.name)} is now on the ${BRAND.name} app!\nBook classes, check in with your phone, pay by UPI and track workouts.\n\nJoin here 👉 https://gos.app/join/${S.gym.slug}</div><div class="row-actions" style="margin-top:12px"><button class="btn wa" data-a="toastOnly" data-t="Opens WhatsApp to pick the group.">${ic("msg")} Open WhatsApp</button><button class="btn sec" data-a="toastOnly" data-t="Link copied">${ic("link")} Copy link</button><button class="btn sec" data-a="seeJoin">See what members see →</button></div>`),
   seeJoin: () => { S.a.modal = null; S.p.route = "join"; S.p.signedOut = false; if (document.body.dataset.view === "admin") A.view({ v: "both" }); },
   approve: (d) => { const m = M(d.id); m.status = "active"; toast(`${m.name} approved. They can use the app now.`, "from-admin"); },
   decline: (d) => { S.members = S.members.filter((m) => m.id !== d.id); toast("Request declined", "from-admin"); },
@@ -1397,11 +1402,11 @@ const A = {
     S.a.ciResult = doCheckin(id, "scan");
   },
   deskCheckin: (d) => { S.a.ciResult = doCheckin(d.id, "manual"); if (S.a.route.startsWith("member")) toast(`${M(d.id).name} checked in`, "from-admin"); if (d.banner) S.a.route = "checkin"; },
-  printPoster: () => { const w = window.open("", "_blank"); if (!w) return toast("Allow pop-ups to print"); w.document.write(`<html><head><title>Poster</title></head><body style="font-family:Poppins,system-ui,sans-serif;text-align:center;padding:40px;background:#1f2a10;color:#fff"><div style="font-size:14px;letter-spacing:2px">SCAN TO CHECK IN</div><div style="font-size:34px;font-weight:800;margin:8px 0">${esc(S.gym.name)}</div><div style="background:#fff;display:inline-block;padding:20px;border-radius:20px">${qr("poster" + S.gym.slug, 320)}</div><p>Open the GOS app → Check in → Scan</p><script>onload=()=>print()<\/script></body></html>`); w.document.close(); },
+  printPoster: () => { const w = window.open("", "_blank"); if (!w) return toast("Allow pop-ups to print"); w.document.write(`<html><head><title>Poster</title></head><body style="font-family:Poppins,system-ui,sans-serif;text-align:center;padding:40px;background:#1f2a10;color:#fff"><div style="font-size:14px;letter-spacing:2px">SCAN TO CHECK IN</div><div style="font-size:34px;font-weight:800;margin:8px 0">${esc(S.gym.name)}</div><div style="background:#fff;display:inline-block;padding:20px;border-radius:20px">${qr("poster" + S.gym.slug, 320)}</div><p>Open the ${BRAND.name} app → Check in → Scan</p><script>onload=()=>print()<\/script></body></html>`); w.document.close(); },
 
   openAdd: () => aModal("Add member", `<form data-submit="addMember"><label class="f"><span>Full name</span><input class="inp" name="name" required></label><label class="f"><span>Phone</span><input class="inp" name="phone" placeholder="98470 12345" required></label><label class="f"><span>Plan <small>(optional, records a payment)</small></span><select class="sel" name="plan"><option value="">No payment yet</option>${S.plans.filter((p) => p.active).map((p) => `<option value="${p.id}">${p.name} · ${inr(p.price)}</option>`).join("")}</select></label><label class="f"><span>Paid by</span><select class="sel" name="method"><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option></select></label><button class="btn" style="width:100%">Add member</button></form>`),
   addMember: (f) => { const m = { id: uid("m"), name: f.name, phone: f.phone, role: "member", status: "active", joined: TODAY, photo: null, notes: [] }; S.members.push(m); if (f.plan) recordPayment(m.id, f.plan, f.method); S.a.modal = null; S.a.route = "member:" + m.id; toast(`${m.name} added${f.plan ? " with a receipt" : ""}`, "from-admin"); },
-  openImport: () => { S.a.importText = "Name, Phone, Paid on, Valid till, Plan\nShyam Prakash, 9847011111, 01/10, 31/10, Monthly\nLakshmi Varma, 9895022222, 5 Sep, 4 Dec, Quarterly\nThomas Kurian, 98470, 12/09, 11/10, Monthly\nNeha Joseph, 9446033333, 15/08, 14/02/2027, Half-yearly"; aModal("Import members from Excel or a register", `<p class="small muted" style="margin-top:0">Copy rows from Excel or Google Sheets and paste. GOS reads dates the way gyms write them ("01/10", "5 Sep") and checks every row before saving. ${usp(4)}</p><textarea class="inp" rows="6" data-input="importText" aria-label="Rows to import" style="font-family:ui-monospace,monospace;font-size:12px">${esc(S.a.importText)}</textarea><div id="import-prev" style="margin-top:12px">${importPreview()}</div>`, true); },
+  openImport: () => { S.a.importText = "Name, Phone, Paid on, Valid till, Plan\nShyam Prakash, 9847011111, 01/10, 31/10, Monthly\nLakshmi Varma, 9895022222, 5 Sep, 4 Dec, Quarterly\nThomas Kurian, 98470, 12/09, 11/10, Monthly\nNeha Joseph, 9446033333, 15/08, 14/02/2027, Half-yearly"; aModal("Import members from Excel or a register", `<p class="small muted" style="margin-top:0">Copy rows from Excel or Google Sheets and paste. ${BRAND.name} reads dates the way gyms write them ("01/10", "5 Sep") and checks every row before saving. ${usp(4)}</p><textarea class="inp" rows="6" data-input="importText" aria-label="Rows to import" style="font-family:ui-monospace,monospace;font-size:12px">${esc(S.a.importText)}</textarea><div id="import-prev" style="margin-top:12px">${importPreview()}</div>`, true); },
   doImport: () => { const rows = parseImport(S.a.importText).filter((r) => !r.errs.length); for (const r of rows) { const m = { id: uid("m"), name: r.name, phone: r.phone, role: "member", status: "active", joined: r.paid || TODAY, photo: null, notes: [] }; S.members.push(m); const plan = S.plans.find((p) => p.name.toLowerCase() === r.plan.toLowerCase()) || S.plans[0]; S.subs.push({ id: uid("s"), memberId: m.id, plan: plan.name, planId: plan.id, start: r.paid || addDays(r.till, -plan.days + 1), end: r.till, price: plan.price }); } S.a.modal = null; S.a.memFilter = "all"; toast(`${rows.length} members imported with their memberships`, "from-admin"); },
   exportCsv: (d) => { if (d.what === "members") download("members.csv", csv([["Name", "Phone", "Status", "Plan", "Ends"], ...membersOnly().map((m) => { const s = mstate(m.id); return [m.name, m.phone, s.kind, s.cur?.plan || s.last?.plan || "", s.cur?.end || s.last?.end || ""]; })])); else download("payments.csv", csv([["Date", "Member", "For", "Method", "Amount", "Receipt", "UTR"], ...S.payments.filter((p) => p.status === "paid").map((p) => [ymd(new Date(p.at)), M(p.memberId).name, p.what, p.method, p.amount / 100, fmtReceipt(p.receipt), p.utr])])); toast("CSV downloaded", "from-admin", "download"); },
 
@@ -1575,7 +1580,7 @@ const STEPS = [
   { t: "Turn features on and off", d: "Admin → Settings → Features. Watch the app's tabs.", go: () => { S.a.route = "settings"; S.p.route = "home"; } },
 ];
 function renderChrome() {
-  $("#drawer").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><h3>Why gyms pick GOS</h3><button class="btn ghost sm" data-a="drawer" aria-label="Close">${ic("x")}</button></div><p class="sub">The 8 things competitors don't do. Badges marked ${usp(1).replace("USP", "USP")} in the demo point at them.</p>
+  $("#drawer").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><h3>Why gyms pick ${BRAND.name}</h3><button class="btn ghost sm" data-a="drawer" aria-label="Close">${ic("x")}</button></div><p class="sub">The 8 things competitors don't do. Badges marked ${usp(1).replace("USP", "USP")} in the demo point at them.</p>
     <div class="pitch">Run your gym from <b>WhatsApp</b> and <b>UPI</b>: members join from one link, pay by UPI, and check in by scanning a poster. <b>No machines, no gateway fees, no data entry.</b></div>
     ${USPS.map((u) => `<div class="usp-item"><span class="n">${u.n}</span><div><b>${esc(u.t)}</b><span>${esc(u.d)}</span><div class="vs">${esc(u.vs)}</div>${Object.keys(u.go).length ? `<button data-a="goUsp" data-n="${u.n}">Show me ${ic("right")}</button>` : ""}</div></div>`).join("")}`;
   $("#guide").innerHTML = `<header data-a="guide"><span>${ic("play")} 2-minute demo script</span>${ic($("#guide").classList.contains("open") ? "down" : "left")}</header><ol>${STEPS.map((s, i) => `<li><button data-a="step" data-i="${i}"><span><b>${esc(s.t)}</b><small>${esc(s.d)}</small></span></button></li>`).join("")}</ol>`;

@@ -1,3 +1,4 @@
+import { BRAND } from '@gymos/shared';
 import { useEffect, useState } from 'react';
 import { Image, View } from 'react-native';
 import Animated, {
@@ -30,14 +31,14 @@ export function SplashView() {
   return (
     <View
       style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: HERO, overflow: 'hidden' }}
-      accessibilityLabel={brand ? `GOS for ${brand.name} is loading` : 'GOS is loading'}>
+      accessibilityLabel={brand ? `${BRAND.name} for ${brand.name} is loading` : `${BRAND.name} is loading`}>
       {!reduced && [0, 1, 2].map((i) => <Ring key={i} delay={i * 700} />)}
 
       <Dumbbell reduced={reduced} />
 
       <Animated.View entering={enter(250)} style={{ flexDirection: 'row', marginTop: 22 }}>
-        <Text style={{ fontSize: 46, fontWeight: '800', letterSpacing: -1.5, color: '#ffffff' }}>G</Text>
-        <Text style={{ fontSize: 46, fontWeight: '800', letterSpacing: -1.5, color: LIME }}>OS</Text>
+        <Text style={{ fontSize: 46, fontWeight: '800', letterSpacing: -1.5, color: '#ffffff' }}>{BRAND.logo[0]}</Text>
+        <Text style={{ fontSize: 46, fontWeight: '800', letterSpacing: -1.5, color: LIME }}>{BRAND.logo[1]}</Text>
       </Animated.View>
 
       {brand && (

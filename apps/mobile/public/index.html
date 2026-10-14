@@ -12,7 +12,9 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="GOS" />
+    <meta name="apple-mobile-web-app-title" content="" />
+    <!-- The home-screen name: the page title, i.e. the app name from brand.json. -->
+    <script>document.querySelector('meta[name="apple-mobile-web-app-title"]').content = document.title;</script>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
@@ -48,7 +50,7 @@
   </head>
 
   <body>
-    <noscript>You need to enable JavaScript to run GOS.</noscript>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
   </body>
 </html>

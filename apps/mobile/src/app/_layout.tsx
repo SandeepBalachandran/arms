@@ -19,7 +19,7 @@ import { ConfirmHost } from '@/lib/confirm';
 import { installCrashRecorder, recordCrash } from '@/lib/crash-log';
 import { useScheme } from '@/lib/appearance';
 import { ActiveGymProvider, checkInstallReferrer, takePendingJoin, useMyGyms } from '@/lib/gyms';
-import { TEAM_ROLES } from '@gymos/shared';
+import { BRAND, TEAM_ROLES } from '@gymos/shared';
 import { SessionProvider, useSession } from '@/lib/session';
 import { useLandOnAdmin } from '@/lib/site-view';
 import { hasSeenWelcome } from '@/lib/welcome';
@@ -85,7 +85,7 @@ function CrashScreen({ error, retry }: { error: Error; retry: () => void }) {
     <View style={{ flex: 1, backgroundColor: '#1f2a10', padding: 24, paddingTop: 80, gap: 16 }}>
       <Text style={{ color: '#ffffff', fontSize: 26, fontWeight: '800' }}>Something went wrong</Text>
       <Text style={{ color: '#c3cdb2', fontSize: 15 }}>
-        Try again. If it keeps happening, send a screenshot of this screen to the GOS team.
+        Try again. If it keeps happening, send a screenshot of this screen to the {BRAND.name} team.
       </Text>
       <ScrollView style={{ maxHeight: 260, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.08)' }} contentContainerStyle={{ padding: 12 }}>
         <Text selectable style={{ color: '#ffffff', fontSize: 12, fontFamily: Platform.select({ ios: 'Menlo', default: 'monospace' }) }}>

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import QRCode from "qrcode";
-import { posterCheckinUrl } from "@gymos/shared";
+import { BRAND, posterCheckinUrl } from "@gymos/shared";
 import { requirePermission } from "@/lib/auth";
 import { SITE_URL } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
@@ -50,7 +50,7 @@ export default async function PosterPage({ params }: PageProps<"/admin/[slug]/ch
 
         <footer className="space-y-3">
           <ol className="flex justify-center gap-6 text-sm font-medium">
-            <li><span className="mr-1 font-extrabold text-[#4d7c0f]">1</span> Open GOS</li>
+            <li><span className="mr-1 font-extrabold text-[#4d7c0f]">1</span> Open {BRAND.name}</li>
             <li><span className="mr-1 font-extrabold text-[#4d7c0f]">2</span> Tap Scan to check in</li>
             <li><span className="mr-1 font-extrabold text-[#4d7c0f]">3</span> Point at this code</li>
           </ol>

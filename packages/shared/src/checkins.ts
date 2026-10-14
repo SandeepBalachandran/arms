@@ -23,7 +23,7 @@ export function isCheckinToken(text: string) {
   return text.startsWith("gymos-ci:");
 }
 
-// The gym's QR poster encodes a link, so a phone camera that isn't the GOS app
+// The gym's QR poster encodes a link, so a phone camera that isn't our app
 // still lands on a page that explains what to do:
 //   https://<site>/checkin/<gym code>?k=<version>.<signature>
 export function posterCheckinUrl(siteUrl: string, slug: string, key: string) {

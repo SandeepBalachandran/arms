@@ -2,6 +2,7 @@ import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AdminHeader } from "./admin-header";
 import { AdminNav, BottomNav } from "./admin-nav";
+import { BRAND } from "@gymos/shared";
 
 // People waiting to join and UPI payments to confirm, for the sidebar.
 async function waitingCounts(gymId: string) {
@@ -35,7 +36,7 @@ export default async function AdminLayout({ children, params }: LayoutProps<"/ad
       {/* Sidebar from tablet width up; phones get the bottom bar instead. */}
       <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-border bg-surface md:flex print:hidden">
         <p className="flex h-14 items-center border-b border-border px-5 text-lg font-bold">
-          G<span className="text-brand">OS</span>
+          {BRAND.logo[0]}<span className="text-brand">{BRAND.logo[1]}</span>
         </p>
         <div className="flex-1 overflow-y-auto py-2">
           <AdminNav {...navProps} />

@@ -1,4 +1,4 @@
-# GOS mobile (Expo)
+# Squatfit mobile (Expo)
 
 Member app. See the root README for setup.
 

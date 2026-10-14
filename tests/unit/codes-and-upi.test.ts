@@ -43,7 +43,7 @@ describe("check-in codes", () => {
     expect(parsePosterCode(url)).toEqual({ slug: "arms-fitness", key: "3.ab12cd" });
   });
 
-  it("ignores QR codes that aren't GOS posters", () => {
+  it("ignores QR codes that aren't gym posters", () => {
     expect(parsePosterCode("https://example.com/menu")).toBeNull();
     expect(parsePosterCode("upi://pay?pa=x@ybl")).toBeNull();
   });

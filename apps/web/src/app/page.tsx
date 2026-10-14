@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { getCurrentUser } from "@/lib/auth";
 import { getTheme } from "@/lib/theme";
 import { playStoreUrl } from "@/lib/site";
+import { BRAND } from "@gymos/shared";
 
 const FEATURES = [
   { icon: CreditCard, title: "Memberships & payments", text: "Plans, online renewals with Razorpay, cash entries and invoices." },
@@ -19,12 +20,12 @@ export default async function Home() {
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
       <header className="flex items-center justify-between">
         <span className="text-xl font-bold">
-          G<span className="text-brand">OS</span>
+          {BRAND.logo[0]}<span className="text-brand">{BRAND.logo[1]}</span>
         </span>
         <nav className="flex items-center gap-4 text-sm">
           <ThemeToggle initial={await getTheme()} />
           {user ? (
-            <Link href="/go" className="hover:underline">Open GOS</Link>
+            <Link href="/go" className="hover:underline">Open {BRAND.name}</Link>
           ) : (
             <Link href="/login" className="hover:underline">Sign in</Link>
           )}

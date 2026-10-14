@@ -1,9 +1,9 @@
-# GOS — Market and Positioning
+# Squatfit — Market and Positioning
 
-Who else sells gym software in India and Kerala, what makes GOS different, where it falls short, and how to price it.
+Who else sells gym software in India and Kerala, what makes Squatfit different, where it falls short, and how to price it.
 
 - **Researched:** October 2026. Most competitor prices come from their own sites or review blogs, so confirm them before quoting to a gym.
-- **In short:** GOS is entering a **crowded, cheap market** (₹300–3,500 a month). It can't win on price. It wins on **WhatsApp and UPI built in, no extra hardware, easy switching, and local Kerala support**.
+- **In short:** Squatfit is entering a **crowded, cheap market** (₹300–3,500 a month). It can't win on price. It wins on **WhatsApp and UPI built in, no extra hardware, easy switching, and local Kerala support**.
 
 ---
 
@@ -35,7 +35,7 @@ Who else sells gym software in India and Kerala, what makes GOS different, where
 | **Fitness Manager** | ≈ ₹2,360/month (₹28,320/year) | Per licence |
 | **Codingclave** (markets to Kochi, based in Lucknow) | ₹1,999/month or ₹19,999 once | Biometric attendance, classes, PT; remote support only |
 
-### Larger or international (not GOS's market)
+### Larger or international (not Squatfit's market)
 
 | Product | Price | Who it's for |
 |---|---|---|
@@ -45,11 +45,11 @@ Who else sells gym software in India and Kerala, what makes GOS different, where
 
 ### Consumer fitness apps (competing for members' attention, not gym owners' money)
 
-Cult.fit, HealthifyMe and similar. Members may already use them for workouts and diet. GOS doesn't compete with them; it's the gym's own app.
+Cult.fit, HealthifyMe and similar. Members may already use them for workouts and diet. Squatfit doesn't compete with them; it's the gym's own app.
 
 ---
 
-## 3. What makes GOS different (USP)
+## 3. What makes Squatfit different (USP)
 
 Most important first:
 
@@ -77,7 +77,7 @@ Most important first:
 | Gap | Why it matters | Effort |
 |---|---|---|
 | **Enquiry and lead tracking** (walk-ins, trial visits, follow-ups) | Gyms live on converting enquiries | Medium |
-| **Automatic WhatsApp reminders** | GOS reminders are one tap but manual; competitors send them on schedule | Medium (needs WhatsApp Business API, see COSTS.md) |
+| **Automatic WhatsApp reminders** | Squatfit reminders are one tap but manual; competitors send them on schedule | Medium (needs WhatsApp Business API, see COSTS.md) |
 | **GST invoices** | Many gyms need proper tax invoices | Small–medium |
 | **Malayalam in the app** | Nobody has it; a clear Kerala advantage | Medium |
 | **Diet plans** (templates the trainer assigns) | Common in Indian tools; calorie and protein tracking is built, plans are next | Medium |

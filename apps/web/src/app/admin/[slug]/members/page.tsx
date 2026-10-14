@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import clsx from "clsx";
 import { Download, Upload } from "lucide-react";
-import { membershipState, rolesLabel, todayIn, type Subscription } from "@gymos/shared";
+import { BRAND, membershipState, rolesLabel, todayIn, type Subscription } from "@gymos/shared";
 import { ActionForm } from "@/components/action-form";
 import { Avatar } from "@/components/avatar";
 import { MembershipBadge } from "@/components/membership-badge";
@@ -106,7 +106,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
                 slug={slug}
                 gymName={gym.name}
                 countryCode={gym.phone_country_code}
-                whatsappHref={`https://wa.me/?text=${encodeURIComponent(`Join ${gym.name} on GOS: ${joinUrl(slug)}`)}`}
+                whatsappHref={`https://wa.me/?text=${encodeURIComponent(`Join ${gym.name} on ${BRAND.name}: ${joinUrl(slug)}`)}`}
               />
             </div>
           )

@@ -5,6 +5,7 @@ import { requirePermission } from "@/lib/auth";
 import { joinUrl } from "@/lib/site";
 import { ApprovalToggle } from "./approval-toggle";
 import { ShareCard } from "./share-card";
+import { BRAND } from "@gymos/shared";
 
 export const metadata: Metadata = { title: "Join link" };
 
@@ -22,7 +23,7 @@ export default async function JoinLinkPage({ params }: PageProps<"/admin/[slug]/
           <ShareCard
             path={`/join/${gym.slug}`}
             url={url}
-            defaultMessage={`💪 ${gym.name} is on the GOS app! Book classes, check in with your phone, pay by UPI and track workouts.\n\nJoin here 👉`}
+            defaultMessage={`💪 ${gym.name} is on the ${BRAND.name} app! Book classes, check in with your phone, pay by UPI and track workouts.\n\nJoin here 👉`}
           />
           <Card>
             <h2 className="font-medium">Who can join</h2>

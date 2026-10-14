@@ -34,7 +34,7 @@ export async function registerGym(_prev: RegisterState, formData: FormData): Pro
 
 export type SlugCheck = { status: "available" | "taken" | "invalid"; message?: string; suggestions: string[] };
 
-// Live check while the owner types a gym code. Codes are unique across GOS
+// Live check while the owner types a gym code. Codes are unique across the platform
 // (deleted gyms keep theirs for 30 days), so a taken code comes back with
 // free alternatives to tap.
 export async function checkSlug(input: string): Promise<SlugCheck> {

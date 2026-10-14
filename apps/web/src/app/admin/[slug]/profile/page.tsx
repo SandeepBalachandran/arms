@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getTheme } from "@/lib/theme";
 import { signOutEverywhere } from "./actions";
 import { PasswordForm } from "./password-form";
+import { BRAND } from "@gymos/shared";
 
 export const metadata: Metadata = { title: "My profile" };
 
@@ -92,7 +93,7 @@ export default async function ProfilePage({ params }: PageProps<"/admin/[slug]/p
           </dl>
           <PasswordForm />
           <form action={signOutEverywhere} className="mt-4 border-t border-border pt-4">
-            <p className="mb-2 text-sm text-muted">Lost a phone or used a shared computer? Sign out of GOS on every device.</p>
+            <p className="mb-2 text-sm text-muted">Lost a phone or used a shared computer? Sign out of {BRAND.name} on every device.</p>
             <button className="rounded-lg border border-border px-3 py-1.5 text-sm text-danger hover:bg-danger/10">
               Sign out everywhere
             </button>

@@ -1,3 +1,4 @@
+import { BRAND } from '@gymos/shared';
 import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
 import { Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
@@ -19,9 +20,9 @@ export function LastCrashNotice() {
     <Modal visible transparent animationType="fade" onRequestClose={close}>
       <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 20 }}>
         <View style={{ backgroundColor: '#1f2a10', borderRadius: 24, padding: 20, gap: 12 }}>
-          <Text style={{ color: '#ffffff', fontSize: 20, fontWeight: '800' }}>GOS closed unexpectedly</Text>
+          <Text style={{ color: '#ffffff', fontSize: 20, fontWeight: '800' }}>{BRAND.name} closed unexpectedly</Text>
           <Text style={{ color: '#c3cdb2', fontSize: 14 }}>
-            Sorry about that. Copy the details below and send them to the GOS team so we can fix it.
+            Sorry about that. Copy the details below and send them to the {BRAND.name} team so we can fix it.
           </Text>
           <CrashDetails report={report} />
           <View style={{ flexDirection: 'row', gap: 10 }}>

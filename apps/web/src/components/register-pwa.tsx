@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-// Registers the service worker (public/sw.js) so GOS can be installed and shows
+// Registers the service worker (public/sw.js) so the site can be installed and shows
 // an offline notice. Production only: the dev server's files change in place.
 export function RegisterPwa() {
   useEffect(() => {

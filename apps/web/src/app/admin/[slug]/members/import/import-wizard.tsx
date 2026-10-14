@@ -16,6 +16,7 @@ import {
   type RawRow,
 } from "@/lib/member-import";
 import { importMembers, type ImportOutcome } from "./actions";
+import { BRAND } from "@gymos/shared";
 
 type Step =
   | { kind: "pick"; error?: string }
@@ -25,9 +26,9 @@ type Step =
 
 const COLUMN_HELP: [string, string][] = [
   ["Name", "Required."],
-  ["Phone", "10-digit mobile. Phone or Email is required; they also match members already in GOS."],
+  ["Phone", `10-digit mobile. Phone or Email is required; they also match members already in ${BRAND.name}.`],
   ["Email", "Optional. Members with an email can sign in to the app straight away."],
-  ["Plan", "Optional. Must match a plan name in GOS exactly (any capitals)."],
+  ["Plan", `Optional. Must match a plan name in ${BRAND.name} exactly (any capitals).`],
   ["Last paid on", "Needed with a plan. The day their current period started, e.g. 01/10/2026."],
   ["Paid until", "Optional. Leave blank to work it out from the plan, or fill it in (e.g. calendar months: 31/10/2026)."],
   ["Amount", "Optional. Recorded as a payment on the last paid date, so it shows in their history."],

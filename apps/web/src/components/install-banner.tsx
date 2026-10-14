@@ -3,8 +3,9 @@
 import { Download, Share, X } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { playStoreUrl } from "@/lib/site";
+import { BRAND } from "@gymos/shared";
 
-// "Put GOS on your home screen", for people using GOS in a browser (the sign-in
+// "Put <name> on your home screen", for people using the site in a browser (the sign-in
 // page and the home page). One app for members and gym staff alike.
 // - Chrome/Edge on Android: an Install button (the browser's own prompt).
 // - iPhone/iPad Safari: how to do it from the Share menu (no prompt there).
@@ -69,7 +70,7 @@ export function InstallBanner() {
     <div className="mb-4 rounded-xl border border-border bg-surface p-3 text-sm shadow-sm">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <p className="font-medium">Put GOS on your home screen</p>
+          <p className="font-medium">Put {BRAND.name} on your home screen</p>
           {env === "ios" ? (
             <p className="mt-0.5 text-muted">
               Tap <Share className="inline size-4 align-text-bottom" /> Share, then &ldquo;Add to Home Screen&rdquo;. One app for members and gym staff.

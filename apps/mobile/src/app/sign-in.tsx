@@ -1,3 +1,4 @@
+import { BRAND } from '@gymos/shared';
 import { ArrowLeft, Dumbbell, KeyRound, Lock, Mail, MailCheck } from 'lucide-react-native';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
@@ -191,7 +192,7 @@ export default function SignInScreen() {
   );
 }
 
-// Dark band with the GOS mark, the remembered gym and some lime shapes.
+// Dark band with the logo (brand.ts), the remembered gym and some lime shapes.
 function Hero({ brand }: { brand?: string }) {
   const theme = useTheme();
   return (
@@ -203,9 +204,9 @@ function Hero({ brand }: { brand?: string }) {
       <View style={{ width: 54, height: 54, borderRadius: 18, backgroundColor: theme.accent, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-8deg' }] }}>
         <Dumbbell size={28} color={theme.accentText} strokeWidth={2.4} />
       </View>
-      <View style={{ flexDirection: 'row', marginTop: Spacing.three }} accessibilityRole="header" accessibilityLabel="GOS">
-        <Text style={{ fontSize: 40, fontWeight: '800', letterSpacing: -1.2, color: '#ffffff', lineHeight: 46 }}>G</Text>
-        <Text style={{ fontSize: 40, fontWeight: '800', letterSpacing: -1.2, color: theme.accent, lineHeight: 46 }}>OS</Text>
+      <View style={{ flexDirection: 'row', marginTop: Spacing.three }} accessibilityRole="header" accessibilityLabel={BRAND.name}>
+        <Text style={{ fontSize: 40, fontWeight: '800', letterSpacing: -1.2, color: '#ffffff', lineHeight: 46 }}>{BRAND.logo[0]}</Text>
+        <Text style={{ fontSize: 40, fontWeight: '800', letterSpacing: -1.2, color: theme.accent, lineHeight: 46 }}>{BRAND.logo[1]}</Text>
       </View>
       <Text style={{ color: theme.heroMuted, fontSize: 14 }} numberOfLines={1}>
         {brand ? `Your ${brand} membership, in your pocket` : 'Membership, check-ins, classes and workouts'}

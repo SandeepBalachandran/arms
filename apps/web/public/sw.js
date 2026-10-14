@@ -1,11 +1,11 @@
-// GOS service worker (one app: the member app at /app and the admin at /admin).
+// Service worker (one app: the member app at /app and the admin at /admin).
 // - The member app's built files are kept, so it opens instantly and offline.
 // - Admin pages and data are private to each person: never stored. Offline,
 //   a short notice shows instead of the browser's error page.
 const CACHE = "gos-v2";
 const APP_SHELL = "/app/index.html";
 const OFFLINE_HTML =
-  '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>GOS</title>' +
+  '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline</title>' +
   '<body style="font-family:system-ui;display:grid;place-items:center;min-height:100vh;margin:0;background:#1f2a10;color:#fff;text-align:center">' +
   '<div><h1>You are offline</h1><p>Reconnect and try again.</p><button onclick="location.reload()" style="padding:10px 18px;border-radius:10px;border:0;background:#a3e635;color:#1f2a10;font-size:16px">Retry</button></div>';
 

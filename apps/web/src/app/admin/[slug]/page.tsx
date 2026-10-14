@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import {
-  addDays,
+import { BRAND, addDays,
   formatDate,
   formatMoney,
   formatReceipt,
@@ -123,7 +122,7 @@ export default async function AdminDashboard({ params }: PageProps<"/admin/[slug
         </div>
         {isStaff && (
           <a
-            href={`https://wa.me/?text=${encodeURIComponent(`💪 ${gym.name} is on the GOS app! Book classes, check in with your phone, pay by UPI and track workouts.\n\nJoin here 👉 ${joinUrl(slug)}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`💪 ${gym.name} is on the ${BRAND.name} app! Book classes, check in with your phone, pay by UPI and track workouts.\n\nJoin here 👉 ${joinUrl(slug)}`)}`}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 rounded-lg bg-[#25d366] px-4 py-2 text-sm font-semibold text-[#073b1c] hover:brightness-95"

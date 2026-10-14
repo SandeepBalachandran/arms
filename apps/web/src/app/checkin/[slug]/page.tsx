@@ -4,11 +4,12 @@ import { notFound } from "next/navigation";
 import { ScanLine } from "lucide-react";
 import { Card } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
+import { BRAND } from "@gymos/shared";
 
 export const metadata: Metadata = { title: "Check in" };
 
 // Opened when someone scans the gym's check-in poster with the phone's own
-// camera instead of the GOS app: explain how to check in.
+// camera instead of the app: explain how to check in.
 export default async function PosterLandingPage({ params }: PageProps<"/checkin/[slug]">) {
   const { slug } = await params;
   const supabase = await createClient();
@@ -28,11 +29,11 @@ export default async function PosterLandingPage({ params }: PageProps<"/checkin/
         <div className="space-y-1">
           <h1 className="text-xl font-semibold">Check in at {gym.name}</h1>
           <p className="text-sm text-muted">
-            Scan this code from inside the GOS app: open GOS, tap <strong>Scan to check in</strong> on Home, and point it at the poster.
+            Scan this code from inside the {BRAND.name} app: open {BRAND.name}, tap <strong>Scan to check in</strong> on Home, and point it at the poster.
           </p>
         </div>
         <Link href={`/join/${gym.slug}`} className="block rounded-lg border border-border px-4 py-3 text-sm font-medium hover:bg-border/40">
-          Don&apos;t have GOS yet? Get the app
+          Don&apos;t have {BRAND.name} yet? Get the app
         </Link>
       </Card>
     </main>

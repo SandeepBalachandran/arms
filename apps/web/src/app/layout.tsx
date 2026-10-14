@@ -4,6 +4,7 @@ import { RegisterPwa } from "@/components/register-pwa";
 import { Toaster } from "@/components/toaster";
 import { TooltipProvider } from "@/components/tooltip";
 import { getTheme } from "@/lib/theme";
+import { BRAND } from "@gymos/shared";
 import "./globals.css";
 
 // Same font as the member app. Poppins isn't a variable font, so list weights.
@@ -19,11 +20,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: { default: "GOS", template: "%s · GOS" },
+  title: { default: BRAND.name, template: `%s · ${BRAND.name}` },
   description: "Run your gym: memberships, check-ins, classes and workouts.",
-  // One installable app for members and gym staff (see public/manifest.webmanifest).
-  manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, title: "GOS", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: BRAND.name, statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

@@ -1,16 +1,19 @@
 import { z } from "zod";
 import { openingHoursSchema } from "./hours";
+import { BRAND } from "./brand";
 import { MANUAL_PAYMENT_METHODS } from "./memberships";
 
 // Per-gym settings (columns on public.gyms) and the helpers that use them.
 
 export const CURRENCIES = ["INR", "USD", "EUR", "GBP", "AED", "SAR", "QAR", "SGD", "AUD", "CAD", "LKR", "NPR", "BDT"] as const;
 
-export const RENEWAL_MESSAGE_PLACEHOLDERS = ["{name}", "{gym}", "{date}", "{plan}"] as const;
+export const RENEWAL_MESSAGE_PLACEHOLDERS = ["{name}", "{gym}", "{date}", "{plan}", "{app}"] as const;
 
-// "Hi {name}, …" → "Hi Asha, …". Unknown placeholders are left as typed.
-export function renderTemplate(template: string, values: { name?: string; gym?: string; date?: string; plan?: string }) {
-  return template.replace(/\{(name|gym|date|plan)\}/g, (match, key: keyof typeof values) => values[key] ?? match);
+// "Hi {name}, …" → "Hi Asha, …". {app} is the product's name (brand.ts), so
+// saved messages follow a rename. Unknown placeholders are left as typed.
+export function renderTemplate(template: string, values: { name?: string; gym?: string; date?: string; plan?: string; app?: string }) {
+  const all = { app: BRAND.name, ...values };
+  return template.replace(/\{(name|gym|date|plan|app)\}/g, (match, key: keyof typeof all) => all[key] ?? match);
 }
 
 // wa.me wants digits with the country code. Numbers that already look
@@ -135,7 +138,7 @@ export const GYM_DEFAULTS = {
   phone_country_code: "91",
   expiry_warning_days: 7,
   renewal_message:
-    "Hi {name}, your {gym} membership ends on {date}. Renew at the front desk or in the GOS app.",
+    "Hi {name}, your {gym} membership ends on {date}. Renew at the front desk or in the {app} app.",
   receipt_prefix: "",
   checkin_dedupe_hours: 3,
   checkin_radius_m: 200,

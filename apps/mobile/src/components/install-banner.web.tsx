@@ -1,3 +1,4 @@
+import { BRAND } from '@gymos/shared';
 import { Download, Share, Smartphone, X, type LucideIcon } from 'lucide-react-native';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Linking, Pressable, View } from 'react-native';
@@ -6,7 +7,7 @@ import { Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-// For members using GOS in the browser: put it on the home screen.
+// For members using the app in the browser: put it on the home screen.
 // - Chrome/Edge on Android: an Install button (the browser's own prompt).
 // - iPhone/iPad Safari: how to do it from the Share menu (no prompt there).
 // - Android without the prompt: a link to the APK, when one is set.
@@ -73,7 +74,7 @@ export function InstallBanner() {
   if (hidden) return null;
   if (prompt) {
     return (
-      <Banner icon={Download} title="Install GOS" body="Opens like an app from your home screen. No Play Store needed." onClose={dismiss}>
+      <Banner icon={Download} title={`Install ${BRAND.name}`} body="Opens like an app from your home screen. No Play Store needed." onClose={dismiss}>
         <Action title="Install" onPress={install} />
       </Banner>
     );
@@ -82,7 +83,7 @@ export function InstallBanner() {
     return (
       <Banner
         icon={Share}
-        title="Add GOS to your Home Screen"
+        title={`Add ${BRAND.name} to your Home Screen`}
         body="Tap Share in Safari, then “Add to Home Screen”. It opens like an app."
         onClose={dismiss}
       />
@@ -90,7 +91,7 @@ export function InstallBanner() {
   }
   if (env.android && ANDROID_APP_URL) {
     return (
-      <Banner icon={Smartphone} title="Get the Android app" body="Faster check-in with the GOS app." onClose={dismiss}>
+      <Banner icon={Smartphone} title="Get the Android app" body={`Faster check-in with the ${BRAND.name} app.`} onClose={dismiss}>
         <Action title="Download" onPress={() => Linking.openURL(ANDROID_APP_URL)} />
       </Banner>
     );

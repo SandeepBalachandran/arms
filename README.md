@@ -1,4 +1,4 @@
-# GOS
+# Squatfit
 
 Multi-tenant gym platform: a web admin panel for gym owners and staff, and an
 Android/iOS app for members. Gym owners share a join link on WhatsApp; it opens
@@ -12,8 +12,8 @@ the app (or the Play Store) and joins their gym.
 | `supabase` | Migrations, email templates (shared backend) |
 | `docs/HOW-IT-WORKS.md` | How everything works: product flows, architecture, data, security, running and releasing |
 | `docs/PLAN.md` | Milestones done and what’s next |
-| `docs/COSTS.md` | What it costs to run GOS: hosting, database, messaging, domains, app stores, and hidden charges |
-| `docs/MARKET.md` | Competitors in India and Kerala, what makes GOS different, gaps, pricing |
+| `docs/COSTS.md` | What it costs to run Squatfit: hosting, database, messaging, domains, app stores, and hidden charges |
+| `docs/MARKET.md` | Competitors in India and Kerala, what makes Squatfit different, gaps, pricing |
 
 ## Setup
 

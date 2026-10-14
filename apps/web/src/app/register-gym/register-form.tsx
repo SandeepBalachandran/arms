@@ -5,6 +5,7 @@ import { Building2, CheckCircle2, Link2, Loader2, MessageCircle, XCircle } from 
 import { AuthField, AuthInput } from "@/components/auth-shell";
 import { Button, FormError } from "@/components/ui";
 import { checkSlug, registerGym, type SlugCheck } from "./actions";
+import { BRAND } from "@gymos/shared";
 
 function slugify(name: string) {
   return name
@@ -112,7 +113,7 @@ export function RegisterGymForm({ siteUrl }: { siteUrl: string }) {
             <MessageCircle className="size-4" />
           </span>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">Join {name.trim() || "your gym"} on GOS</p>
+            <p className="truncate text-sm font-medium">Join {name.trim() || "your gym"} on {BRAND.name}</p>
             <p className="truncate font-mono text-xs text-muted">
               {host}/join/<span className="text-brand">{slug || "your-gym"}</span>
             </p>

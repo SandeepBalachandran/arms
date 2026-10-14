@@ -4,6 +4,7 @@ import { cache } from "react";
 import { Card } from "@/components/ui";
 import { memberWebJoinUrl, playStoreUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
+import { BRAND } from "@gymos/shared";
 
 // The page behind the link gym owners share on WhatsApp. When the app is
 // installed, Android App Links open the app instead and this page never shows.
@@ -22,7 +23,7 @@ const getGym = cache(async (slug: string) => {
 export async function generateMetadata({ params }: PageProps<"/join/[slug]">): Promise<Metadata> {
   const gym = await getGym((await params).slug);
   if (!gym) return { title: "Gym not found" };
-  const title = `Join ${gym.name} on GOS`;
+  const title = `Join ${gym.name} on ${BRAND.name}`;
   const description = "Membership, check-in, classes and workouts — all in one app.";
   return { title, description, openGraph: { title, description, type: "website" } };
 }
@@ -48,7 +49,7 @@ export default async function JoinGymPage({ params }: PageProps<"/join/[slug]">)
           href={playStoreUrl(gym.slug)}
           className="block rounded-lg bg-brand px-4 py-3 font-medium text-brand-fg"
         >
-          Get the GOS app
+          Get the {BRAND.name} app
         </a>
         {webUrl && (
           <a
