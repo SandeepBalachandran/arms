@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { Card } from "@/components/ui";
-import { playStoreUrl } from "@/lib/site";
+import { memberWebJoinUrl, playStoreUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
 // The page behind the link gym owners share on WhatsApp. When the app is
@@ -31,6 +31,7 @@ export default async function JoinGymPage({ params }: PageProps<"/join/[slug]">)
   const { slug } = await params;
   const gym = await getGym(slug);
   if (!gym) notFound();
+  const webUrl = memberWebJoinUrl(gym.slug);
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-12">
@@ -49,6 +50,14 @@ export default async function JoinGymPage({ params }: PageProps<"/join/[slug]">)
         >
           Get the GOS app
         </a>
+        {webUrl && (
+          <a
+            href={webUrl}
+            className="block rounded-lg border border-border px-4 py-3 font-medium hover:bg-border/40"
+          >
+            Open in browser, no install
+          </a>
+        )}
 
         <div className="rounded-lg border border-dashed border-border p-3">
           <p className="text-xs text-muted">Already have the app? Enter this gym code</p>

@@ -19,3 +19,11 @@ export function playStoreUrl(gymSlug?: string) {
 export function joinUrl(gymSlug: string) {
   return `${SITE_URL}/join/${gymSlug}`;
 }
+
+// Where the member app's web build (PWA) is hosted, if it is. Lets people who
+// won't install an app join from the browser.
+export const MEMBER_WEB_APP_URL = process.env.NEXT_PUBLIC_MEMBER_WEB_APP_URL?.replace(/\/$/, "");
+
+export function memberWebJoinUrl(gymSlug: string) {
+  return MEMBER_WEB_APP_URL ? `${MEMBER_WEB_APP_URL}/join/${gymSlug}` : null;
+}

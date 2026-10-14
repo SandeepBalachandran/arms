@@ -11,6 +11,7 @@ import { Button, Card, Loading, Screen, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useActiveGym } from '@/lib/gyms';
+import '@/lib/barcode-polyfill';
 import { supabase } from '@/lib/supabase';
 
 type Outcome = { result?: CheckinResult & { gym_name?: string }; error?: string };

@@ -4,6 +4,7 @@ import { ActivityCard } from '@/components/activity-card';
 import { CheckinCard } from '@/components/checkin-card';
 import { ExploreTiles, HomeHeader, MembershipProgress, TodayHero } from '@/components/home-cards';
 import { HoursCard } from '@/components/hours-card';
+import { InstallBanner } from '@/components/install-banner';
 import { Appear } from '@/components/motion';
 import { Screen, Text } from '@/components/ui';
 import { useProfile } from '@/lib/profile';
@@ -16,6 +17,8 @@ export default function HomeScreen() {
       <Appear index={0}>
         <HomeHeader />
       </Appear>
+
+      <InstallBanner />
 
       {profile.data && !profile.data.full_name && (
         <Link href="/profile">

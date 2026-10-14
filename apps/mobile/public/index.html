@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>%WEB_TITLE%</title>
+    <meta name="description" content="Your membership, check-ins, classes, workouts and food log." />
+    <!-- Installable web app (PWA): name, icons, colours, offline (sw.js). -->
+    <meta name="theme-color" content="#1f2a10" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="GOS" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        overflow: hidden;
+        background-color: #1f2a10;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+    <script>
+      // Chrome fires this once, early: keep it for the install banner
+      // (src/components/install-banner.web.tsx).
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        window.__gosInstallPrompt = e;
+        window.dispatchEvent(new Event('gos-installable'));
+      });
+      // Not on the Expo dev server (port 8081), whose bundles change in place.
+      if ('serviceWorker' in navigator && location.port !== '8081') {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js');
+        });
+      }
+    </script>
+  </head>
+
+  <body>
+    <noscript>You need to enable JavaScript to run GOS.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
