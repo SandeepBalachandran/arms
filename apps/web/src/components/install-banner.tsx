@@ -1,8 +1,8 @@
 "use client";
 
-import { Download, Share, X } from "lucide-react";
+import { Download, EllipsisVertical, Share, X } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { playStoreUrl } from "@/lib/site";
+import { androidAppUrl } from "@/lib/site";
 import { BRAND } from "@gymos/shared";
 
 // "Put <name> on your home screen", for people using the site in a browser (the sign-in
@@ -58,6 +58,7 @@ export function InstallBanner() {
   }, []);
 
   if (env === "hidden" || closed) return null;
+  const appUrl = androidAppUrl();
 
   const close = () => {
     try {
@@ -75,10 +76,15 @@ export function InstallBanner() {
             <p className="mt-0.5 text-muted">
               Tap <Share className="inline size-4 align-text-bottom" /> Share, then &ldquo;Add to Home Screen&rdquo;. One app for members and gym staff.
             </p>
-          ) : (
+          ) : prompt ? (
             <p className="mt-0.5 text-muted">Opens like an app, full screen. One app for members and gym staff.</p>
+          ) : (
+            // Chrome hasn't offered its install prompt (yet): its menu still can.
+            <p className="mt-0.5 text-muted">
+              Tap <EllipsisVertical className="inline size-4 align-text-bottom" /> in Chrome, then &ldquo;Add to Home screen&rdquo;. Opens like an app.
+            </p>
           )}
-          {env === "android" && (
+          {env === "android" && (prompt || appUrl) && (
             <div className="mt-2 flex flex-wrap gap-2">
               {prompt && (
                 <button
@@ -95,9 +101,11 @@ export function InstallBanner() {
                   <Download className="size-4" /> Install
                 </button>
               )}
-              <a href={playStoreUrl()} className="rounded-lg border border-border px-3 py-1.5 font-medium">
-                Get the Android app
-              </a>
+              {appUrl && (
+                <a href={appUrl} className="rounded-lg border border-border px-3 py-1.5 font-medium">
+                  Get the Android app
+                </a>
+              )}
             </div>
           )}
         </div>

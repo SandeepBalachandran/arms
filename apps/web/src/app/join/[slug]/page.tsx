@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { Card } from "@/components/ui";
-import { memberWebJoinUrl, playStoreUrl } from "@/lib/site";
+import { androidAppUrl, memberWebJoinUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import { BRAND } from "@gymos/shared";
 
@@ -33,6 +33,7 @@ export default async function JoinGymPage({ params }: PageProps<"/join/[slug]">)
   const gym = await getGym(slug);
   if (!gym) notFound();
   const webUrl = memberWebJoinUrl(gym.slug);
+  const appUrl = androidAppUrl(gym.slug);
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-12">
@@ -45,20 +46,21 @@ export default async function JoinGymPage({ params }: PageProps<"/join/[slug]">)
         <h1 className="text-2xl font-semibold">{gym.name}</h1>
         {gym.address && <p className="text-sm text-muted">{gym.address}</p>}
 
-        <a
-          href={playStoreUrl(gym.slug)}
-          className="block rounded-lg bg-brand px-4 py-3 font-medium text-brand-fg"
-        >
-          Get the {BRAND.name} app
-        </a>
+        {/* Joining in the browser works for everyone; the Android app is extra, once there's a link. */}
         {webUrl && (
-          <a
-            href={webUrl}
-            className="block rounded-lg border border-border px-4 py-3 font-medium hover:bg-border/40"
-          >
-            Open in browser, no install
+          <a href={webUrl} className="block rounded-lg bg-brand px-4 py-3 font-medium text-brand-fg">
+            Join {gym.name}
           </a>
         )}
+        {appUrl && (
+          <a
+            href={appUrl}
+            className={webUrl ? "block rounded-lg border border-border px-4 py-3 font-medium hover:bg-border/40" : "block rounded-lg bg-brand px-4 py-3 font-medium text-brand-fg"}
+          >
+            Get the Android app
+          </a>
+        )}
+        {webUrl && <p className="text-xs text-muted">Opens in your browser, no download. Add it to your home screen to use it like an app.</p>}
 
         <div className="rounded-lg border border-dashed border-border p-3">
           <p className="text-xs text-muted">Already have the app? Enter this gym code</p>
