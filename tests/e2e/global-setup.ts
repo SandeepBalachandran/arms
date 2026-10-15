@@ -1,13 +1,14 @@
 import { mkdirSync, writeFileSync } from "node:fs";
-import { createServerClient } from "@supabase/ssr";
-import { clientWithToken, PUBLISHABLE_KEY, serviceClient, SUPABASE_URL } from "../db/env";
+import { clientWithToken, serviceClient } from "../db/env";
+import { sessionCookies } from "../support/session-cookies";
 import { HOURS_ALWAYS } from "../db/fixture-data";
 import { createTestGym, ROLES, type TestGym, type TestRole } from "../support/test-gym";
 import { AUTH_DIR, FIXTURE_FILE, authFile, type E2EFixture } from "./paths";
 
 // Makes the throwaway gym, adds what the screens need (class, PT, workout
-// plan, UPI, opening hours), and saves a signed-in browser state per role for
-// the admin (cookies) and the member app (localStorage).
+// plan, UPI, opening hours), and saves a signed-in browser state per role.
+// Both the admin and the member app keep the session in cookies on the web
+// (one site, one sign-in); cookies ignore the port, so localhost covers both.
 export default async function globalSetup() {
   mkdirSync(AUTH_DIR, { recursive: true });
   const t = await createTestGym();
@@ -16,8 +17,9 @@ export default async function globalSetup() {
   writeFileSync(FIXTURE_FILE, JSON.stringify(fixture, null, 2));
 
   for (const role of ROLES) {
-    writeFileSync(authFile("admin", role), JSON.stringify({ cookies: await adminCookies(t, role), origins: [] }));
-    writeFileSync(authFile("app", role), JSON.stringify(appStorage(t, role)));
+    const cookies = await sessionCookies(t.users[role].session);
+    writeFileSync(authFile("admin", role), JSON.stringify({ cookies, origins: [] }));
+    writeFileSync(authFile("app", role), JSON.stringify(appStorage(t, role, cookies)));
   }
 }
 
@@ -59,29 +61,15 @@ async function seed(t: TestGym) {
   return { ptPackageId: pkg.data!.id, workoutPlanId: plan.data!.id };
 }
 
-// Cookies the admin's Supabase SSR client would set after signing in.
-async function adminCookies(t: TestGym, role: TestRole) {
-  const jar = new Map<string, string>();
-  const sb = createServerClient(SUPABASE_URL, PUBLISHABLE_KEY, {
-    cookies: { getAll: () => [...jar].map(([name, value]) => ({ name, value })), setAll: (c) => c.forEach(({ name, value }) => jar.set(name, value)) },
-  });
-  const { session } = t.users[role];
-  const { error } = await sb.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
-  if (error) throw error;
-  return [...jar].map(([name, value]) => ({ name, value, domain: "localhost", path: "/", expires: -1, httpOnly: false, secure: false, sameSite: "Lax" as const }));
-}
-
-// What the member app keeps in localStorage on the web: the intro already
-// seen, the Supabase session, and the chosen gym.
-function appStorage(t: TestGym, role: TestRole) {
-  const ref = new URL(SUPABASE_URL).hostname.split(".")[0];
+// The member app on the web: the session cookies, plus what it keeps in
+// localStorage (the intro already seen, and the chosen gym).
+function appStorage(t: TestGym, role: TestRole, cookies: Awaited<ReturnType<typeof sessionCookies>>) {
   return {
-    cookies: [],
+    cookies,
     origins: [{
       origin: "http://localhost:8081",
       localStorage: [
         { name: "gymos.welcomed", value: "1" },
-        { name: `sb-${ref}-auth-token`, value: JSON.stringify(t.users[role].session) },
         ...(role === "outsider" ? [] : [{ name: "gymos.activeGym", value: t.gym.slug }]),
       ],
     }],

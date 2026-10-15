@@ -1,4 +1,4 @@
-import { SUPABASE_URL } from "../../db/env";
+import { sessionCookies } from "../../support/session-cookies";
 import { deleteAccount, signedIn, TEST_PASSWORD } from "../../support/test-gym";
 import { expect, fx, openApp, service, test, watchErrors } from "../fixture";
 
@@ -18,14 +18,11 @@ test("a member deletes their account from Profile", async ({ page }) => {
   await service.from("profiles").update({ full_name: "Ari Leaver" }).eq("id", userId);
   await service.from("gym_members").insert({ gym_id: fx.gym.id, user_id: userId, role: "member", status: "active" });
   const { session } = await signedIn(email);
-  const ref = new URL(SUPABASE_URL).hostname.split(".")[0];
-  await page.addInitScript(([key, value, slug]) => {
-    if (localStorage.getItem("e2e.seeded")) return;
-    localStorage.setItem("e2e.seeded", "1");
+  await page.context().addCookies(await sessionCookies(session));
+  await page.addInitScript((slug) => {
     localStorage.setItem("gymos.welcomed", "1");
-    localStorage.setItem(key, value);
     localStorage.setItem("gymos.activeGym", slug);
-  }, [`sb-${ref}-auth-token`, JSON.stringify(session), fx.gym.slug] as const);
+  }, fx.gym.slug);
 
   await openApp(page);
   await page.getByRole("tab", { name: "Profile" }).click();

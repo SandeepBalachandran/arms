@@ -12,7 +12,7 @@ type Mode = "signin" | "signup" | "magic";
 const ACTIONS = { signin: signIn, signup: signUp, magic: sendMagicLink };
 const COPY = {
   signin: { title: "Welcome back", subtitle: "Members and gym staff sign in here.", submit: "Sign in" },
-  signup: { title: "Create your account", subtitle: "Then register your gym or open an invite.", submit: "Create account" },
+  signup: { title: "Create your account", subtitle: "Then join your gym with its link or code.", submit: "Create account" },
   magic: { title: "Sign in with email", subtitle: "We'll email you a link. No password needed.", submit: "Email me a link" },
 };
 
@@ -44,7 +44,8 @@ function ModeForm({ mode, next, email, onEmailChange, onModeChange, linkError }:
 }) {
   const [state, action, pending] = useActionState(ACTIONS[mode], undefined);
   const [showPassword, setShowPassword] = useState(false);
-  const copy = COPY[mode];
+  // Owners arrive from "Register your gym"; everyone else is joining a gym.
+  const copy = mode === "signup" && next.startsWith("/register-gym") ? { ...COPY.signup, subtitle: "Then set up your gym." } : COPY[mode];
 
   if (state?.sent) {
     return (

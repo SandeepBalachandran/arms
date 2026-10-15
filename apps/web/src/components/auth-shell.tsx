@@ -4,11 +4,12 @@ import clsx from "clsx";
 import { CalendarCheck, CreditCard, QrCode, Users, type LucideIcon } from "lucide-react";
 import { BRAND } from "@gymos/shared";
 
+// The sign-in page is shared by members and gym staff, so this speaks to both.
 const FEATURES = [
-  { icon: Users, text: "Members, plans and renewals in one list" },
-  { icon: CreditCard, text: "UPI payments with no gateway fees" },
-  { icon: QrCode, text: "QR check-in at the front desk" },
-  { icon: CalendarCheck, text: "Classes, workouts and personal training" },
+  { icon: QrCode, text: "Check in with a QR code" },
+  { icon: CreditCard, text: "Renew with UPI, every receipt kept" },
+  { icon: CalendarCheck, text: "Classes, workouts and your trainer's plan" },
+  { icon: Users, text: "Owners and staff run the gym from the same app" },
 ];
 
 // Two-column page for sign-in and gym registration: a dark brand panel on
@@ -30,10 +31,10 @@ export function AuthShell({ title, subtitle, children, aside }: {
         <div className="relative my-auto max-w-md space-y-8">
           <div className="space-y-3">
             <h2 className="text-4xl font-semibold leading-tight tracking-tight">
-              {aside?.heading ?? "Run your gym from one place"}
+              {aside?.heading ?? "Your gym in one app"}
             </h2>
             <p className="text-white/70">
-              {aside?.text ?? "The admin panel for owners and staff, and an app your members install from a WhatsApp link."}
+              {aside?.text ?? "Members check in, book classes and renew. Owners and staff manage everything else."}
             </p>
           </div>
           <ul className="space-y-3">
@@ -47,14 +48,14 @@ export function AuthShell({ title, subtitle, children, aside }: {
             ))}
           </ul>
         </div>
-        <p className="relative text-xs text-white/50">Made for Indian gyms: INR, UPI, +91 and IST by default.</p>
+        {/* <p className="relative text-xs text-white/50">Made for Indian gyms: INR, UPI, +91 and IST by default.</p> */}
       </section>
 
-      <section className="flex flex-col px-4 py-8 sm:px-8 lg:py-12">
+      <section className="flex flex-col px-4 pb-8 pt-5 sm:px-8 lg:py-12">
         <div className="lg:hidden">
           <Logo />
         </div>
-        <div className="mx-auto my-auto w-full max-w-sm space-y-6 py-8">
+        <div className="mx-auto w-full max-w-sm space-y-5 pt-6 lg:my-auto lg:space-y-6 lg:py-8">
           {title && <AuthHeading title={title} subtitle={subtitle} />}
           {children}
         </div>

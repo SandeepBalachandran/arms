@@ -11,7 +11,7 @@ function applyTheme(theme: Theme) {
   document.cookie = `theme=${theme}; path=/; max-age=31536000; samesite=lax`;
 }
 
-// One-button switch (landing page). The choice is kept in a cookie so the
+// One icon button (landing page): moon to go dark, sun to go light. The choice is kept in a cookie so the
 // server renders the right theme on the next visit (no flash).
 export function ThemeToggle({ initial, className }: { initial: Theme; className?: string }) {
   const [theme, setTheme] = useState<Theme>(initial);
@@ -25,10 +25,10 @@ export function ThemeToggle({ initial, className }: { initial: Theme; className?
         setTheme(next);
       }}
       aria-label={`Switch to ${next} theme`}
-      className={className ?? "flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted hover:bg-border/40"}
+      title={`Switch to ${next} theme`}
+      className={className ?? "flex size-9 items-center justify-center rounded-lg text-muted hover:bg-border/40 hover:text-foreground"}
     >
       {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
-      {theme === "dark" ? "Light theme" : "Dark theme"}
     </button>
   );
 }
