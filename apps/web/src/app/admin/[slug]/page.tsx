@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { InstallBanner } from "@/components/install-banner";
 import type { ReactNode } from "react";
 import { BRAND, addDays,
   formatDate,
@@ -115,6 +116,8 @@ export default async function AdminDashboard({ params }: PageProps<"/admin/[slug
   return (
     <>
       {gym.checkin_enabled && <LiveRefresh gymId={gym.id} />}
+      {/* Phones only; hidden once installed or after "Not now" (same as the sign-in page). */}
+      <InstallBanner />
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{greeting(gym.timezone)}{firstName ? `, ${firstName}` : ""}</h1>
