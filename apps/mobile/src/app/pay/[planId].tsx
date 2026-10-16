@@ -11,7 +11,7 @@ import { Button, Card, Input, Loading, Screen, Text } from '@/components/ui';
 import { Spacing, type Tint } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useActiveGym } from '@/lib/gyms';
-import { usePaymentClaims, usePlans } from '@/lib/memberships';
+import { alertGymOfClaim, usePaymentClaims, usePlans } from '@/lib/memberships';
 import { useProfile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 
@@ -93,13 +93,14 @@ export default function PayScreen() {
     if (!parsedUtr.success) return setError(parsedUtr.error.issues[0].message);
     setError(null);
     setSubmitting(true);
-    const { error } = await supabase.rpc('claim_upi_payment', {
+    const { data: paymentId, error } = await supabase.rpc('claim_upi_payment', {
       p_gym_id: gym!.id,
       p_plan_id: plan!.id,
       ...(parsedUtr.data ? { p_utr: parsedUtr.data } : {}),
     });
     setSubmitting(false);
     if (error) return setError(error.message);
+    void alertGymOfClaim(paymentId);
     await queryClient.invalidateQueries({ queryKey: ['payment-claims'] });
     router.back();
   }

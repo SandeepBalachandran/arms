@@ -11,7 +11,12 @@ const OFFLINE_HTML =
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(["/icons/icon-192.png"])).then(() => self.skipWaiting()),
+    caches
+      .open(CACHE)
+      .then((c) => c.addAll(["/icons/icon-192.png"]))
+      // The icon is a nice-to-have: a storage hiccup mustn't stop the worker (and alerts) installing.
+      .catch(() => {})
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -63,4 +68,34 @@ self.addEventListener("fetch", (event) => {
       ),
     );
   }
+});
+
+// Phone alerts for the gym team (lib/push.ts): show it, and open its page when tapped.
+self.addEventListener("push", (event) => {
+  let msg = {};
+  try {
+    msg = event.data ? event.data.json() : {};
+  } catch {
+    msg = { title: event.data ? event.data.text() : "" };
+  }
+  event.waitUntil(
+    self.registration.showNotification(msg.title || "Squatpress", {
+      body: msg.body || "",
+      tag: msg.tag,
+      icon: "/icons/icon-192.png",
+      data: { url: msg.url || "/go" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || "/go", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      const open = wins.find((w) => new URL(w.url).origin === self.location.origin);
+      if (open) return open.navigate(target).then((w) => (w || open).focus());
+      return self.clients.openWindow(target);
+    }),
+  );
 });

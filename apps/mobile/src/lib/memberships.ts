@@ -1,5 +1,6 @@
 import { membershipState, receiptView, todayIn } from '@gymos/shared';
 import { useQuery } from '@tanstack/react-query';
+import { Platform } from 'react-native';
 
 import { useActiveGym } from '@/lib/gyms';
 import { supabase } from '@/lib/supabase';
@@ -122,4 +123,28 @@ export function useReceipt(paymentId: string) {
       });
     },
   });
+}
+
+// Right after a UPI claim: ask the site to alert whoever confirms payments at
+// the gym (a phone notification, apps/web/src/app/api/push/upi-claim). The web
+// app shares the site's sign-in cookie; the Android app sends its token to the
+// site it links to. Best effort: if it fails, the claim still shows in the
+// admin's notifications as before.
+export async function alertGymOfClaim(paymentId: string) {
+  try {
+    if (Platform.OS === 'web') {
+      await fetch('/api/push/upi-claim', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId }) });
+      return;
+    }
+    const host = process.env.EXPO_PUBLIC_APP_LINK_HOST;
+    const token = (await supabase.auth.getSession()).data.session?.access_token;
+    if (!host || !token) return;
+    await fetch(`https://${host}/api/push/upi-claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ paymentId }),
+    });
+  } catch {
+    // Offline or the site is unreachable: nothing to do.
+  }
 }

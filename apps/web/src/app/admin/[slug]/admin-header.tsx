@@ -4,6 +4,7 @@ import { signOut } from "@/app/(auth)/actions";
 import { initials } from "@gymos/shared";
 import { Avatar } from "@/components/avatar";
 import { Dropdown, MenuSection } from "@/components/dropdown";
+import { PushAlerts } from "@/components/push-alerts";
 import { menuItemClass } from "@/components/menu-styles";
 import { ThemeSwitch } from "@/components/theme-toggle";
 import { signAvatar } from "@/lib/avatars";
@@ -79,6 +80,7 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
               ))
             )}
           </MenuSection>
+          {permissions.has("confirm_upi") && <PushAlerts />}
         </Dropdown>
 
         <Dropdown

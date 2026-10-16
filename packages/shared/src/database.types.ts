@@ -781,6 +781,34 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"push_sent": {
+                  Row: {
+                    "created_at": string,"key": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"key": string
+                  }
+                  Update: {
+                    "created_at"?: string,"key"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"push_subscriptions": {
+                  Row: {
+                    "auth": string,"created_at": string,"endpoint": string,"id": string,"p256dh": string,"user_agent": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "auth": string,"created_at"?: string,"endpoint": string,"id"?: string,"p256dh": string,"user_agent"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "auth"?: string,"created_at"?: string,"endpoint"?: string,"id"?: string,"p256dh"?: string,"user_agent"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"subscriptions": {
                   Row: {
                     "cancelled_at": string | null,"created_at": string,"created_by": string | null,"ends_on": string,"gym_id": string,"id": string,"member_id": string,"plan_id": string | null,"plan_name": string,"price_paise": number,"starts_on": string,"status": Database["public"]['Enums']["subscription_status"]
@@ -1135,6 +1163,9 @@ isOneToOne: false
 { Args: { "p_gym_id": string }; Returns: {
               "allowed": boolean,"editable": boolean,"is_default": boolean,"permission": string,"role": Database["public"]['Enums']["gym_role"]
             }[]
+                           },
+"permission_holders":
+{ Args: { "p_gym_id": string,"p_permission": string }; Returns: string[]
                            },
 "plan_gym_id":
 { Args: { "p_plan_id": string }; Returns: string
