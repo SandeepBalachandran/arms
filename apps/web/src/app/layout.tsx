@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Poppins } from "next/font/google";
+import { Suspense } from "react";
+import { NavProgress } from "@/components/nav-progress";
 import { RegisterPwa } from "@/components/register-pwa";
 import { Toaster } from "@/components/toaster";
 import { TooltipProvider } from "@/components/tooltip";
@@ -40,6 +42,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${poppins.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
+        {/* useSearchParams needs a Suspense boundary so pages can still prerender. */}
+        <Suspense fallback={null}>
+          <NavProgress />
+        </Suspense>
         <TooltipProvider>{children}</TooltipProvider>
         <Toaster />
         <RegisterPwa />

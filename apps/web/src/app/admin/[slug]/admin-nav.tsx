@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import {
   Apple,
+  Loader2,
   CalendarDays,
   CreditCard,
   Dumbbell,
@@ -21,6 +22,7 @@ import {
   ShieldCheck,
   Users,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import type { GymRole, Permission } from "@/lib/auth";
 
@@ -99,7 +101,7 @@ export function AdminNav(props: NavProps) {
           isActive(i) ? "bg-brand/15 font-medium text-foreground" : "text-muted hover:bg-border/40",
         )}
       >
-        <i.icon className="size-4" />
+        <NavIcon icon={i.icon} className="size-4" />
         {i.label}
         {!!count && (
           <span className="ml-auto rounded-full bg-danger px-1.5 text-[10.5px] font-bold text-white" aria-label={`${count} waiting`}>
@@ -166,7 +168,7 @@ export function BottomNav(props: NavProps) {
                   isActive(i) ? "border-brand bg-brand/10 font-medium" : "border-border",
                 )}
               >
-                <i.icon className="size-5" />
+                <NavIcon icon={i.icon} className="size-5" />
                 {i.label}
               </Link>
             ))}
@@ -186,7 +188,7 @@ export function BottomNav(props: NavProps) {
             onClick={close}
             className={tabClass(isActive(i))}
           >
-            <i.icon className="size-5" />
+            <NavIcon icon={i.icon} className="size-5" />
             {i.short}
           </Link>
         ))}
@@ -204,4 +206,11 @@ export function BottomNav(props: NavProps) {
       </nav>
     </>
   );
+}
+
+// A menu link's icon; a spinner from the tap until the page starts to show,
+// so a slow first load doesn't feel like a missed tap.
+function NavIcon({ icon: Icon, className }: { icon: LucideIcon; className: string }) {
+  const { pending } = useLinkStatus();
+  return pending ? <Loader2 aria-hidden className={clsx(className, "animate-spin text-brand")} /> : <Icon className={className} />;
 }

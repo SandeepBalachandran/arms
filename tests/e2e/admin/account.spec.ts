@@ -37,7 +37,8 @@ test("a member deletes their account", async ({ page }) => {
   await page.getByPlaceholder("you@example.com").fill(email);
   await page.locator("input[name=password]").fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+  // Members land in the member app (/go sends them on to /app); wait until they're there.
+  await page.waitForURL((url) => url.pathname.startsWith("/app"), { waitUntil: "load" });
 
   await page.goto("/account");
   await page.getByRole("button", { name: "Delete my account" }).click();

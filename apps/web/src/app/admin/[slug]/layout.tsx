@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AdminHeader } from "./admin-header";
 import { AdminNav, BottomNav } from "./admin-nav";
 import { BRAND } from "@gymos/shared";
+import { PageContent } from "@/components/nav-progress";
 
 // People waiting to join and UPI payments to confirm, for the sidebar.
 async function waitingCounts(gymId: string) {
@@ -44,7 +45,9 @@ export default async function AdminLayout({ children, params }: LayoutProps<"/ad
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <AdminHeader membership={membership} user={user} />
-        <main className="flex-1 p-4 pb-[calc(5rem+env(safe-area-inset-bottom))] md:p-8 print:p-0">{children}</main>
+        <main className="flex-1 p-4 pb-[calc(5rem+env(safe-area-inset-bottom))] md:p-8 print:p-0">
+          <PageContent>{children}</PageContent>
+        </main>
       </div>
       <div className="print:hidden">
         <BottomNav {...navProps} />
