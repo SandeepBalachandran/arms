@@ -6,7 +6,7 @@ import { getTheme } from "@/lib/theme";
 import { BRAND } from "@gymos/shared";
 
 const FEATURES = [
-  { icon: CreditCard, title: "Memberships & payments", text: "Plans, online renewals with Razorpay, cash entries and invoices." },
+  { icon: CreditCard, title: "Memberships & payments", text: "Plans, UPI renewals straight to your account with no fees, cash entries and receipts." },
   { icon: QrCode, title: "QR check-in", text: "Members show a rotating QR code; the front desk scans it." },
   { icon: CalendarDays, title: "Classes & bookings", text: "Schedules, capacity, waitlists and attendance." },
   { icon: Dumbbell, title: "Workouts & progress", text: "Trainer-built plans, workout logs and body metrics." },
@@ -45,6 +45,10 @@ export default async function Home() {
             Own a gym?{" "}
             <Link href="/register-gym" className="inline-flex items-center gap-1 font-medium text-brand hover:underline">
               Register your gym <ArrowRight className="size-3.5" />
+            </Link>
+            <span aria-hidden> · </span>
+            <Link href="/pricing" className="font-medium text-brand hover:underline">
+              Pricing
             </Link>
           </p>
         </div>
