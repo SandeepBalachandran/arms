@@ -62,8 +62,8 @@ export function NavProgress() {
 
   if (!loading) return null;
   return (
-    <div role="progressbar" aria-label="Loading page" className="pointer-events-none fixed inset-x-0 top-0 z-100 h-0.5">
-      <div className="nav-progress h-full origin-left bg-brand shadow-[0_0_8px] shadow-brand/60" />
+    <div role="progressbar" aria-label="Loading page" className="nav-progress-track pointer-events-none fixed inset-x-0 top-0 z-100 h-1 bg-brand/20">
+      <div className="nav-progress h-full origin-left rounded-r-full bg-brand shadow-[0_0_10px] shadow-brand/70" />
     </div>
   );
 }

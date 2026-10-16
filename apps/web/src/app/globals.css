@@ -66,11 +66,18 @@ body {
 /* Page-loading bar (components/nav-progress.tsx): appears after a short wait,
    then creeps towards the end until the page arrives. */
 @keyframes nav-progress {
-  from { transform: scaleX(0); }
+  from { transform: scaleX(0.12); }
   to { transform: scaleX(0.92); }
+}
+@keyframes nav-progress-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .nav-progress {
   animation: nav-progress 10s cubic-bezier(0.08, 0.8, 0.25, 1) 150ms both;
+}
+.nav-progress-track {
+  animation: nav-progress-in 150ms ease-out 150ms both;
 }
 @media (prefers-reduced-motion: reduce) {
   .nav-progress {
