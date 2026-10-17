@@ -7,9 +7,11 @@ import clsx from "clsx";
 const DEFAULT_RANGE: Record<SessionName, [string, string]> = { morning: ["05:00", "10:00"], evening: ["16:00", "21:00"] };
 const SESSION_LABELS: Record<SessionName, string> = { morning: "Morning", evening: "Evening" };
 
-// Phones: the two times share the row's width; wider screens: fixed size.
+// Phones: the two times share the row's width and drop the clock icon (a tap
+// opens the picker anyway), so the row fits even 320 px screens; wider
+// screens: fixed size with the icon.
 const timeInput =
-  "min-w-0 flex-1 sm:w-[6.5rem] sm:flex-none rounded-lg border border-border bg-surface px-2 py-1.5 text-sm tabular-nums outline-none focus:border-brand disabled:opacity-40";
+  "w-0 min-w-0 flex-1 rounded-lg border border-border bg-surface px-1.5 py-1.5 text-sm tabular-nums outline-none focus:border-brand disabled:opacity-40 max-sm:[&::-webkit-calendar-picker-indicator]:hidden sm:w-[6.5rem] sm:flex-none sm:px-2";
 
 // Week editor for opening hours: each day has an optional morning and evening
 // session. Posts the whole week as JSON in `opening_hours`.
@@ -26,11 +28,11 @@ export function HoursEditor({ defaultValue }: { defaultValue: OpeningHours }) {
   return (
     <div className="space-y-3">
       <input type="hidden" name="opening_hours" value={JSON.stringify(hours)} />
-      <div className="divide-y divide-border rounded-lg border border-border">
+      <div className="min-w-0 divide-y divide-border rounded-lg border border-border">
         {HOURS_DAYS.map((day) => {
           const closed = SESSIONS.every((s) => !hours[day][s]);
           return (
-            <div key={day} className="grid gap-2 p-3 sm:grid-cols-[6rem_1fr] sm:items-center">
+            <div key={day} className="grid min-w-0 gap-2 p-2.5 sm:grid-cols-[6rem_1fr] sm:items-center sm:p-3">
               <p className={clsx("text-sm font-medium", closed && "text-muted")}>
                 {HOURS_DAY_LABELS[day]}
                 {closed && <span className="ml-2 text-xs font-normal">Closed</span>}
@@ -39,8 +41,8 @@ export function HoursEditor({ defaultValue }: { defaultValue: OpeningHours }) {
                 {SESSIONS.map((session) => {
                   const range = hours[day][session];
                   return (
-                    <div key={session} className="flex w-full items-center gap-2 sm:w-auto">
-                      <label className="flex w-20 shrink-0 items-center gap-1.5 text-sm">
+                    <div key={session} className="flex w-full min-w-0 items-center gap-1.5 sm:w-auto sm:gap-2">
+                      <label className="flex w-[4.75rem] shrink-0 items-center gap-1.5 text-sm sm:w-20">
                         <input
                           type="checkbox"
                           checked={!!range}

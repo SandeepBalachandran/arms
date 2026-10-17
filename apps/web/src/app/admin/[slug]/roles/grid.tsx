@@ -39,6 +39,7 @@ export function PermissionGrid({ slug, cells, sectionsOff }: {
   // Team permissions don't apply to members, and the in-app ones are what members do.
   const applies = (p: PermissionInfo, role: GridRole) => (role === "member" ? p.group === MEMBER_GROUP : true);
 
+  const PLURAL: Record<GridRole, string> = { admin: "admins", staff: "front desk staff", trainer: "trainers", member: "members" };
   // Phones show one role at a time (the table is too wide for five columns).
   const phoneHide = (role: GridRole) => (role === phoneRole ? "" : "hidden md:table-cell");
 
@@ -60,12 +61,16 @@ export function PermissionGrid({ slug, cells, sectionsOff }: {
           </button>
         ))}
       </div>
-      <p className="mb-3 text-xs text-muted md:hidden">The owner can always do everything.</p>
+      <p className="mb-3 text-xs text-muted md:hidden">Ticked means allowed. The owner can always do everything.</p>
       <Card className="overflow-x-auto p-0">
         <table className="w-full text-sm md:min-w-[640px]">
           <thead>
             <tr className="border-b border-border text-left">
-              <th className="p-3 font-medium">Can…</th>
+              {/* Phones show one role, so name it; wider screens tick per column. */}
+              <th className="p-3 font-medium">
+                <span className="md:hidden">What {PLURAL[phoneRole]} can do</span>
+                <span className="hidden md:inline">What each role can do</span>
+              </th>
               <th className="hidden w-20 p-3 text-center font-medium md:table-cell">{ROLE_TITLES.owner}</th>
               {GRID_ROLES.map((r) => <th key={r} className={`w-20 p-3 text-center font-medium ${phoneHide(r)}`}>{ROLE_TITLES[r]}</th>)}
             </tr>
