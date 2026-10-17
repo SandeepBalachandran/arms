@@ -3,11 +3,12 @@
 // The site's own address, for links people open elsewhere (join links, QR
 // posters, sign-in emails). NEXT_PUBLIC_SITE_URL once there's a custom domain;
 // until then Vercel's production address (set by Vercel on every deploy), so a
-// missing setting never sends people to localhost.
+// missing setting never sends people to localhost. A localhost value copied
+// into Vercel's settings from .env.local is ignored there for the same reason.
 const vercelUrl = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_PROJECT_PRODUCTION_URL;
-export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || (vercelUrl ? `https://${vercelUrl}` : "http://localhost:3000")
-).replace(/[/]$/, "");
+const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL;
+const usableUrl = configuredUrl && !(vercelUrl && /\/\/(localhost|127\.0\.0\.1)\b/.test(configuredUrl)) ? configuredUrl : undefined;
+export const SITE_URL = (usableUrl || (vercelUrl ? `https://${vercelUrl}` : "http://localhost:3000")).replace(/[/]$/, "");
 
 // Android application id of the app (apps/mobile/app.json), for App Links.
 export const ANDROID_PACKAGE = process.env.NEXT_PUBLIC_ANDROID_PACKAGE ?? "com.gymos.app";
