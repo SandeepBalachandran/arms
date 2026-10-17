@@ -1,4 +1,4 @@
-import { addDays, FOOD_TYPE_LABELS, MEAL_LABELS, type Food, type FoodType, type MealSlot } from '@gymos/shared';
+import { addDays, FOOD_TYPE_LABELS, MEAL_LABELS, MEALS, type Food, type FoodType, type MealSlot } from '@gymos/shared';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Copy, Minus, Pencil, Plus, Search } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
@@ -16,6 +16,7 @@ import {
   useFoods,
   useNutritionProfile,
   useSaveMyFood,
+  useToday,
   type MyFoodInput,
   type NewFoodLog,
 } from '@/lib/nutrition';
@@ -26,7 +27,12 @@ export default function AddFoodScreen() {
   const theme = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { meal, day } = useLocalSearchParams<{ meal: MealSlot; day: string }>();
+  const params = useLocalSearchParams<{ meal?: string; day?: string }>();
+  const today = useToday();
+  // Opened without them (the installed app reopening on this screen, or a
+  // bookmarked link): today, and the meal for this time of day.
+  const day = params.day && /^\d{4}-\d{2}-\d{2}$/.test(params.day) ? params.day : today;
+  const meal: MealSlot = MEALS.includes(params.meal as MealSlot) ? (params.meal as MealSlot) : mealForNow();
   const foods = useFoods();
   const logs = useFoodLogs(7);
   const pref = useNutritionProfile().data?.food_pref;
@@ -374,4 +380,9 @@ function Chip({ icon, label, onPress }: { icon: React.ReactNode; label: string; 
       <Text style={{ fontSize: 13, fontWeight: '600' }}>{label}</Text>
     </Pressable>
   );
+}
+
+function mealForNow(): MealSlot {
+  const h = new Date().getHours();
+  return h < 7 ? 'early' : h < 11 ? 'breakfast' : h < 16 ? 'lunch' : h < 19 ? 'snack' : 'dinner';
 }

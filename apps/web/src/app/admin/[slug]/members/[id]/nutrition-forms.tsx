@@ -37,12 +37,15 @@ export function TargetForm({ slug, memberId, current, body }: {
     <form action={action} className="space-y-3">
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="member_id" value={memberId} />
-      <div className="grid grid-cols-3 gap-3">
+      {/* Phones: goal on its own row, the two numbers side by side under it. */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="col-span-2 sm:col-span-1">
         <Field label="Goal">
           <Select name="goal" value={goal} onChange={(e) => setGoal(e.target.value as NutritionGoal)}>
             {(Object.keys(GOAL_LABELS) as NutritionGoal[]).map((g) => <option key={g} value={g}>{GOAL_LABELS[g]}</option>)}
           </Select>
         </Field>
+        </div>
         <Field label="Calories / day">
           <Input ref={kcal} name="kcal" type="number" min={800} max={6000} step={10} defaultValue={current?.kcal ?? ""} required />
         </Field>
@@ -74,8 +77,9 @@ export function CommentForm({ slug, memberId, days }: { slug: string; memberId: 
     <ActionForm action={addNutritionComment} success="Comment sent" className="space-y-2">
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="member_id" value={memberId} />
-      <div className="flex gap-2">
-        <div className="w-36 shrink-0">
+      {/* Phones: the day on its own row, then the comment and Send. */}
+      <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+        <div className="w-full sm:w-36 sm:shrink-0">
           <Select name="day" defaultValue={days[0]?.value} aria-label="Day">
             {days.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
           </Select>

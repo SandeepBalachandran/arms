@@ -6,7 +6,7 @@ import brand from "./brand.json";
 // and renewal reminders ({app}).
 //   name     the product's name
 //   logo     the two-colour logo: first part in white/ink, second in lime
-//   tagline  after the name in the installed web app's full name
+//   tagline  the line under the name on the app's opening screen (/splash.js)
 //
 // To rename: edit brand.json, run `npm run brand` (redraws the splash image and
 // rewrites the sign-in emails in supabase/templates; paste those into the

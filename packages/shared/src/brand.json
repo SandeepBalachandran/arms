@@ -1,5 +1,8 @@
 {
   "name": "Squatpress",
-  "logo": ["Squat", "press"],
-  "tagline": "your gym"
+  "logo": [
+    "Squat",
+    "press"
+  ],
+  "tagline": "Your whole gym, in one app"
 }

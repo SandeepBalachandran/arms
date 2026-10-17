@@ -42,6 +42,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${poppins.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
+        {/* The installed app's animated opening screen; must run before the page paints. */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src="/splash.js" />
         {/* useSearchParams needs a Suspense boundary so pages can still prerender. */}
         <Suspense fallback={null}>
           <NavProgress />

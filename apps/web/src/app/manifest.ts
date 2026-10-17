@@ -5,7 +5,9 @@ import { BRAND } from "@gymos/shared";
 // /manifest.webmanifest. Its name comes from packages/shared/src/brand.ts.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${BRAND.name} — ${BRAND.tagline}`,
+    // The phone's own splash shows this under the icon; the animated opening
+    // screen with the tagline follows (app/splash.js/route.ts).
+    name: BRAND.name,
     short_name: BRAND.name,
     description: "Memberships, check-ins, classes and workouts. Members and gym staff sign in here.",
     id: "/",

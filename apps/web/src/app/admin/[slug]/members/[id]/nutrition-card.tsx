@@ -69,6 +69,18 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
   // Today is still in progress, so only finished days count towards "on target".
   const finished = logged.filter((d) => d !== today);
   const hits = target ? finished.filter((d) => onTarget(dayTotals(byDay.get(d)!).kcal, target.kcal)).length : 0;
+  const dayRow = (d: string) => {
+    const items = byDay.get(d)!;
+    const t = dayTotals(items);
+    const balance = target ? calorieBalance(t.kcal, target.kcal) : null;
+    const status = !items.length
+      ? { text: "Not logged", cls: "text-muted" }
+      : !target ? { text: `${items.length} items`, cls: "text-muted" }
+      : onTarget(t.kcal, target.kcal) ? { text: "On target ✓", cls: "text-brand font-medium" }
+      : balance!.over ? { text: balance!.label, cls: "text-amber-600 font-medium" }
+      : { text: balance!.label, cls: "text-sky-600 font-medium" };
+    return { items, t, status };
+  };
   const dayLabel = (d: string) => (d === today ? "Today" : d === addDays(today, -1) ? "Yesterday" : formatDay(d));
 
   return (
@@ -119,8 +131,34 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
         body={body}
       />
 
-      {/* Last 7 days */}
-      <div className="overflow-x-auto">
+      {/* Last 7 days. Phones: a block per day; wider screens: the table. */}
+      <ul className="divide-y divide-border rounded-lg border border-border text-sm sm:hidden">
+        {days.map((d) => {
+          const { items, t, status } = dayRow(d);
+          const lowProtein = target && items.length && d !== today && t.protein_g < target.protein_g * 0.8;
+          return (
+            <li key={d} className="px-3 py-2.5">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="font-medium">{dayLabel(d)}</p>
+                <p className={clsx("text-right", status.cls)}>{status.text}</p>
+              </div>
+              {items.length > 0 ? (
+                <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 tabular-nums text-muted">
+                  <span><span className="text-foreground">{t.kcal}</span>{target && <> / {target.kcal}</>} kcal</span>
+                  <span className={clsx(lowProtein && "text-amber-600")}>
+                    <span className={clsx(!lowProtein && "text-foreground")}>{Math.round(t.protein_g)} g</span>{target && <> / {target.protein_g}</>} protein
+                  </span>
+                  {water.get(d) ? <span className="inline-flex items-center gap-1"><Droplets className="size-3.5 text-sky-500" />{formatLitres(water.get(d)!)}</span> : null}
+                </p>
+              ) : water.get(d) ? (
+                <p className="mt-1 inline-flex items-center gap-1 text-muted"><Droplets className="size-3.5 text-sky-500" />{formatLitres(water.get(d)!)}</p>
+              ) : null}
+              {items.length > 0 && <Eaten items={items} />}
+            </li>
+          );
+        })}
+      </ul>
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-muted">
@@ -133,15 +171,7 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
           </thead>
           <tbody>
             {days.map((d) => {
-              const items = byDay.get(d)!;
-              const t = dayTotals(items);
-              const balance = target ? calorieBalance(t.kcal, target.kcal) : null;
-              const status = !items.length
-                ? { text: "Not logged", cls: "text-muted" }
-                : !target ? { text: `${items.length} items`, cls: "text-muted" }
-                : onTarget(t.kcal, target.kcal) ? { text: "On target ✓", cls: "text-brand font-medium" }
-                : balance!.over ? { text: balance!.label, cls: "text-amber-600 font-medium" }
-                : { text: balance!.label, cls: "text-sky-600 font-medium" };
+              const { items, t, status } = dayRow(d);
               return (
                 <tr key={d} className="border-b border-border align-top last:border-0">
                   <td className="py-2 pr-3 font-medium">{dayLabel(d)}</td>
@@ -156,19 +186,7 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
                   </td>
                   <td className="py-2">
                     <span className={status.cls}>{status.text}</span>
-                    {items.length > 0 && (
-                      <details className="mt-1 text-xs">
-                        <summary className="cursor-pointer text-muted hover:text-foreground">What they ate</summary>
-                        <ul className="mt-1 space-y-0.5">
-                          {MEALS.filter((m) => items.some((l) => l.meal === m)).map((m) => (
-                            <li key={m}>
-                              <span className="text-muted">{MEAL_LABELS[m]}:</span>{" "}
-                              {items.filter((l) => l.meal === m).map((l) => `${l.name}${Number(l.servings) !== 1 ? ` ×${Number(l.servings)}` : ""} (${l.kcal})`).join(", ")}
-                            </li>
-                          ))}
-                        </ul>
-                      </details>
-                    )}
+                    {items.length > 0 && <Eaten items={items} />}
                   </td>
                 </tr>
               );
@@ -222,5 +240,24 @@ export async function NutritionCard({ slug, memberId, myMemberId, today }: {
       )}
       <p className="text-xs text-muted">Calories are estimates from the food list. Not medical advice.</p>
     </Card>
+  );
+}
+
+type Log = { meal: (typeof MEALS)[number]; name: string; servings: number | string; kcal: number };
+
+/** The day's food by meal, folded away until opened. */
+function Eaten({ items }: { items: Log[] }) {
+  return (
+    <details className="mt-1 text-xs">
+      <summary className="cursor-pointer text-muted hover:text-foreground">What they ate</summary>
+      <ul className="mt-1 space-y-0.5">
+        {MEALS.filter((m) => items.some((l) => l.meal === m)).map((m) => (
+          <li key={m}>
+            <span className="text-muted">{MEAL_LABELS[m]}:</span>{" "}
+            {items.filter((l) => l.meal === m).map((l) => `${l.name}${Number(l.servings) !== 1 ? ` ×${Number(l.servings)}` : ""} (${l.kcal})`).join(", ")}
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }

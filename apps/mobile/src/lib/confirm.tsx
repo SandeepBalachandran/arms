@@ -1,4 +1,4 @@
-import { TriangleAlert } from 'lucide-react-native';
+import { TriangleAlert, type LucideIcon } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, View } from 'react-native';
 import Animated, { FadeIn, useReducedMotion, ZoomIn } from 'react-native-reanimated';
@@ -8,13 +8,18 @@ import { useTheme } from '@/hooks/use-theme';
 
 // In-app yes/no popup before a destructive action, styled like the app (no
 // system alert). Call confirm() from anywhere; <ConfirmHost /> in the root
-// layout shows it. Resolves true when confirmed.
+// layout shows it. Resolves true when confirmed. `tone: 'calm'` is for
+// everyday choices that lose nothing (signing out): dark, not red.
 
 type Request = {
   title: string;
   message?: string;
   confirmText: string;
   cancelText?: string;
+  tone?: 'danger' | 'calm';
+  icon?: LucideIcon;
+  // A small line in a pill under the message, e.g. "Signed in as …".
+  note?: string;
   resolve: (ok: boolean) => void;
 };
 
@@ -56,13 +61,30 @@ export function ConfirmHost() {
             accessibilityViewIsModal
             accessibilityRole="alert"
             style={{ width: '100%', maxWidth: 360, backgroundColor: theme.surface, borderRadius: 28, padding: 22, gap: 14, alignItems: 'center' }}>
-            <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(220,38,38,0.12)', alignItems: 'center', justifyContent: 'center' }}>
-              <TriangleAlert size={26} color={theme.danger} />
-            </View>
+            {request.tone === 'calm' ? (
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: theme.hero, alignItems: 'center', justifyContent: 'center' }}>
+                {(() => {
+                  const Icon = request.icon ?? TriangleAlert;
+                  return <Icon size={28} color={theme.accent} />;
+                })()}
+              </View>
+            ) : (
+              <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(220,38,38,0.12)', alignItems: 'center', justifyContent: 'center' }}>
+                {(() => {
+                  const Icon = request.icon ?? TriangleAlert;
+                  return <Icon size={26} color={theme.danger} />;
+                })()}
+              </View>
+            )}
             <View style={{ gap: 4, alignItems: 'center' }}>
               <Text style={{ fontSize: 19, fontWeight: '800', textAlign: 'center' }}>{request.title}</Text>
               {request.message && <Text variant="muted" style={{ textAlign: 'center' }}>{request.message}</Text>}
             </View>
+            {request.note && (
+              <View style={{ maxWidth: '100%', borderRadius: 999, backgroundColor: theme.surfaceMuted, paddingHorizontal: 14, paddingVertical: 6 }}>
+                <Text variant="small" numberOfLines={1} style={{ color: theme.textSecondary }}>{request.note}</Text>
+              </View>
+            )}
             <View style={{ alignSelf: 'stretch', gap: 10, marginTop: 4 }}>
               <Pressable
                 onPress={() => close(true)}
@@ -72,10 +94,10 @@ export function ConfirmHost() {
                   borderRadius: 999,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: theme.danger,
+                  backgroundColor: request.tone === 'calm' ? theme.hero : theme.danger,
                   opacity: pressed ? 0.8 : 1,
                 })}>
-                <Text style={{ color: '#ffffff', fontWeight: '700', fontSize: 16 }}>{request.confirmText}</Text>
+                <Text style={{ color: request.tone === 'calm' ? theme.heroText : '#ffffff', fontWeight: '700', fontSize: 16 }}>{request.confirmText}</Text>
               </Pressable>
               <Button title={request.cancelText ?? 'Cancel'} variant="secondary" onPress={() => close(false)} />
             </View>

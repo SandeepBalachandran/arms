@@ -61,7 +61,17 @@ export default function ProfileScreen() {
   }
 
   async function signOut() {
-    if (await confirm({ title: 'Sign out?', message: 'You can sign back in any time.', confirmText: 'Sign out' })) {
+    const email = session?.user.email;
+    const ok = await confirm({
+      tone: 'calm',
+      icon: LogOut,
+      title: 'Sign out?',
+      message: 'Your membership, workouts and food log stay saved. Sign back in any time with your email.',
+      note: email ? `Signed in as ${email}` : undefined,
+      confirmText: 'Sign out',
+      cancelText: 'Stay signed in',
+    });
+    if (ok) {
       saveSplashBrand(null);
       supabase.auth.signOut();
     }
