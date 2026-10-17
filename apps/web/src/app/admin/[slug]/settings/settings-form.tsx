@@ -43,7 +43,7 @@ export function SettingsCard({
         {readOnly ? (
           <p className="text-xs text-muted">Only the owner, or someone they allow under Roles &amp; permissions, can change this.</p>
         ) : (
-          <Button disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
+          <Button loading={pending}>{pending ? "Saving…" : "Save"}</Button>
         )}
       </form>
     </Card>

@@ -12,8 +12,7 @@ export const upiIdSchema = z
 export const utrSchema = z
   .string()
   .trim()
-  .toUpperCase()
-  .refine((v) => v === "" || /^[A-Z0-9]{6,35}$/.test(v), "Check the reference number");
+  .refine((v) => v === "" || /^\d{12}$/.test(v), "The UTR is the 12-digit number in your UPI app");
 
 // upi://pay link that opens GPay/PhonePe/Paytm with payee and amount filled in.
 // Some apps limit amount-prefilled links to personal UPI IDs, so screens should

@@ -19,7 +19,7 @@ export function NewPlanForm({ slug }: { slug: string }) {
         <Input name="description" placeholder="3 days a week, 45 minutes" />
       </Field>
       <FormError message={state?.error} />
-      <Button className="w-full" disabled={pending}>{pending ? "Creating…" : "Create plan"}</Button>
+      <Button className="w-full" loading={pending}>{pending ? "Creating…" : "Create plan"}</Button>
     </form>
   );
 }
@@ -46,7 +46,7 @@ export function NewExerciseForm({ slug }: { slug: string }) {
         </Field>
       </div>
       <FormError message={state?.error} />
-      <Button variant="secondary" disabled={pending}>{pending ? "Adding…" : "Add exercise"}</Button>
+      <Button variant="secondary" loading={pending}>{pending ? "Adding…" : "Add exercise"}</Button>
     </form>
   );
 }
@@ -141,7 +141,7 @@ export function PlanItemRow({
           </Field>
           <FormError message={state?.error} />
           <div className="flex gap-2">
-            <Button disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
+            <Button loading={pending}>{pending ? "Saving…" : "Save"}</Button>
             <Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
           </div>
         </form>
@@ -198,7 +198,7 @@ export function AddItemForm({
         <Input name="notes" placeholder="Slow on the way down" />
       </Field>
       <FormError message={state?.error} />
-      <Button className="w-full" disabled={pending}>{pending ? "Adding…" : "Add to plan"}</Button>
+      <Button className="w-full" loading={pending}>{pending ? "Adding…" : "Add to plan"}</Button>
     </form>
   );
 }

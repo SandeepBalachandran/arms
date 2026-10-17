@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BRAND } from "@gymos/shared";
 import { signOut } from "@/app/(auth)/actions";
+import { SubmitButton } from "@/components/submit-button";
 import { requirePlatformAdmin } from "@/lib/auth";
 
 export const metadata: Metadata = { title: { default: "Platform", template: `%s · Platform · ${BRAND.name}` } };
@@ -36,9 +37,9 @@ export default async function PlatformLayout({ children }: LayoutProps<"/platfor
             ))}
           </nav>
           <form action={signOut} className="ml-auto shrink-0">
-            <button className="text-sm text-muted hover:text-foreground" title={user.email ?? undefined}>
+            <SubmitButton className="text-sm text-muted hover:text-foreground" title={user.email ?? undefined}>
               Sign out
-            </button>
+            </SubmitButton>
           </form>
         </div>
       </header>

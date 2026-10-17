@@ -1,5 +1,6 @@
 import { membershipState, receiptView, todayIn } from '@gymos/shared';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 
 import { useActiveGym } from '@/lib/gyms';
@@ -67,12 +68,16 @@ export function useMyPayments() {
 }
 
 // UPI claims that need the member's attention: one waiting for the gym, and
-// any the gym rejected in the last 14 days.
+// any the gym rejected in the last 14 days. While one is waiting it's checked
+// every few seconds, so "Withdraw" disappears and the membership shows as soon
+// as the gym confirms (or rejects) it.
 export function usePaymentClaims() {
   const memberId = useActiveGym()?.memberId;
-  return useQuery({
+  const queryClient = useQueryClient();
+  const query = useQuery({
     queryKey: ['payment-claims', memberId],
     enabled: !!memberId,
+    refetchInterval: (q) => (q.state.data?.pending ? 8_000 : false),
     queryFn: async () => {
       const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
       const { data, error } = await supabase
@@ -89,6 +94,18 @@ export function usePaymentClaims() {
       };
     },
   });
+
+  // The waiting claim was just decided: refresh what it changed.
+  const waitingId = query.data?.pending?.id ?? null;
+  const lastWaiting = useRef(waitingId);
+  useEffect(() => {
+    if (lastWaiting.current && lastWaiting.current !== waitingId) {
+      for (const key of ['subscriptions', 'payments', 'notifications']) void queryClient.invalidateQueries({ queryKey: [key] });
+    }
+    lastWaiting.current = waitingId;
+  }, [waitingId, queryClient]);
+
+  return query;
 }
 
 // One paid payment with what it was for, laid out as a receipt.

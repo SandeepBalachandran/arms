@@ -10,6 +10,7 @@ import { ThemeSwitch } from "@/components/theme-toggle";
 import { signAvatar } from "@/lib/avatars";
 import { getMyGyms, getMyPermissions, STAFF_ROLES, TEAM_ROLES, type CurrentUser, type GymMembership } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { SubmitButton } from "@/components/submit-button";
 import { getTheme } from "@/lib/theme";
 
 // Top bar of the admin panel: gym name on the left; notifications and the
@@ -139,9 +140,9 @@ export async function AdminHeader({ membership, user }: { membership: GymMembers
 
           <MenuSection>
             <form action={signOut}>
-              <button role="menuitem" className={`${menuItemClass} text-danger`}>
+              <SubmitButton role="menuitem" className={`${menuItemClass} text-danger`}>
                 <LogOut className="size-4" /> Sign out
-              </button>
+              </SubmitButton>
             </form>
           </MenuSection>
         </Dropdown>

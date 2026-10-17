@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import clsx from "clsx";
-import { ArrowLeft, Eye, EyeOff, Loader2, Lock, Mail, MailCheck, UserRound } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Lock, Mail, MailCheck, UserRound } from "lucide-react";
 import { AuthField, AuthHeading, AuthInput } from "@/components/auth-shell";
 import { Button, FormError } from "@/components/ui";
 import { sendMagicLink, signIn, signUp } from "../actions";
@@ -152,8 +152,7 @@ function ModeForm({ mode, next, email, onEmailChange, onModeChange, linkError }:
           </AuthField>
         )}
         <FormError message={state?.error} />
-        <Button className="h-11 w-full rounded-xl text-base" disabled={pending}>
-          {pending && <Loader2 className="size-4 animate-spin" />}
+        <Button className="h-11 w-full rounded-xl text-base" loading={pending}>
           {pending ? "Please wait…" : copy.submit}
         </Button>
       </form>

@@ -20,7 +20,7 @@ export function PasswordForm() {
         </Field>
       </div>
       <FormError message={state?.error} />
-      <Button variant="secondary" disabled={pending}>{pending ? "Saving…" : "Update password"}</Button>
+      <Button variant="secondary" loading={pending}>{pending ? "Saving…" : "Update password"}</Button>
     </form>
   );
 }

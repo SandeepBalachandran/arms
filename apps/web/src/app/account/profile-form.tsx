@@ -17,7 +17,7 @@ export function ProfileForm({ fullName, phone }: { fullName: string; phone: stri
         <Input name="phone" type="tel" defaultValue={phone} autoComplete="tel" />
       </Field>
       <FormError message={state?.error} />
-      <Button disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
+      <Button loading={pending}>{pending ? "Saving…" : "Save"}</Button>
     </form>
   );
 }

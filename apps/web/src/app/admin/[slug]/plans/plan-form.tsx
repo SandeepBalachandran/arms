@@ -115,7 +115,7 @@ function PlanForm({ slug, currency, classesEnabled, plan, onSaved }: {
         <Input name="sort_order" type="number" min={0} defaultValue={plan?.sort_order ?? 0} />
       </Field>
       <FormError message={state?.error} />
-      <Button className="w-full" disabled={pending}>{pending ? "Saving…" : plan ? "Save changes" : "Create plan"}</Button>
+      <Button className="w-full" loading={pending}>{pending ? "Saving…" : plan ? "Save changes" : "Create plan"}</Button>
     </form>
   );
 }

@@ -96,7 +96,7 @@ function ManualForm({ slug, countryCode }: { slug: string; countryCode: string }
         <Input name="email" type="email" autoComplete="off" />
       </Field>
       <FormError message={state?.error} />
-      <Button className="w-full" disabled={pending}>
+      <Button className="w-full" loading={pending}>
         {pending ? "Adding…" : "Add member"}
       </Button>
       <p className="text-center text-xs text-muted">Next you can record their first payment.</p>

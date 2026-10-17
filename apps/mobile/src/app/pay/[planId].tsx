@@ -165,10 +165,12 @@ export default function PayScreen() {
         <Input
           label="UPI reference number (optional)"
           value={utr}
-          onChangeText={setUtr}
-          autoCapitalize="characters"
+          // UTRs are 12 digits: only digits go in, and no more than 12.
+          onChangeText={(text) => setUtr(text.replace(/\D/g, '').slice(0, 12))}
           autoCorrect={false}
-          keyboardType="default"
+          keyboardType="number-pad"
+          inputMode="numeric"
+          maxLength={12}
           placeholder="12-digit UTR from your UPI app"
         />
         {error && <Text variant="error">{error}</Text>}

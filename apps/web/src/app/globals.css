@@ -95,3 +95,24 @@ body {
 .nav-skeleton {
   animation: nav-skeleton 2s cubic-bezier(0.4, 0, 0.6, 1) 150ms infinite backwards;
 }
+
+/* A button that is waiting on the server (ActionForm marks the one that was
+   clicked): a small spinner before its label, in the label's colour. */
+@keyframes button-spin {
+  to { transform: rotate(360deg); }
+}
+[data-loading]::before {
+  content: "";
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.45em;
+  vertical-align: -0.12em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 9999px;
+  animation: button-spin 0.7s linear infinite;
+}
+[data-loading] {
+  cursor: progress;
+}

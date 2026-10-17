@@ -8,14 +8,14 @@ import { getTheme } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: `One plan with everything, ${rupees(PRICING.monthly)} a month. No setup fee, first month free.`,
+  description: `One plan with everything, ${rupees(PRICING.monthly)} a month. First month free, nothing to pay to start.`,
 };
 
 // Public pricing for gym owners. Linked from the home page ("Own a gym?"),
 // not from sign-in, so members don't come across it. Prices: packages/shared/src/pricing.ts.
 
 const INCLUDED: { group: string; items: string[] }[] = [
-  { group: "Members & money", items: ["Members join from one WhatsApp link", "Plans, renewals and receipts", "UPI straight to your account, ₹0 fees", "Cash and card entries", "WhatsApp renewal reminders", "Import members from Excel"] },
+  { group: "Members & money", items: ["Members join from one WhatsApp link", "Plans, renewals and receipts", "UPI straight to your account, ₹0 fees", "Cash and card entries", "One-tap WhatsApp renewal reminders", "Import members from Excel"] },
   { group: "Front desk", items: ["QR check-in, no biometric machine", "Live visits today", "Phone alert when a member pays by UPI"] },
   { group: "Training", items: ["Classes, bookings and waitlists", "Workout plans with how-to videos", "Food and water coaching", "PT packages and sessions", "Progress and weigh-ins"] },
   { group: "Your team", items: ["Owner, admin, front desk and trainers", "You decide who can do what", "Activity log nobody can delete", "Members' app in English and മലയാളം"] },
@@ -24,6 +24,7 @@ const INCLUDED: { group: string; items: string[] }[] = [
 const FAQ: { q: string; a: string }[] = [
   { q: "Do my members pay anything?", a: `No. The member app is free for your members. Only the gym pays for ${BRAND.name}.` },
   { q: "Are there fees on UPI payments?", a: "No. Members pay to your own UPI ID, so the money reaches your bank account in full. We never touch it." },
+  { q: "Is there a registration fee?", a: `Yes, ${rupees(PRICING.registrationFee)} once. It's added to your first payment, after the free month, so you never pay it before you've tried the app. Once paid, it isn't refunded.` },
   { q: "What if I pay you late?", a: "Nothing stops. We'll remind you, and your gym keeps running as usual. Your members won't notice a thing." },
   { q: "Do I need a computer?", a: "No. Everything works on a phone: you, your front desk and your trainers. Install it from the browser in a few seconds." },
   { q: "Who sets it up?", a: "You can do it yourself in a few minutes. Or we'll do it with you, free: import your members from Excel, print your QR poster and show your staff around." },
@@ -50,7 +51,7 @@ export default async function PricingPage() {
         <p className="text-sm font-semibold uppercase tracking-widest text-brand">Pricing for gym owners</p>
         <h1 className="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">One plan. Everything included.</h1>
         <p className="mx-auto mt-3 max-w-xl text-muted">
-          No setup fee. First month free. No per-member charges, no contract.
+          First month free, nothing to pay to start. No per-member charges, no contract.
         </p>
       </section>
 
@@ -66,7 +67,7 @@ export default async function PricingPage() {
               {rupees(PRICING.founding.monthly)}<span className="text-lg font-medium text-white/70"> /month, locked for life</span>
             </p>
             <p className="mt-1 max-w-xl text-sm text-white/70">
-              Join early, help us shape the app with your feedback, and your price never goes up, for as long as you stay.
+              Join early, help us shape the app with your feedback, and your monthly price never goes up, for as long as you stay.
             </p>
           </div>
           <Link href="/register-gym" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#c8f04b] px-5 py-3 font-semibold text-[#141a04]">
@@ -88,6 +89,9 @@ export default async function PricingPage() {
       </section>
       <p className="mt-3 text-center text-sm text-muted">
         Both include everything below, for unlimited members and staff. {PRICING.freeMonths === 1 ? "The first month is free" : `The first ${PRICING.freeMonths} months are free`}, with no payment needed to start.
+      </p>
+      <p className="mt-1 text-center text-sm text-muted">
+        A one-time registration fee of {rupees(PRICING.registrationFee)} is added to your first payment, after the free month. It isn&apos;t refunded once paid.
       </p>
 
       {/* Everything included */}
@@ -115,14 +119,14 @@ export default async function PricingPage() {
         <h2 className="text-xl font-bold tracking-tight">Your first year, compared</h2>
         <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
           <div className="rounded-lg bg-border/30 p-4">
-            <p className="text-muted">Typical gym software</p>
+            <p className="text-muted">Typical gym app</p>
             <p className="mt-1 text-2xl font-bold">{rupees(typicalFirstYear)}</p>
             <p className="mt-1 text-muted">{rupees(3000)} setup + about {rupees(400)} a month</p>
           </div>
           <div className="rounded-lg border border-brand/40 bg-brand/10 p-4">
             <p className="font-medium text-brand">{BRAND.name}, yearly</p>
-            <p className="mt-1 text-2xl font-bold">{rupees(PRICING.yearly)}</p>
-            <p className="mt-1 text-muted">No setup fee, and the first month free</p>
+            <p className="mt-1 text-2xl font-bold">{rupees(PRICING.yearly + PRICING.registrationFee)}</p>
+            <p className="mt-1 text-muted">{rupees(PRICING.yearly)} a year + {rupees(PRICING.registrationFee)} registration, and the first month free</p>
           </div>
         </div>
       </section>

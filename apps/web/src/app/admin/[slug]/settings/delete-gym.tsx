@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Download, Loader2, Trash2 } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { Modal } from "@/components/modal";
 import { Button, Card, FormError, Input } from "@/components/ui";
 import { deleteGym } from "./delete-actions";
@@ -61,8 +61,7 @@ function DeleteGymForm({ slug }: { slug: string }) {
         <Input name="confirm" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" spellCheck={false} />
       </label>
       <FormError message={state?.error} />
-      <Button variant="danger" className="w-full" disabled={!matches || pending}>
-        {pending && <Loader2 className="size-4 animate-spin" />}
+      <Button variant="danger" className="w-full" loading={pending} disabled={!matches || pending}>
         {pending ? "Deleting…" : "Delete gym"}
       </Button>
     </form>

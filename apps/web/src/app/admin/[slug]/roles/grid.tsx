@@ -131,7 +131,7 @@ export function PermissionGrid({ slug, cells, sectionsOff }: {
         </table>
       </Card>
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <Button disabled={pending || !dirty}>{pending ? "Saving…" : "Save changes"}</Button>
+        <Button loading={pending} disabled={pending || !dirty}>{pending ? "Saving…" : "Save changes"}</Button>
         {dirty && <span className="text-sm text-muted">Unsaved changes</span>}
         <span className="ml-auto inline-flex items-center gap-2 text-xs text-muted">
           <span className="inline-block size-3 rounded ring-2 ring-amber-400/70" /> Changed from the default

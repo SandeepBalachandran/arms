@@ -71,7 +71,7 @@ export function GuideForm({ slug, exerciseId, initial }: {
         />
       </Field>
       <FormError message={state?.error} />
-      <Button disabled={pending}>{pending ? "Saving…" : "Save guide"}</Button>
+      <Button loading={pending}>{pending ? "Saving…" : "Save guide"}</Button>
     </form>
   );
 }

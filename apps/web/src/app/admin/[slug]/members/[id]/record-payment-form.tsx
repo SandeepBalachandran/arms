@@ -70,7 +70,7 @@ export function RecordPaymentForm({
         <Input name="note" placeholder="UPI ref, discount reason…" maxLength={300} />
       </Field>
       <FormError message={state?.error} />
-      <Button className="w-full" disabled={pending}>
+      <Button className="w-full" loading={pending}>
         {pending ? "Saving…" : "Record payment"}
       </Button>
     </form>

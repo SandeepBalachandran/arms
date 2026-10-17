@@ -46,7 +46,7 @@ function FoodForm({ slug, onSaved }: { slug: string; onSaved: () => void }) {
         <Field label="Fat g"><Input name="fat_g" type="number" min={0} step="0.1" defaultValue={0} /></Field>
       </div>
       <FormError message={state?.error} />
-      <Button className="w-full" disabled={pending}>{pending ? "Adding…" : "Add food"}</Button>
+      <Button className="w-full" loading={pending}>{pending ? "Adding…" : "Add food"}</Button>
     </form>
   );
 }

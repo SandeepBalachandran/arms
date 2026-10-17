@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Loader2, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { deleteMyAccount } from "@/app/account/actions";
 import { Modal } from "@/components/modal";
 import { Button, FormError, Input } from "@/components/ui";
@@ -43,8 +43,7 @@ function DeleteAccountForm() {
         <Input name="confirm" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" spellCheck={false} />
       </label>
       <FormError message={state?.error} />
-      <Button variant="danger" className="w-full" disabled={confirm.trim().toUpperCase() !== "DELETE" || pending}>
-        {pending && <Loader2 className="size-4 animate-spin" />}
+      <Button variant="danger" className="w-full" loading={pending} disabled={confirm.trim().toUpperCase() !== "DELETE" || pending}>
         {pending ? "Deleting…" : "Delete my account"}
       </Button>
     </form>

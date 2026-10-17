@@ -15,7 +15,7 @@ import {
 import { Redirect, useRouter } from 'expo-router';
 import { Droplets, MessageCircle, Plus, Salad, Settings2, Undo2, X } from 'lucide-react-native';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
 import { Appear, GrowBar, GrowFill } from '@/components/motion';
@@ -322,9 +322,13 @@ function MealCard({ meal, day, items }: { meal: MealSlot; day: string; items: Lo
             <Text variant="small">{Math.round(Number(l.protein_g))} g protein</Text>
           </View>
           <Text style={{ fontWeight: '700' }}>{l.kcal}</Text>
-          <Pressable onPress={() => onRemove(l)} hitSlop={8} accessibilityLabel={`Remove ${l.name}`}>
-            <X size={16} color={theme.textSecondary} />
-          </Pressable>
+          {remove.isPending && remove.variables === l.id ? (
+            <ActivityIndicator size="small" color={theme.textSecondary} accessibilityLabel={`Removing ${l.name}`} />
+          ) : (
+            <Pressable onPress={() => onRemove(l)} disabled={remove.isPending} hitSlop={8} accessibilityLabel={`Remove ${l.name}`}>
+              <X size={16} color={theme.textSecondary} />
+            </Pressable>
+          )}
         </View>
       ))}
     </Card>

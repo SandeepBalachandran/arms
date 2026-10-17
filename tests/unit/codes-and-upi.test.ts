@@ -15,10 +15,13 @@ describe("UPI ID", () => {
     expect(link).toBe("upi://pay?pa=arms@okhdfcbank&pn=Arms%20Fitness&am=1499.50&cu=INR&tn=Monthly%20plan");
   });
 
-  it("reference numbers are optional and upper-cased", () => {
-    expect(utrSchema.parse(" ab12cd34ef56 ")).toBe("AB12CD34EF56");
+  it("reference numbers are optional and exactly 12 digits", () => {
+    expect(utrSchema.parse(" 412345678901 ")).toBe("412345678901");
     expect(utrSchema.safeParse("").success).toBe(true);
     expect(utrSchema.safeParse("12-34").success).toBe(false);
+    expect(utrSchema.safeParse("41234567890").success).toBe(false);
+    expect(utrSchema.safeParse("4123456789012").success).toBe(false);
+    expect(utrSchema.safeParse("AB12CD34EF56").success).toBe(false);
   });
 });
 

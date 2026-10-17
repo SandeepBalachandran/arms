@@ -53,7 +53,7 @@ export function TargetForm({ slug, memberId, current, body }: {
       {hint && <p className="text-xs text-muted">{hint}</p>}
       <FormError message={state?.error} />
       <div className="flex flex-wrap gap-2">
-        <Button disabled={pending}>{pending ? "Saving…" : current ? "Update targets" : "Set targets"}</Button>
+        <Button loading={pending}>{pending ? "Saving…" : current ? "Update targets" : "Set targets"}</Button>
         <Button
           type="button"
           variant="secondary"

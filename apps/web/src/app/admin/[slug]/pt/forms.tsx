@@ -132,7 +132,7 @@ function PackageForm({ slug, currency, pkg, onSaved }: { slug: string; currency:
         <Input name="sort_order" type="number" min={0} defaultValue={pkg?.sort_order ?? 0} />
       </Field>
       <FormError message={state?.error} />
-      <Button className="w-full" disabled={pending}>{pending ? "Saving…" : pkg ? "Save changes" : "Create package"}</Button>
+      <Button className="w-full" loading={pending}>{pending ? "Saving…" : pkg ? "Save changes" : "Create package"}</Button>
     </form>
   );
 }
@@ -214,7 +214,7 @@ function SellForm({ slug, currency, packages, trainers, methods, member, members
         <Input name="note" placeholder="UPI ref, discount reason…" maxLength={300} />
       </Field>
       <FormError message={state?.error} />
-      <Button className="w-full" disabled={pending}>{pending ? "Saving…" : "Record sale"}</Button>
+      <Button className="w-full" loading={pending}>{pending ? "Saving…" : "Record sale"}</Button>
     </form>
   );
 }
@@ -269,7 +269,7 @@ function LogForm({ slug, ptSubscriptionId, today, minDate, onSaved }: {
         <Input name="notes" maxLength={300} placeholder="Legs + core, increased squat to 60 kg" autoFocus />
       </Field>
       <FormError message={state?.error} />
-      <Button className="w-full" disabled={pending}>{pending ? "Saving…" : "Log session"}</Button>
+      <Button className="w-full" loading={pending}>{pending ? "Saving…" : "Log session"}</Button>
     </form>
   );
 }

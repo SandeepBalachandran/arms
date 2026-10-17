@@ -114,7 +114,7 @@ function EditDetailsForm({ slug, memberId, fullName, phone, onSaved }: {
       </Field>
       <p className="text-xs text-muted">This updates the member&apos;s profile, which they also see in the app.</p>
       <FormError message={state?.error} />
-      <Button className="w-full" disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
+      <Button className="w-full" loading={pending}>{pending ? "Saving…" : "Save"}</Button>
     </form>
   );
 }

@@ -1,0 +1,73 @@
+# Nightly backup of the hosted Supabase project (the free plan keeps none).
+# Dumps roles, schema and data with the Supabase CLI, downloads storage files,
+# encrypts the lot with BACKUP_PASSPHRASE (this repo is public, so artifacts
+# must be unreadable without it) and keeps each night's copy for 30 days.
+# Restore steps: docs/BACKUPS.md.
+#
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL        session pooler string with the password filled in
+#   SUPABASE_URL           https://<ref>.supabase.co
+#   SUPABASE_SECRET_KEY    secret key, for reading storage
+#   BACKUP_PASSPHRASE      long random phrase; keep a copy somewhere safe
+name: Nightly database backup
+
+on:
+  schedule:
+    - cron: "30 21 * * *" # 03:00 IST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Dump database
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p backup
+          supabase db dump --db-url "$DB_URL" -f backup/roles.sql --role-only
+          supabase db dump --db-url "$DB_URL" -f backup/schema.sql
+          supabase db dump --db-url "$DB_URL" -f backup/data.sql --use-copy --data-only
+          ls -l backup
+
+      - name: Download storage files
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: node scripts/backup-storage.mjs backup/storage
+
+      - name: Encrypt
+        env:
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          test -n "$PASSPHRASE" || { echo "BACKUP_PASSPHRASE is not set"; exit 1; }
+          name="squatpress-$(date -u +%Y-%m-%d)"
+          tar czf - backup | gpg --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" \
+            --symmetric --cipher-algo AES256 -o "$name.tar.gz.gpg"
+          rm -rf backup
+          echo "NAME=$name" >> "$GITHUB_ENV"
+          ls -l "$name.tar.gz.gpg"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}
+          path: ${{ env.NAME }}.tar.gz.gpg
+          retention-days: 30
+          compression-level: 0

@@ -122,8 +122,7 @@ export function RegisterGymForm({ siteUrl }: { siteUrl: string }) {
       </div>
 
       <FormError message={state?.error} />
-      <Button className="h-11 w-full rounded-xl text-base" disabled={pending || taken || check === "checking"}>
-        {pending && <Loader2 className="size-4 animate-spin" />}
+      <Button className="h-11 w-full rounded-xl text-base" loading={pending} disabled={pending || taken || check === "checking"}>
         {pending ? "Creating…" : "Create gym"}
       </Button>
     </form>

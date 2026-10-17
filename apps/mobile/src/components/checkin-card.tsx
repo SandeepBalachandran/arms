@@ -2,7 +2,7 @@ import { checkinOpenNow, describeOpenStatus, openStatus, parseOpeningHours } fro
 import { useRouter } from 'expo-router';
 import { CircleCheck, Moon, QrCode, ScanLine } from 'lucide-react-native';
 import { useEffect, useState, type ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 
 import { Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
@@ -83,6 +83,7 @@ export function CheckinCard() {
                   label={checkIn.isPending ? 'Checking in…' : 'Check in'}
                   primary
                   disabled={checkIn.isPending}
+                  busy={checkIn.isPending}
                   onPress={() => checkIn.mutate()}
                 />
               )}
@@ -104,8 +105,9 @@ export function CheckinCard() {
   );
 }
 
-function CardButton({ icon, label, a11y, primary, disabled, onPress }: {
+function CardButton({ icon, label, a11y, primary, disabled, busy, onPress }: {
   icon: ReactNode;
+  busy?: boolean;
   label: string;
   a11y?: string;
   primary?: boolean;
@@ -120,7 +122,7 @@ function CardButton({ icon, label, a11y, primary, disabled, onPress }: {
       accessibilityRole="button"
       accessibilityLabel={a11y ?? label}
       style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 48, borderRadius: 999, backgroundColor: primary ? theme.accent : theme.surfaceMuted, opacity: pressed || disabled ? 0.7 : 1 })}>
-      {icon}
+      {busy ? <ActivityIndicator size="small" color={primary ? theme.accentText : theme.text} /> : icon}
       <Text style={{ fontWeight: '800', color: primary ? theme.accentText : theme.text }}>{label}</Text>
     </Pressable>
   );

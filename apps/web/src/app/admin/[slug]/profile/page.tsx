@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getTheme } from "@/lib/theme";
 import { signOutEverywhere } from "./actions";
 import { PasswordForm } from "./password-form";
+import { SubmitButton } from "@/components/submit-button";
 import { BRAND } from "@gymos/shared";
 
 export const metadata: Metadata = { title: "My profile" };
@@ -94,9 +95,9 @@ export default async function ProfilePage({ params }: PageProps<"/admin/[slug]/p
           <PasswordForm />
           <form action={signOutEverywhere} className="mt-4 border-t border-border pt-4">
             <p className="mb-2 text-sm text-muted">Lost a phone or used a shared computer? Sign out of {BRAND.name} on every device.</p>
-            <button className="rounded-lg border border-border px-3 py-1.5 text-sm text-danger hover:bg-danger/10">
+            <SubmitButton className="rounded-lg border border-border px-3 py-1.5 text-sm text-danger hover:bg-danger/10">
               Sign out everywhere
-            </button>
+            </SubmitButton>
           </form>
         </Section>
 
@@ -139,9 +140,9 @@ export default async function ProfilePage({ params }: PageProps<"/admin/[slug]/p
         </Section>
 
         <form action={signOut}>
-          <button className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm hover:bg-border/40">
+          <SubmitButton className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm hover:bg-border/40">
             <LogOut className="size-4" /> Sign out
-          </button>
+          </SubmitButton>
         </form>
       </div>
     </>

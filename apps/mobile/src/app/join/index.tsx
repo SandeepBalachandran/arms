@@ -27,7 +27,7 @@ export default function JoinWithCodeScreen() {
         <Card key={m.memberId}>
           <Text variant="heading">Waiting for {m.gym.name}</Text>
           <Text variant="muted">Your request to join is waiting for the front desk to approve it.</Text>
-          <Button title="Check again" variant="secondary" onPress={() => pending.refetch()} />
+          <Button title="Check again" variant="secondary" loading={pending.isFetching} onPress={() => pending.refetch()} />
         </Card>
       ))}
       <Text variant="muted">

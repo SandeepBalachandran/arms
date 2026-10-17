@@ -4,7 +4,7 @@ Everything you pay for to take Squatpress live: the web admin, the member app, t
 
 - **Prices checked:** October 2026. Providers change prices often, so check each link in [Sources](#sources) before paying.
 - **Exchange rate:** about **₹88 per US dollar**. Most of these services bill in dollars.
-- **Bottom line:** a production launch costs about **₹4,500–5,500 a month**, plus about **₹3,000–10,000 one time**. Messaging (WhatsApp/SMS) is extra and grows with the number of members; pass it on to gyms.
+- **Bottom line:** a production launch costs about **₹4,500–5,500 a month**, plus about **₹3,000–10,000 one time**. Messaging (WhatsApp/SMS) is extra and grows with the number of members; pass offer messages on to gyms. At ₹349–499 per gym a month, monthly fees cover costs from about **20 gyms**; until then the ₹2,500 registration fees carry it (section 5).
 
 ---
 
@@ -18,6 +18,7 @@ Everything you pay for to take Squatpress live: the web admin, the member app, t
 | Vercel | Hosts the web admin, join pages and posters | Pro, 1 seat | $20 (≈ ₹1,760) |
 | Expo EAS | Builds the Android/iOS app | Free | ₹0 |
 | Resend | Sign-in and confirmation emails | Free (3,000/month) | ₹0 |
+| Web push | Phone alerts to the gym when a member pays by UPI | Free (Google's and Apple's push services) | ₹0 |
 | Domain | `yourbrand.in` or `.com` | — | ≈ ₹100 (₹1,000–1,800 a year) |
 | **Subtotal** | | | **≈ ₹4,060** |
 | GST and card fees | 18% GST on foreign services, about 3.5% forex markup | | ≈ ₹700–900 |
@@ -194,11 +195,40 @@ All monthly, including GST and card fees. Messaging assumes WhatsApp login codes
 | **All in** | **≈ ₹5,600–7,100** | **≈ ₹12,300** | **≈ ₹34,000** |
 | **Cost per gym** | ₹1,100–7,000 | ≈ ₹600 | ≈ ₹340 |
 
-At 20+ gyms, the platform costs **about ₹300–600 per gym per month**, so a Squatpress subscription of ₹999–1,999 per gym leaves a healthy margin.
+At 20+ gyms, the platform costs **about ₹200–500 per gym per month** (leaving out offer messages, which gyms pay for; see section 6). That's close to what a gym pays, so the margin is thin until there are many gyms. See the next section.
 
 ---
 
-## 5. Who should pay for what
+## 5. Revenue vs costs
+
+What gyms pay (the public `/pricing` page; amounts in `packages/shared/src/pricing.ts`):
+
+| | Founding gyms (first 5) | Other gyms |
+|---|---|---|
+| 1st month | Free | Free |
+| 2nd month | ₹2,500 registration (not refunded) + ₹349 | ₹2,500 registration (not refunded) + ₹499, or ₹4,990 for the year |
+| After that | ₹349 a month, locked for life | ₹499 a month, or ₹4,990 a year (≈ ₹416 a month) |
+
+Monthly, using the scenarios above. Costs leave out WhatsApp offer messages, because gyms buy those as credits (section 6). Revenue assumes everyone pays monthly and is before GST.
+
+| | Pilot | Growing | Established |
+|---|---|---|---|
+| Gyms | 5 (all founding) | 20 | 100 |
+| You earn | ₹1,745 | ≈ ₹9,200 | ≈ ₹49,000 |
+| You pay | ≈ ₹5,100–6,600 | ≈ ₹9,800 | ≈ ₹21,500 |
+| **Each month** | **−₹3,400 to −₹4,900** | **≈ break-even** | **≈ +₹27,500** |
+| Registration fees (once) | ₹12,500 | ₹50,000 | ₹2,50,000 |
+
+**What it means:**
+- **Monthly fees alone break even at about 20 gyms.** Below that, the registration fees carry the costs: the 5 founding gyms' ₹12,500 covers about 2–3 months.
+- **Yearly plans bring in less a month but arrive up front.** A gym on ₹4,990 a year pays about ₹416 a month, against ₹499 monthly.
+- **Gyms must pay for offer messages.** At 100 gyms, offers are about ₹12,500 a month, more than half the platform cost.
+- **Cheapest start:** with only a pilot gym or two, you can stay on the free Supabase and Vercel plans for testing. Move to Pro (≈ ₹4,800 a month) when the first gym pays. Supabase Free pauses after a week without use, so don't run a paying gym on it.
+- **GST:** registration becomes compulsory above ₹20 lakh a year in revenue. Once registered, add 18% to gyms' bills (₹499 becomes ≈ ₹589); the pricing page already says "plus GST if applicable". You can then claim back the GST you pay on Supabase and Vercel.
+
+---
+
+## 6. Who should pay for what
 
 | Cost | Who pays | How |
 |---|---|---|
@@ -210,7 +240,7 @@ At 20+ gyms, the platform costs **about ₹300–600 per gym per month**, so a S
 
 ---
 
-## 6. Launch checklist (in order)
+## 7. Launch checklist (in order)
 
 1. **Supabase Pro** ($25), and turn on billing alerts.
 2. **Domain:** buy it, then point it at Vercel.

@@ -64,7 +64,7 @@ function ClassTypeForm({ slug, type, onSaved }: { slug: string; type?: ClassType
       </Field>
       {type && <p className="text-xs text-muted">Changes apply to classes you schedule from now on.</p>}
       <FormError message={state?.error} />
-      <Button className="w-full" disabled={pending}>{pending ? "Saving…" : type ? "Save changes" : "Add class type"}</Button>
+      <Button className="w-full" loading={pending}>{pending ? "Saving…" : type ? "Save changes" : "Add class type"}</Button>
     </form>
   );
 }
@@ -176,7 +176,7 @@ function SeriesForm({ slug, types, trainers, defaultStart, today, onSaved }: Ser
         )}
       </p>
       <FormError message={state?.error} />
-      <Button className="w-full" disabled={pending || count === 0}>
+      <Button className="w-full" loading={pending} disabled={pending || count === 0}>
         {pending ? "Scheduling…" : count > 0 ? `Schedule ${count} ${count === 1 ? "class" : "classes"}` : "Schedule classes"}
       </Button>
     </form>

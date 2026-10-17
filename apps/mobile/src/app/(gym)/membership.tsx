@@ -28,6 +28,7 @@ export default function MembershipScreen() {
   const pending = claims.data?.pending;
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
   const currency = gym?.currency ?? 'INR';
   // Cheapest per day among plans of different lengths gets a "Best value" tag.
   const perDay = (plans.data ?? []).map((p) => ({ id: p.id, rate: p.price_paise / Math.max(1, p.duration_days), days: p.duration_days }));
@@ -63,9 +64,12 @@ export default function MembershipScreen() {
             <Button
               title="Withdraw (payment didn’t go through)"
               variant="secondary"
+              loading={withdrawing}
               onPress={async () => {
+                setWithdrawing(true);
                 await supabase.rpc('withdraw_upi_payment', { p_payment_id: pending.id });
-                claims.refetch();
+                await claims.refetch();
+                setWithdrawing(false);
               }}
             />
           </Card>

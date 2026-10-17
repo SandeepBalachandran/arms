@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { InstallBanner } from "@/components/install-banner";
+import { PushAlertsCard } from "@/components/push-alerts";
 import type { ReactNode } from "react";
 import { BRAND, addDays,
   formatDate,
@@ -17,7 +18,7 @@ import { ActionForm } from "@/components/action-form";
 import { Avatar } from "@/components/avatar";
 import { BarChart } from "@/components/bar-chart";
 import { Card } from "@/components/ui";
-import { requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
+import { getMyPermissions, requireGym, STAFF_ROLES, TEAM_ROLES } from "@/lib/auth";
 import { signAvatars } from "@/lib/avatars";
 import { joinUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
@@ -118,6 +119,8 @@ export default async function AdminDashboard({ params }: PageProps<"/admin/[slug
       {gym.checkin_enabled && <LiveRefresh gymId={gym.id} />}
       {/* Phones only; hidden once installed or after "Not now" (same as the sign-in page). */}
       <InstallBanner />
+      {/* Payment alerts are on by default; this asks once where the browser needs a tap. */}
+      {(await getMyPermissions(gym.id)).has("confirm_upi") && <PushAlertsCard />}
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{greeting(gym.timezone)}{firstName ? `, ${firstName}` : ""}</h1>
