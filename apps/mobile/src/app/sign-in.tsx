@@ -1,5 +1,5 @@
-import { BRAND } from '@gymos/shared';
-import { ArrowLeft, Dumbbell, KeyRound, Lock, Mail, MailCheck } from 'lucide-react-native';
+import { BRAND, PIN_LENGTH } from '@gymos/shared';
+import { ArrowLeft, Dumbbell, KeyRound, Lock, Mail, MailCheck, Phone } from 'lucide-react-native';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
@@ -13,12 +13,13 @@ import { useTheme } from '@/hooks/use-theme';
 import { readSplashBrand } from '@/lib/splash-brand';
 import { supabase } from '@/lib/supabase';
 
-type Step = 'email' | 'password' | 'code';
+type Step = 'email' | 'password' | 'code' | 'pin';
 
 const COPY: Record<Step, { title: string; subtitle: string }> = {
   email: { title: 'Welcome', subtitle: 'Sign in or create an account. We’ll email you a 6-digit code.' },
   password: { title: 'Welcome back', subtitle: 'Sign in with your email and password.' },
   code: { title: 'Check your email', subtitle: 'Enter the 6-digit code we sent to' },
+  pin: { title: 'Welcome back', subtitle: 'Use the phone number your gym has and the PIN they gave you.' },
 };
 
 // Default is passwordless: email → 6-digit code (new emails create an account;
@@ -33,6 +34,8 @@ export default function SignInScreen() {
   const [code, setCode] = useState('');
   const [step, setStep] = useState<Step>('email');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const copy = COPY[step];
@@ -63,6 +66,26 @@ export default function SignInScreen() {
     const { error } = await supabase.auth.signInWithPassword({ email: parsed.data, password });
     setLoading(false);
     if (error) setError(error.message);
+  }
+
+  // Phone + PIN (members the gym added without an email): the web app checks
+  // it (apps/web/src/app/api/auth/pin) and hands back a session.
+  async function signInWithPin() {
+    setError(null);
+    setLoading(true);
+    try {
+      const host = process.env.EXPO_PUBLIC_APP_LINK_HOST;
+      const url = Platform.OS === 'web' ? '/api/auth/pin' : `https://${host}/api/auth/pin`;
+      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, pin }) });
+      const body = (await res.json().catch(() => ({}))) as { error?: string; access_token?: string; refresh_token?: string };
+      if (!res.ok || !body.access_token || !body.refresh_token) throw new Error(body.error ?? 'Couldn’t sign in. Try again.');
+      const { error } = await supabase.auth.setSession({ access_token: body.access_token, refresh_token: body.refresh_token });
+      if (error) throw error;
+    } catch (e) {
+      setError(e instanceof Error && e.message !== 'Network request failed' ? e.message : 'Couldn’t reach the server. Check your internet.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function verify() {
@@ -113,6 +136,7 @@ export default function SignInScreen() {
                   options={[
                     { value: 'email', label: 'Email code', icon: Mail },
                     { value: 'password', label: 'Password', icon: KeyRound },
+                    { value: 'pin', label: 'Phone PIN', icon: Phone },
                   ]}
                 />
               )}
@@ -132,6 +156,29 @@ export default function SignInScreen() {
                   placeholder="••••••"
                   style={{ fontSize: 26, letterSpacing: 12, textAlign: 'center', minHeight: 62 }}
                 />
+              ) : step === 'pin' ? (
+                <>
+                  <Input
+                    label="Phone number"
+                    icon={Phone}
+                    value={phone}
+                    onChangeText={setPhone}
+                    placeholder="98470 12345"
+                    keyboardType="phone-pad"
+                    autoComplete="tel"
+                    returnKeyType="next"
+                  />
+                  <PasswordInput
+                    label={`${PIN_LENGTH}-digit PIN`}
+                    icon={Lock}
+                    value={pin}
+                    onChangeText={(v) => setPin(v.replace(/\D/g, '').slice(0, PIN_LENGTH))}
+                    keyboardType="number-pad"
+                    maxLength={PIN_LENGTH}
+                    returnKeyType="go"
+                    onSubmitEditing={signInWithPin}
+                  />
+                </>
               ) : (
                 <Input
                   label="Email"
@@ -167,6 +214,7 @@ export default function SignInScreen() {
 
               {step === 'email' && <Button title="Send code" onPress={sendCode} loading={loading} />}
               {step === 'password' && <Button title="Sign in" onPress={signInWithPassword} loading={loading} disabled={!password} />}
+              {step === 'pin' && <Button title="Sign in" onPress={signInWithPin} loading={loading} disabled={!phone.trim() || pin.length < PIN_LENGTH} />}
               {step === 'code' && (
                 <>
                   <Button title="Verify and sign in" onPress={verify} loading={loading} disabled={code.length < 6} />
@@ -181,7 +229,9 @@ export default function SignInScreen() {
             <View style={{ flex: 1 }} />
             <InstallBanner />
             <Text variant="small" style={{ textAlign: 'center' }}>
-              {step === 'password'
+              {step === 'pin'
+                ? 'Forgot your PIN? Ask at the front desk for a new one.'
+                : step === 'password'
                 ? 'Forgot your password? Use Email code instead.'
                 : 'New here? Use your email and your account is created for you.'}
             </Text>

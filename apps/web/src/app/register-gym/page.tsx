@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth-shell";
 import { requireUser } from "@/lib/auth";
+import { SITE_URL } from "@/lib/site";
 import { RegisterGymForm } from "./register-form";
 
 export const metadata: Metadata = { title: "Register your gym" };
@@ -17,7 +18,7 @@ export default async function RegisterGymPage() {
         text: "Pick a name and a link. Share the link on WhatsApp and members join from the app.",
       }}
     >
-      <RegisterGymForm siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? ""} />
+      <RegisterGymForm siteUrl={SITE_URL} />
     </AuthShell>
   );
 }

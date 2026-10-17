@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { safeNextPath } from "@/lib/auth";
+import { SITE_URL } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
 // `sent` switches the form to a "check your email" screen.
@@ -46,7 +47,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     password: parsed.data.password,
     options: {
       data: { full_name: parsed.data.full_name },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${encodeURIComponent(next)}`,
+      emailRedirectTo: `${SITE_URL}/auth/callback?next=${encodeURIComponent(next)}`,
     },
   });
   if (error) return { error: friendly(error.message) };
@@ -64,7 +65,7 @@ export async function sendMagicLink(_prev: AuthState, formData: FormData): Promi
   const { error } = await supabase.auth.signInWithOtp({
     email: email.data,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${encodeURIComponent(next)}`,
+      emailRedirectTo: `${SITE_URL}/auth/callback?next=${encodeURIComponent(next)}`,
     },
   });
   if (error) return { error: friendly(error.message) };

@@ -2,10 +2,11 @@
 
 import { useActionState, useState } from "react";
 import clsx from "clsx";
-import { ArrowLeft, Eye, EyeOff, Lock, Mail, MailCheck, UserRound } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, KeyRound, Lock, Mail, MailCheck, UserRound } from "lucide-react";
 import { AuthField, AuthHeading, AuthInput } from "@/components/auth-shell";
 import { Button, FormError } from "@/components/ui";
 import { sendMagicLink, signIn, signUp } from "../actions";
+import { PinForm } from "./pin-form";
 
 type Mode = "signin" | "signup" | "magic";
 
@@ -17,9 +18,10 @@ const COPY = {
 };
 
 export function LoginForm({ next, initialMode, linkError }: { next: string; initialMode: Mode; linkError: boolean }) {
-  const [mode, setMode] = useState<Mode>(initialMode);
+  const [mode, setMode] = useState<Mode | "pin">(initialMode);
   // The email carries across modes so switching doesn't make you retype it.
   const [email, setEmail] = useState("");
+  if (mode === "pin") return <PinForm next={next} onBack={() => setMode("signin")} />;
   // Re-key per mode so each form keeps its own action state.
   return (
     <ModeForm
@@ -39,7 +41,7 @@ function ModeForm({ mode, next, email, onEmailChange, onModeChange, linkError }:
   next: string;
   email: string;
   onEmailChange: (email: string) => void;
-  onModeChange: (m: Mode) => void;
+  onModeChange: (m: Mode | "pin") => void;
   linkError: boolean;
 }) {
   const [state, action, pending] = useActionState(ACTIONS[mode], undefined);
@@ -173,6 +175,11 @@ function ModeForm({ mode, next, email, onEmailChange, onModeChange, linkError }:
           <Button type="button" variant="secondary" className="h-11 w-full rounded-xl" onClick={() => onModeChange("magic")}>
             <Mail className="size-4" /> Email me a sign-in link
           </Button>
+          {mode === "signin" && (
+            <Button type="button" variant="secondary" className="h-11 w-full rounded-xl" onClick={() => onModeChange("pin")}>
+              <KeyRound className="size-4" /> Phone + PIN from your gym
+            </Button>
+          )}
         </>
       )}
     </div>

@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { highestRole, type Database, type GymRole, type Permission } from "@gymos/shared";
+import { highestRole, shownEmail, type Database, type GymRole, type Permission } from "@gymos/shared";
 
 export { STAFF_ROLES, TEAM_ROLES, type GymRole, type Permission } from "@gymos/shared";
 
@@ -41,7 +41,8 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   return {
     id: claims.sub,
-    email: (claims.email as string | undefined) ?? null,
+    // A phone + PIN member's placeholder address is never shown.
+    email: shownEmail(claims.email as string | undefined),
     fullName: profile?.full_name ?? "",
     avatarPath: profile?.avatar_url ?? null,
     isPlatformAdmin: profile?.is_platform_admin ?? false,

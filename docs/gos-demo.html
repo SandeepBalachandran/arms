@@ -429,6 +429,7 @@ const initials = (n) => { const p = String(n).trim().split(/\s+/); return ((p[0]
 
 /* Icons (stroke paths, 24×24) */
 const P = {
+  key: "M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4",
   home: "M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z", users: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
   cal: "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z", dumb: "M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11",
   apple: "M12 7c-1.5-1-4-1.2-5.5.3C4.6 9.2 5 13.5 7 16.5c1.2 1.8 2.6 3.5 4 3 .6-.2.9-.4 1-.4s.4.2 1 .4c1.4.5 2.8-1.2 4-3 2-3 2.4-7.3.5-9.2C16 5.8 13.5 6 12 7zM12 7c0-2 1-3.5 3-4",
@@ -884,6 +885,7 @@ const PAGES = {
       <div class="row-actions">
         ${m.phone ? `<button class="btn wa" data-a="remind" data-id="${id}">${ic("msg")} ${remind ? "Send reminder" : "WhatsApp"}</button>` : ""}
         ${m.status === "active" ? `<button class="btn sec" data-a="deskCheckin" data-id="${id}">${checkedInToday(id) ? "Checked in ✓" : "Check in"}</button><button class="btn" data-a="openPay" data-id="${id}">${ic("receipt")} Record payment</button>` : ""}
+        ${!m.team && m.phone ? `<button class="btn sec" data-a="openPin" data-id="${id}" title="For members without an email">${ic("key")} Sign-in PIN</button>` : ""}
       </div>
     </div>
     <div class="grid g4" style="margin-top:14px">
@@ -1308,7 +1310,7 @@ const SCREENS = {
 
   signedout() {
     return `<div class="p-signed"><div style="font-size:34px;font-weight:800">${BRAND.logo[0]}<span style="color:var(--p-brand)">${BRAND.logo[1]}</span></div>${S.p.deleted ? `<div class="p-card"><b>Your account has been deleted.</b><div class="p-sec" style="margin-top:4px">Name, phone, photo, workouts and food log are gone. The gym keeps its payment and visit records as "Deleted member". Look at the admin's Members page.</div></div><button class="p-btn" data-a="reset">Reset demo</button>`
-      : `<div class="p-sec">One ${BRAND.name} app for members and gym staff. Sign in with an email code or password: members open their app, owners and staff open the admin. To use the other side, sign out and sign in with that account.</div><input class="p-inp" value="anjali.menon@gmail.com" aria-label="Email"><button class="p-btn" data-a="signIn">Send me a code</button><button class="p-btn sec" data-a="pJoinScreen">I have a gym's join link</button>`}</div>`;
+      : `<div class="p-sec">One ${BRAND.name} app for members and gym staff. Sign in with an email code or password: members open their app, owners and staff open the admin. To use the other side, sign out and sign in with that account.</div><input class="p-inp" value="anjali.menon@gmail.com" aria-label="Email"><button class="p-btn" data-a="signIn">Send me a code</button><button class="p-btn sec" data-a="signInPin">${ic("key")} Phone + PIN from your gym</button><button class="p-btn sec" data-a="pJoinScreen">I have a gym's join link</button>`}</div>`;
   },
 };
 
@@ -1383,6 +1385,8 @@ const A = {
   pToast: (d) => toast(d.t, "from-app", "sparkles"),
 
   /* admin navigation */
+  openPin: (d) => { const m = M(d.id); const pin = String(100000 + Math.floor(Math.random() * 900000)); const msg = encodeURIComponent(`Hi ${firstName(m.name)}, to sign in to the gym app choose "Phone + PIN", then enter your phone number and PIN ${pin}. Please don't share it.`); aModal("Sign-in PIN", `<p class="hint">Members without an email sign in with their phone number and this PIN. It's shown only once; make a new one if they forget it.</p><div style="text-align:center;font:700 40px/1.2 ui-monospace,monospace;letter-spacing:.3em;margin:14px 0">${pin}</div><div style="display:flex;gap:8px"><button class="btn sec" style="flex:1" data-a="toastMsg" data-t="PIN copied">Copy PIN</button><a class="btn wa" style="flex:1;justify-content:center" target="_blank" rel="noreferrer" href="https://wa.me/${(m.phone || "").replace(/\D/g, "")}?text=${msg}">${ic("msg")} Send on WhatsApp</a></div><p class="hint" style="margin-top:10px">Owners, admins, trainers and desk staff manage their own sign-in, so staff can't take over their accounts.</p>`); },
+  toastMsg: (d) => { toast(d.t); },
   aGo: (d) => { S.a.route = d.r; S.a.pop = null; S.a.modal = null; },
   aPop: (d) => { S.a.pop = S.a.pop === d.p ? null : d.p; },
   aClose: (d, el, e) => { if (d.self && e.target !== el) return false; S.a.modal = null; },
@@ -1490,14 +1494,16 @@ const A = {
   promoteFood: (d) => { const m = S.food.mine.find((x) => x.id === d.id); S.gymFoods.push({ id: uid("g"), name: m.name, serving: m.serving, kcal: m.kcal, p: m.p }); toast(`${m.name} added to the gym's foods. Every member can pick it now.`, "from-admin"); },
   rmFood: (d) => { S.food.log = S.food.log.filter((x) => x.id !== d.id); },
 
-  payUpi: (d) => { const p = S.plans.find((x) => x.id === d.id); pSheet(`Pay ${inr(p.price)} by UPI`, `<div class="uz" style="border-radius:18px"><div class="p-sec" style="margin-bottom:10px">${esc(p.name)} membership. You pay ${esc(S.gym.name)} directly. No gateway fee ${usp(2)}</div><div style="display:flex;gap:12px;align-items:center" class="p-card"><div style="background:#fff;padding:6px;border-radius:12px">${qr("upi" + S.gym.upi + p.price, 96)}</div><div><div class="p-sec">UPI ID</div><b>${esc(S.gym.upi)}</b><div class="p-sec">${esc(S.gym.payee)}</div></div></div></div><button class="p-btn dark" style="margin-top:12px" data-a="pToast" data-t="Opens GPay / PhonePe / Paytm with the amount filled in.">Open UPI app</button><div class="p-sec" style="margin:14px 0 6px">After paying, enter the 12-digit UPI reference (UTR):</div><form data-submit="claimUpi" data-id="${p.id}"><input class="p-inp" name="utr" value="4${String(Date.now()).slice(-11)}" inputmode="numeric" aria-label="UPI reference"><button class="p-btn" style="margin-top:10px">I've paid</button></form>`); },
-  claimUpi: (f, el) => { const p = S.plans.find((x) => x.id === el.dataset.id); S.payments.unshift({ id: uid("pay"), memberId: ME, amount: p.price, what: p.name, planId: p.id, kind: "plan", status: "created", method: "upi", at: new Date(), utr: f.utr }); S.p.sheet = null; toast("Sent to the gym. Watch it appear in the admin's Payments →", "from-app"); },
+  payUpi: (d) => { const p = S.plans.find((x) => x.id === d.id); pSheet(`Pay ${inr(p.price)} by UPI`, `<div class="uz" style="border-radius:18px"><div class="p-sec" style="margin-bottom:10px">${esc(p.name)} membership. You pay ${esc(S.gym.name)} directly. No gateway fee ${usp(2)}</div><div style="display:flex;gap:12px;align-items:center" class="p-card"><div style="background:#fff;padding:6px;border-radius:12px">${qr("upi" + S.gym.upi + p.price, 96)}</div><div><div class="p-sec">UPI ID</div><b>${esc(S.gym.upi)}</b><div class="p-sec">${esc(S.gym.payee)}</div></div></div></div><button class="p-btn dark" style="margin-top:12px" data-a="pToast" data-t="Opens GPay / PhonePe / Paytm with the amount filled in.">Open UPI app</button><div class="p-sec" style="margin:14px 0 6px">After paying, enter the 12-digit UPI reference (UTR):</div><form data-submit="claimUpi" data-id="${p.id}"><input class="p-inp" name="utr" value="4${String(Date.now()).slice(-11)}" inputmode="numeric" maxlength="12" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,12)" aria-label="UPI reference"><div class="p-sec" style="margin-top:4px">Numbers only, exactly 12.</div><button class="p-btn" style="margin-top:10px">I've paid</button></form>`); },
+  claimUpi: (f, el) => { if (f.utr && !/^\d{12}$/.test(f.utr)) { toast("The UTR is the 12-digit number in your UPI app", "from-app", "alert"); return false; } const p = S.plans.find((x) => x.id === el.dataset.id); setTimeout(() => toast(`Phone alert to the owner and desk: ${M(ME).name} paid ${inr(p.price)} by UPI. Check your UPI app, then confirm.`, "", "bell"), 900); S.payments.unshift({ id: uid("pay"), memberId: ME, amount: p.price, what: p.name, planId: p.id, kind: "plan", status: "created", method: "upi", at: new Date(), utr: f.utr }); S.p.sheet = null; toast("Sent to the gym. Watch it appear in the admin's Payments →", "from-app"); },
   seenReject: (d) => { S.payments.find((x) => x.id === d.id).seen = true; },
 
   photoSheet: () => pSheet("Profile photo", `<div class="p-sec" style="margin-bottom:8px">Your gym's team sees it, so the front desk knows it's you. Other members can't.</div><label class="p-row"><span class="ic" style="background:var(--p-muted)">${ic("camera")}</span><span class="grow"><b>Take photo</b></span><input type="file" accept="image/*" capture="user" class="sr" data-file="photo" data-id="${ME}"></label><label class="p-row"><span class="ic" style="background:var(--p-muted)">${ic("image")}</span><span class="grow"><b>Choose from gallery</b></span><input type="file" accept="image/*" class="sr" data-file="photo" data-id="${ME}"></label><button class="p-row" data-a="samplePhoto" data-id="${ME}"><span class="ic" style="background:var(--p-muted)">${ic("user")}</span><span class="grow"><b>Use a sample photo</b></span></button>${M(ME).photo ? `<button class="p-row" data-a="rmPhoto" data-id="${ME}" style="color:var(--p-danger)"><span class="ic" style="background:var(--p-muted)">${ic("trash")}</span><span class="grow"><b>Remove photo</b></span></button>` : ""}`),
   dark: (d) => { S.p.dark = d.v === "1"; },
-  signOut: () => { S.p.signedOut = true; },
+  signOut: () => pSheet("Sign out?", `<div style="text-align:center"><div style="width:64px;height:64px;border-radius:50%;background:var(--hero);color:var(--accent);display:flex;align-items:center;justify-content:center;margin:4px auto 12px;font-size:26px">${ic("logout")}</div><div class="p-sec">Your membership, workouts and food log stay saved. Sign back in any time.</div><div class="p-chip" style="display:inline-block;margin:12px 0 4px;cursor:default">Signed in as anjali.menon@gmail.com</div></div><button class="p-btn dark" style="margin-top:10px" data-a="signOutYes">Sign out</button><button class="p-btn sec" style="margin-top:8px" data-a="pClose">Stay signed in</button>`),
+  signOutYes: () => { S.p.sheet = null; S.p.signedOut = true; },
   signIn: () => { S.p.signedOut = false; S.p.route = "home"; toast("Signed in (a 6-digit code arrives by email)", "from-app"); },
+  signInPin: () => { S.p.signedOut = false; S.p.route = "home"; toast("Signed in with phone number + PIN (no email needed)", "from-app", "key"); },
   pJoinScreen: () => { S.p.signedOut = false; S.p.route = "join"; },
   joinGym: () => { const name = ($("#join-name")?.value || "New member").trim(); S.members.push({ id: uid("p"), name, f: false, photo: null, phone: "95440 76543", role: "member", status: "pending", joined: TODAY, notes: [] }); S.p.route = "home"; S.a.route = "members"; toast(`${name} asked to join. Approve them in the admin's Members page.`, "from-app"); },
   deleteAccount: () => pSheet("Delete your account?", `<div class="p-sec">Your name, phone, photo, workouts, body measurements and food log are deleted, and you can't sign in again. ${esc(S.gym.name)} keeps its payment and visit records as "Deleted member".</div><button class="p-btn danger" style="margin-top:14px" data-a="doDelete">Delete my account</button><button class="p-btn sec" style="margin-top:8px" data-a="pClose">Cancel</button>`),
@@ -1573,9 +1579,11 @@ const STEPS = [
   { t: "Member checks in", d: "App → Home → Check in. The desk sees it live.", go: () => { S.p.route = "home"; S.a.route = "checkin"; } },
   { t: "Desk scans a member, sees their photo", d: "Admin → Check-in → Simulate a scan.", go: () => { S.a.route = "checkin"; } },
   { t: "Member renews with UPI, no gateway", d: "App → Pass → Pay with UPI → I've paid.", go: () => { S.p.route = "membership"; S.a.route = "payments"; } },
+  { t: "Owner's phone buzzes when a member pays", d: "App → Pass → Pay with UPI → I've paid. An alert reaches the owner's phone.", go: () => { S.p.route = "membership"; S.a.route = "payments"; } },
   { t: "Gym confirms the payment", d: "Admin → Payments → Confirm. The member gets a receipt.", go: () => { S.a.route = "payments"; S.p.route = "notifications"; } },
   { t: "Trainer coaches food & workouts", d: "Admin → Anjali → comment on food. App → Food.", go: () => { S.a.route = "member:m1"; S.p.route = "food"; } },
   { t: "Member logs a workout", d: "App → Workouts → Start workout, tick sets.", go: () => { S.p.route = "workouts"; S.a.route = "workouts"; } },
+  { t: "No email? Phone number + PIN", d: "Admin → a member → Sign-in PIN. App → Sign out → Phone + PIN.", go: () => { S.a.route = "member:m2"; } },
   { t: "Switch from Excel in a minute", d: "Admin → Members → Import → paste rows.", go: () => { S.a.route = "members"; A.openImport(); } },
   { t: "Turn features on and off", d: "Admin → Settings → Features. Watch the app's tabs.", go: () => { S.a.route = "settings"; S.p.route = "home"; } },
 ];

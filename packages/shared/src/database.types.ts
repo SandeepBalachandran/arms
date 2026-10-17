@@ -607,6 +607,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"pin_attempts": {
+                  Row: {
+                    "failures": number,"locked_until": string | null,"phone": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "failures"?: number,"locked_until"?: string | null,"phone": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "failures"?: number,"locked_until"?: string | null,"phone"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"plan_assignments": {
                   Row: {
                     "assigned_at": string,"assigned_by": string | null,"gym_id": string,"id": string,"member_id": string,"plan_id": string
@@ -667,14 +681,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "avatar_url": string | null,"created_at": string,"deleted_at": string | null,"full_name": string,"id": string,"is_platform_admin": boolean,"language": string,"phone": string | null
+                    "avatar_url": string | null,"created_at": string,"deleted_at": string | null,"full_name": string,"id": string,"is_platform_admin": boolean,"language": string,"phone": string | null,"pin_set_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id": string,"is_platform_admin"?: boolean,"language"?: string,"phone"?: string | null
+                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id": string,"is_platform_admin"?: boolean,"language"?: string,"phone"?: string | null,"pin_set_at"?: string | null
                   }
                   Update: {
-                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id"?: string,"is_platform_admin"?: boolean,"language"?: string,"phone"?: string | null
+                    "avatar_url"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"full_name"?: string,"id"?: string,"is_platform_admin"?: boolean,"language"?: string,"phone"?: string | null,"pin_set_at"?: string | null
                   }
                   Relationships: [
                     

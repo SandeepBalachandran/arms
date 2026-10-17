@@ -1,12 +1,13 @@
 "use server";
 
+import { randomInt } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { internationalPhone, MANUAL_PAYMENT_METHODS, rupeesSchema } from "@gymos/shared";
+import { internationalPhone, MANUAL_PAYMENT_METHODS, PIN_LENGTH, rupeesSchema, shownEmail } from "@gymos/shared";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { TEAM_ROLES, requireGym, requirePermission } from "@/lib/auth";
-import { findOrCreateUser } from "@/lib/member-accounts";
+import { findOrCreateUser, setPin, signInLockedReason, syncSignIn } from "@/lib/member-accounts";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -140,8 +141,10 @@ export async function addMember(_prev: AddMemberState, formData: FormData): Prom
   redirect(`/admin/${slug}/members/${member.id}?added=1`);
 }
 
-// Staff fix a member's name or phone. Uses the service role because profiles
-// are only self-editable under RLS; the member must belong to this gym.
+// Staff fix a member's name, phone or email. Uses the service role because
+// profiles are only self-editable under RLS; the member must belong to this
+// gym. Phone and email also change how they sign in, so those follow
+// signInLockedReason() (ordinary members of this gym only).
 export type DetailsState = { error?: string; saved?: boolean } | undefined;
 
 export async function updateMemberDetails(_prev: DetailsState, formData: FormData): Promise<DetailsState> {
@@ -151,10 +154,11 @@ export async function updateMemberDetails(_prev: DetailsState, formData: FormDat
       member_id: z.uuid(),
       full_name: z.string().trim().min(2, "Enter a name").max(80),
       phone: z.string().trim().max(20).transform((v) => v || null),
+      email: z.union([z.literal(""), z.email("Check the email").max(254)]).optional().transform((v) => v?.toLowerCase() || null),
     })
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
-  const { slug, member_id, full_name, phone } = parsed.data;
+  const { slug, member_id, full_name, phone, email } = parsed.data;
   const { gym } = await requirePermission(slug, "manage_members");
 
   const admin = createAdminClient();
@@ -165,11 +169,69 @@ export async function updateMemberDetails(_prev: DetailsState, formData: FormDat
     .eq("gym_id", gym.id)
     .maybeSingle();
   if (!member) return { error: "Member not found" };
+  const intlPhone = phone ? internationalPhone(phone, gym.phone_country_code) : null;
+  if (phone && !intlPhone) return { error: "Check the phone number" };
 
+  const locked = await signInLockedReason(admin, member.user_id, gym.id);
+  if (locked && email) {
+    const { data } = await admin.auth.admin.getUserById(member.user_id);
+    if (email !== data.user?.email?.toLowerCase()) return { error: `Can't change the email. ${locked}` };
+  }
+  if (!locked) {
+    const syncError = await syncSignIn(admin, member.user_id, { intlPhone, email });
+    if (syncError) return { error: syncError };
+  }
   const { error } = await admin.from("profiles").update({ full_name, phone }).eq("id", member.user_id);
   if (error) return { error: error.message };
   revalidatePath(`/admin/${slug}`, "layout");
   return { saved: true };
+}
+
+export type SignInInfo = { email: string | null; phone: string | null; pinSetAt: string | null; locked: string | null };
+
+// For the edit and PIN dialogs: how this member signs in today.
+export async function getMemberSignIn(slug: string, memberId: string): Promise<SignInInfo | { error: string }> {
+  const { gym } = await requirePermission(slug, "manage_members");
+  const admin = createAdminClient();
+  const { data: member } = await admin
+    .from("gym_members")
+    .select("user_id, profiles!inner(phone, pin_set_at)")
+    .eq("id", memberId)
+    .eq("gym_id", gym.id)
+    .maybeSingle();
+  if (!member) return { error: "Member not found" };
+  const { data } = await admin.auth.admin.getUserById(member.user_id);
+  return {
+    email: shownEmail(data.user?.email),
+    phone: member.profiles.phone,
+    pinSetAt: member.profiles.pin_set_at,
+    locked: await signInLockedReason(admin, member.user_id, gym.id),
+  };
+}
+
+// A new random PIN for phone + PIN sign-in, shown once to the staff member to
+// pass on. Replaces the member's password.
+export async function setMemberPin(slug: string, memberId: string): Promise<{ pin: string; phone: string } | { error: string }> {
+  const { gym, user } = await requirePermission(slug, "manage_members");
+  const admin = createAdminClient();
+  const { data: member } = await admin
+    .from("gym_members")
+    .select("user_id, profiles!inner(phone)")
+    .eq("id", memberId)
+    .eq("gym_id", gym.id)
+    .maybeSingle();
+  if (!member) return { error: "Member not found" };
+  if (member.user_id === user.id) return { error: "Change your own password from your profile." };
+  const locked = await signInLockedReason(admin, member.user_id, gym.id);
+  if (locked) return { error: locked };
+  const intlPhone = member.profiles.phone ? internationalPhone(member.profiles.phone, gym.phone_country_code) : null;
+  if (!intlPhone) return { error: "Add their phone number first: they sign in with it." };
+
+  const pin = String(randomInt(0, 10 ** PIN_LENGTH)).padStart(PIN_LENGTH, "0");
+  const error = await setPin(admin, member.user_id, intlPhone, pin);
+  if (error) return { error };
+  revalidatePath(`/admin/${slug}/members/${memberId}`);
+  return { pin, phone: intlPhone };
 }
 
 // Remove someone from the gym (they lose access; history is kept) or restore them.

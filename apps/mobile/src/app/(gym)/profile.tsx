@@ -1,4 +1,4 @@
-import { rolesLabel } from '@gymos/shared';
+import { rolesLabel, shownEmail } from '@gymos/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Apple, Camera, Check, ChevronRight, LogOut, Moon, Pencil, Plus, ScanLine, Sun, Trash2, type LucideIcon } from 'lucide-react-native';
@@ -61,7 +61,7 @@ export default function ProfileScreen() {
   }
 
   async function signOut() {
-    const email = session?.user.email;
+    const email = shownEmail(session?.user.email);
     const ok = await confirm({
       tone: 'calm',
       icon: LogOut,
@@ -137,7 +137,7 @@ function ProfileHero({ onEdit }: { onEdit: () => void }) {
   const profile = useProfile();
   const active = useActiveGym();
   const name = profile.data?.full_name || 'Add your name';
-  const contact = session?.user.email || profile.data?.phone || '';
+  const contact = shownEmail(session?.user.email) || profile.data?.phone || '';
   const [sheet, setSheet] = useState(false);
   const setAvatar = useSetAvatar();
   const hasPhoto = !!profile.data?.avatar_url;
