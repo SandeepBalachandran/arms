@@ -7,8 +7,9 @@ import clsx from "clsx";
 const DEFAULT_RANGE: Record<SessionName, [string, string]> = { morning: ["05:00", "10:00"], evening: ["16:00", "21:00"] };
 const SESSION_LABELS: Record<SessionName, string> = { morning: "Morning", evening: "Evening" };
 
+// Phones: the two times share the row's width; wider screens: fixed size.
 const timeInput =
-  "w-[6.5rem] rounded-lg border border-border bg-surface px-2 py-1.5 text-sm tabular-nums outline-none focus:border-brand disabled:opacity-40";
+  "min-w-0 flex-1 sm:w-[6.5rem] sm:flex-none rounded-lg border border-border bg-surface px-2 py-1.5 text-sm tabular-nums outline-none focus:border-brand disabled:opacity-40";
 
 // Week editor for opening hours: each day has an optional morning and evening
 // session. Posts the whole week as JSON in `opening_hours`.
@@ -38,8 +39,8 @@ export function HoursEditor({ defaultValue }: { defaultValue: OpeningHours }) {
                 {SESSIONS.map((session) => {
                   const range = hours[day][session];
                   return (
-                    <div key={session} className="flex items-center gap-2">
-                      <label className="flex w-20 items-center gap-1.5 text-sm">
+                    <div key={session} className="flex w-full items-center gap-2 sm:w-auto">
+                      <label className="flex w-20 shrink-0 items-center gap-1.5 text-sm">
                         <input
                           type="checkbox"
                           checked={!!range}

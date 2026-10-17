@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { addDays, formatMoney, formatReceipt, PAYMENT_METHOD_LABELS, todayIn, type PaymentMethod } from "@gymos/shared";
+import { Pagination, pageOf } from "@/components/pagination";
 import { Card, PageHeader } from "@/components/ui";
 import { requireGym, STAFF_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -16,7 +17,8 @@ function shiftMonth(month: string, delta: number) {
 
 export default async function PaymentsPage({ params, searchParams }: PageProps<"/admin/[slug]/payments">) {
   const { slug } = await params;
-  const { month: monthParam } = await searchParams;
+  const sp = await searchParams;
+  const { month: monthParam } = sp;
   const { gym, can } = await requireGym(slug, STAFF_ROLES);
 
   const thisMonth = todayIn(gym.timezone).slice(0, 7);
@@ -41,6 +43,10 @@ export default async function PaymentsPage({ params, searchParams }: PageProps<"
   const total = payments.reduce((sum, p) => sum + p.amount_paise, 0);
   const byMethod = new Map<PaymentMethod, number>();
   for (const p of payments) byMethod.set(p.method, (byMethod.get(p.method) ?? 0) + p.amount_paise);
+
+  const paged = pageOf(payments, sp.page);
+  const when = (paidAt: string) =>
+    new Date(paidAt).toLocaleString("en-IN", { timeZone: gym.timezone, dateStyle: "medium", timeStyle: "short" });
 
   const monthLabel = new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric", timeZone: "UTC" }).format(
     new Date(`${month}-01T00:00:00Z`),
@@ -77,7 +83,27 @@ export default async function PaymentsPage({ params, searchParams }: PageProps<"
         ))}
       </div>
 
-      <Card className="overflow-x-auto p-0">
+      {/* Phones: a card per payment, the whole card opens the receipt. */}
+      <ul className="space-y-2 md:hidden">
+        {paged.items.map((p) => (
+          <li key={p.id}>
+            <Link href={`/admin/${slug}/payments/${p.id}`} className="block rounded-xl border border-border bg-surface p-3 hover:border-brand">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="min-w-0 truncate font-medium">{p.gym_members.profiles.full_name || "Unnamed member"}</p>
+                <p className="shrink-0 font-semibold tabular-nums">{formatMoney(p.amount_paise, gym.currency)}</p>
+              </div>
+              <div className="mt-1 flex items-baseline justify-between gap-3 text-sm text-muted">
+                <p className="min-w-0 truncate">{when(p.paid_at!)} · {PAYMENT_METHOD_LABELS[p.method]}</p>
+                <p className="shrink-0 font-mono text-xs text-brand">{formatReceipt(gym.receipt_prefix, p.receipt_no)}</p>
+              </div>
+              {p.note && <p className="mt-1 truncate text-sm text-muted">{p.note}</p>}
+            </Link>
+          </li>
+        ))}
+        {payments.length === 0 && <Card className="p-6 text-center text-sm text-muted">No payments this month.</Card>}
+      </ul>
+
+      <Card className="hidden overflow-x-auto p-0 md:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border text-left text-muted">
             <tr>
@@ -90,16 +116,14 @@ export default async function PaymentsPage({ params, searchParams }: PageProps<"
             </tr>
           </thead>
           <tbody>
-            {payments.map((p) => (
+            {paged.items.map((p) => (
               <tr key={p.id} className="border-b border-border last:border-0">
                 <td className="p-3 font-mono">
                   <Link href={`/admin/${slug}/payments/${p.id}`} className="text-brand hover:underline" title="Open receipt">
                     {formatReceipt(gym.receipt_prefix, p.receipt_no)}
                   </Link>
                 </td>
-                <td className="p-3 text-muted">
-                  {new Date(p.paid_at!).toLocaleString("en-IN", { timeZone: gym.timezone, dateStyle: "medium", timeStyle: "short" })}
-                </td>
+                <td className="p-3 text-muted">{when(p.paid_at!)}</td>
                 <td className="p-3">
                   <Link href={`/admin/${slug}/members/${p.member_id}`} className="hover:underline">
                     {p.gym_members.profiles.full_name || "Unnamed member"}
@@ -116,6 +140,7 @@ export default async function PaymentsPage({ params, searchParams }: PageProps<"
           </tbody>
         </table>
       </Card>
+      <Pagination {...paged} shown={paged.items.length} params={sp} noun={payments.length === 1 ? "payment" : "payments"} />
     </>
   );
 }

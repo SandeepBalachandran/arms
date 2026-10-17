@@ -251,8 +251,29 @@ export default async function AdminDashboard({ params }: PageProps<"/admin/[slug
 
       {isStaff && (
         <Card className="mt-4">
-          <h2 className="font-medium">Recent payments</h2>
-          <div className="mt-2 overflow-x-auto">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-medium">Recent payments</h2>
+            <Link href={`/admin/${slug}/payments`} className="text-sm font-medium text-brand hover:underline">View all</Link>
+          </div>
+          {/* Phones: one line per payment; the row opens the receipt. */}
+          <ul className="mt-2 divide-y divide-border md:hidden">
+            {payments.data!.slice(0, 5).map((p) => (
+              <li key={p.id}>
+                <Link href={`/admin/${slug}/payments/${p.id}`} className="flex items-center gap-3 py-2.5">
+                  <Avatar name={p.gym_members.profiles.full_name} src={photo(p.gym_members.profiles.avatar_url)} size="sm" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{p.gym_members.profiles.full_name}</p>
+                    <p className="truncate text-xs text-muted">
+                      {formatDate(todayIn(gym.timezone, new Date(p.paid_at!)))} · {p.pt_subscriptions?.package_name ?? p.plans?.name ?? "Payment"} · {PAYMENT_METHOD_LABELS[p.method]}
+                    </p>
+                  </div>
+                  <p className="shrink-0 text-sm font-semibold tabular-nums">{formatMoney(p.amount_paise, gym.currency)}</p>
+                </Link>
+              </li>
+            ))}
+            {payments.data!.length === 0 && <li className="py-6 text-center text-sm text-muted">No payments this month yet.</li>}
+          </ul>
+          <div className="mt-2 hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead className="text-left text-xs text-muted">
                 <tr><th className="py-2 pr-3 font-medium">Date</th><th className="py-2 pr-3 font-medium">Member</th><th className="py-2 pr-3 font-medium">For</th><th className="py-2 pr-3 font-medium">Method</th><th className="py-2 pr-3 text-right font-medium">Amount</th><th className="py-2 font-medium">Receipt</th></tr>

@@ -6,6 +6,7 @@ import { BRAND, membershipState, rolesLabel, todayIn, type Subscription } from "
 import { ActionForm } from "@/components/action-form";
 import { Avatar } from "@/components/avatar";
 import { MembershipBadge } from "@/components/membership-badge";
+import { Pagination, pageOf } from "@/components/pagination";
 import { Card, PageHeader } from "@/components/ui";
 import { requireGym, TEAM_ROLES, type GymRole } from "@/lib/auth";
 import { signAvatars } from "@/lib/avatars";
@@ -23,7 +24,8 @@ type Filter = (typeof FILTER_KEYS)[number];
 
 export default async function MembersPage({ params, searchParams }: PageProps<"/admin/[slug]/members">) {
   const { slug } = await params;
-  const { show, q } = await searchParams;
+  const sp = await searchParams;
+  const { show, q } = sp;
   const filter: Filter = FILTER_KEYS.includes(show as Filter) ? (show as Filter) : "all";
   const query = typeof q === "string" ? q.trim() : "";
 
@@ -34,18 +36,30 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
   const extraAssignable: GymRole[] = isOwner ? ["admin", "staff", "trainer"] : ["staff", "trainer"];
 
   const supabase = await createClient();
-  let request = supabase
-    .from("gym_members")
-    .select("id, user_id, role, extra_roles, status, joined_at, profiles!inner(full_name, phone, avatar_url)")
-    .eq("gym_id", gym.id)
-    .neq("status", "pending")
-    .order("joined_at", { ascending: false })
-    .limit(200);
-  if (filter === "team") request = request.neq("role", "member");
-  else if (filter !== "all") request = request.eq("role", "member");
-  if (query) request = request.ilike("profiles.full_name", `%${query}%`);
-  const { data: members, error } = await request;
-  if (error) throw error;
+  // Everyone who matches, 1,000 rows a request (the API's cap); the
+  // membership filters need each person's plans, so paging happens after.
+  const search = query.replace(/[,()*%\\]/g, " ").trim();
+  const membersFrom = (from: number) => {
+    let request = supabase
+      .from("gym_members")
+      .select("id, user_id, role, extra_roles, status, joined_at, profiles!inner(full_name, phone, avatar_url)")
+      .eq("gym_id", gym.id)
+      .neq("status", "pending")
+      .order("joined_at", { ascending: false })
+      .order("id")
+      .range(from, from + 999);
+    if (filter === "team") request = request.neq("role", "member");
+    else if (filter !== "all") request = request.eq("role", "member");
+    if (search) request = request.or(`full_name.ilike.%${search}%,phone.ilike.%${search}%`, { referencedTable: "profiles" });
+    return request;
+  };
+  const members: NonNullable<Awaited<ReturnType<typeof membersFrom>>["data"]> = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await membersFrom(from);
+    if (error) throw error;
+    members.push(...data);
+    if (data.length < 1000) break;
+  }
 
   const { data: pending } = canManage
     ? await supabase
@@ -56,14 +70,21 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
         .order("joined_at")
     : { data: [] };
 
-  const { data: subs, error: subsError } = members.length
-    ? await supabase
+  // Plans in batches of 100 people, so the request URL stays short.
+  const ids = members.map((m) => m.id);
+  const batches = await Promise.all(
+    Array.from({ length: Math.ceil(ids.length / 100) }, (_, i) =>
+      supabase
         .from("subscriptions")
         .select("member_id, status, starts_on, ends_on")
-        .in("member_id", members.map((m) => m.id))
-        .neq("status", "cancelled")
-    : { data: [], error: null };
-  if (subsError) throw subsError;
+        .in("member_id", ids.slice(i * 100, (i + 1) * 100))
+        .neq("status", "cancelled"),
+    ),
+  );
+  const subs = batches.flatMap((b) => {
+    if (b.error) throw b.error;
+    return b.data;
+  });
 
   const subsByMember = Map.groupBy(subs, (s) => s.member_id);
   const today = todayIn(gym.timezone);
@@ -81,7 +102,16 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
       if (filter === "expired") return s.kind === "expired" || s.kind === "none";
       return true;
     });
-  const photos = await signAvatars(rows.map((m) => m.profiles.avatar_url));
+  const paged = pageOf(rows, sp.page);
+  const photos = await signAvatars(paged.items.map((m) => m.profiles.avatar_url));
+  // Only the owner touches admins; the owner may add extra roles to their own row.
+  const canEdit = (m: (typeof rows)[number]) => {
+    const ownRow = m.user_id === user.id;
+    return canManage && (
+      m.role === "owner" ? isOwner && ownRow
+      : !ownRow && (isOwner || (m.role !== "admin" && !m.extra_roles.includes("admin")))
+    );
+  };
 
   return (
     <>
@@ -177,14 +207,45 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
           <input
             name="q"
             defaultValue={query}
-            placeholder="Search by name"
-            aria-label="Search by name"
+            type="search"
+            placeholder="Search name or phone"
+            aria-label="Search by name or phone"
             className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
           />
         </form>
       </div>
 
-      <Card className="overflow-x-auto p-0">
+      {/* Phones: a card per person. */}
+      <ul className="space-y-2 md:hidden">
+        {paged.items.map((m) => (
+          <li key={m.id}>
+            <Card className="relative flex items-center gap-3 p-3">
+              <Avatar name={m.profiles.full_name || "?"} src={photos.get(m.profiles.avatar_url ?? "")} size="md" />
+              <div className="min-w-0 flex-1">
+                <Link href={`/admin/${slug}/members/${m.id}`} className="block truncate font-medium after:absolute after:inset-0">
+                  {m.profiles.full_name || "Unnamed member"}
+                </Link>
+                <p className="truncate text-sm text-muted">
+                  {[m.profiles.phone, m.role !== "member" && rolesLabel(m.role, m.extra_roles)].filter(Boolean).join(" · ") || "No phone"}
+                </p>
+                {m.role === "member" && (
+                  <div className="mt-1.5">
+                    <MembershipBadge state={m.membership} warnDays={gym.expiry_warning_days} />
+                  </div>
+                )}
+              </div>
+              {canManage && (
+                <div className="relative z-10">
+                  <EditMemberButton slug={slug} memberId={m.id} fullName={m.profiles.full_name} phone={m.profiles.phone ?? ""} />
+                </div>
+              )}
+            </Card>
+          </li>
+        ))}
+        {rows.length === 0 && <Card className="p-6 text-center text-sm text-muted">No one matches.</Card>}
+      </ul>
+
+      <Card className="hidden overflow-x-auto p-0 md:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border text-left text-muted">
             <tr>
@@ -197,13 +258,8 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
             </tr>
           </thead>
           <tbody>
-            {rows.map((m) => {
-              // Only the owner touches admins; the owner may add extra roles to their own row.
-              const ownRow = m.user_id === user.id;
-              const editable = canManage && (
-                m.role === "owner" ? isOwner && ownRow
-                : !ownRow && (isOwner || (m.role !== "admin" && !m.extra_roles.includes("admin")))
-              );
+            {paged.items.map((m) => {
+              const editable = canEdit(m);
               return (
                 <tr key={m.id} className="border-b border-border last:border-0">
                   <td className="p-3 font-medium">
@@ -252,6 +308,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
           </tbody>
         </table>
       </Card>
+      <Pagination {...paged} shown={paged.items.length} params={sp} noun={rows.length === 1 ? "person" : "people"} />
     </>
   );
 }

@@ -18,6 +18,7 @@ import {
 } from "@gymos/shared";
 import { EyeOff, HeartHandshake, Users } from "lucide-react";
 import { ActionForm } from "@/components/action-form";
+import { Pagination, pageOf } from "@/components/pagination";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { requireGym, TEAM_ROLES } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -28,7 +29,8 @@ export const metadata: Metadata = { title: "Personal training" };
 
 export default async function PtPage({ params, searchParams }: PageProps<"/admin/[slug]/pt">) {
   const { slug } = await params;
-  const { view } = await searchParams;
+  const sp = await searchParams;
+  const { view } = sp;
   const { gym, role, memberId, can } = await requireGym(slug, TEAM_ROLES);
   if (!gym.pt_enabled) notFound();
   const isStaff = can("sell_pt");
@@ -112,6 +114,7 @@ export default async function PtPage({ params, searchParams }: PageProps<"/admin
     }
   }
 
+  const paged = pageOf(current, sp.page);
   const revenue = monthRevenue.data?.reduce((n, p) => n + p.amount_paise, 0);
   const soldCounts = new Map<string, number>();
   for (const s of subs.data!) if (s.package_id) soldCounts.set(s.package_id, (soldCounts.get(s.package_id) ?? 0) + 1);
@@ -164,7 +167,65 @@ export default async function PtPage({ params, searchParams }: PageProps<"/admin
             </p>
           </Card>
         ) : (
-          <Card className="overflow-x-auto p-0">
+          <>
+          {/* Phones: a card per client. */}
+          <ul className="space-y-2 md:hidden">
+            {paged.items.map((c) => {
+              const pct = c.sessions_total ? Math.min(100, Math.round((c.used / c.sessions_total) * 100)) : null;
+              const canLog = c.state.kind === "active" && (isStaff || c.trainer_member_id === memberId);
+              const food = showNutrition ? nutrition.get(c.member_id) : undefined;
+              return (
+                <li key={c.id}>
+                  <Card className="p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <Link href={`/admin/${slug}/members/${c.member_id}`} className="block truncate font-medium hover:underline">
+                          {c.client?.profiles.full_name || "Unnamed member"}
+                        </Link>
+                        <p className="truncate text-sm text-muted">
+                          {c.package_name} · {c.trainer?.profiles.full_name ?? "No trainer"}
+                        </p>
+                      </div>
+                      {c.state.kind === "upcoming" ? (
+                        <Badge>Starts {formatDate(c.starts_on)}</Badge>
+                      ) : (
+                        <Badge tone={c.low ? "warn" : "good"}>
+                          {formatDate(c.ends_on)}
+                          {c.state.kind === "active" && ` · ${c.state.daysLeft}d`}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="mt-2 flex items-center gap-3 text-sm">
+                      <p className="shrink-0 tabular-nums">{formatSessionsLeft(c, c.used)}</p>
+                      {pct !== null && (
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border/70">
+                          <div className={clsx("h-full rounded-full", c.low ? "bg-amber-500" : "bg-brand")} style={{ width: `${pct}%` }} />
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-muted">{c.last ? `Last session ${formatDate(c.last)}` : "No sessions yet"}</p>
+                    {(food || canLog) && (
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
+                        {food ? <Badge tone={food.tone}>Food: {food.text}</Badge> : <span />}
+                        {canLog && (
+                          <LogSessionDialog
+                            slug={slug}
+                            ptSubscriptionId={c.id}
+                            clientName={c.client?.profiles.full_name || "client"}
+                            today={today}
+                            minDate={c.starts_on}
+                            compact
+                          />
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                </li>
+              );
+            })}
+          </ul>
+
+          <Card className="hidden overflow-x-auto p-0 md:block">
             <table className="w-full min-w-[42rem] text-sm">
               <thead className="border-b border-border text-left text-xs text-muted">
                 <tr>
@@ -177,7 +238,7 @@ export default async function PtPage({ params, searchParams }: PageProps<"/admin
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {current.map((c) => {
+                {paged.items.map((c) => {
                   const pct = c.sessions_total ? Math.min(100, Math.round((c.used / c.sessions_total) * 100)) : null;
                   const canLog = c.state.kind === "active" && (isStaff || c.trainer_member_id === memberId);
                   return (
@@ -235,6 +296,8 @@ export default async function PtPage({ params, searchParams }: PageProps<"/admin
               </tbody>
             </table>
           </Card>
+          <Pagination {...paged} shown={paged.items.length} params={sp} noun={current.length === 1 ? "client" : "clients"} />
+          </>
         )}
 
         {ended.length > 0 && (
