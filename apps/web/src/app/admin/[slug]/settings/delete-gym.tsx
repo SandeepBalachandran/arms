@@ -10,7 +10,7 @@ import { deleteGym } from "./delete-actions";
 export function DeleteGymCard({ slug, gymName }: { slug: string; gymName: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <Card className="space-y-3 border-danger/40 lg:col-span-2">
+    <Card className="space-y-3 border-danger/40">
       <div>
         <h2 className="font-semibold text-danger">Delete gym</h2>
         <p className="mt-1 text-sm text-muted">

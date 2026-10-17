@@ -62,41 +62,61 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
           The owner can change this under Roles &amp; permissions.
         </p>
       )}
-      <div className="grid max-w-5xl grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2">
-        <SettingsCard slug={slug} section="general" readOnly={locked.settings} title="Gym profile">
-          <LogoUploader slug={slug} gymName={g.name} logoUrl={g.logo_url} />
-          <Field label="Name">
-            <Input name="name" defaultValue={g.name} required />
-          </Field>
-          <Field label="Address">
-            <Input name="address" defaultValue={g.address ?? ""} />
-          </Field>
-          <Field label="Phone">
-            <Input name="phone" type="tel" defaultValue={g.phone ?? ""} />
-          </Field>
-          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
-            <Field label="Currency" hint={`Default ${GYM_DEFAULTS.currency}`}>
-              <Select name="currency" defaultValue={g.currency}>
-                {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+      {/* Wide screens: profile and UPI side by side, hours across, then the
+          optional sections in two columns that pack without gaps. */}
+      <div className="max-w-5xl space-y-6">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2 lg:items-start">
+          <SettingsCard slug={slug} section="general" readOnly={locked.settings} title="Gym profile">
+            <LogoUploader slug={slug} gymName={g.name} logoUrl={g.logo_url} />
+            <Field label="Name">
+              <Input name="name" defaultValue={g.name} required />
+            </Field>
+            <Field label="Address">
+              <Input name="address" defaultValue={g.address ?? ""} />
+            </Field>
+            <Field label="Phone">
+              <Input name="phone" type="tel" defaultValue={g.phone ?? ""} />
+            </Field>
+            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
+              <Field label="Currency" hint={`Default ${GYM_DEFAULTS.currency}`}>
+                <Select name="currency" defaultValue={g.currency}>
+                  {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </Select>
+              </Field>
+              <Field label="Phone country code" hint={`For WhatsApp links. Default +${GYM_DEFAULTS.phone_country_code}`}>
+                <Input name="phone_country_code" inputMode="numeric" defaultValue={g.phone_country_code} required />
+              </Field>
+            </div>
+            <Field label="Timezone" hint={`Used for class times, expiry dates and daily counts. Default ${GYM_DEFAULTS.timezone}`}>
+              <Select name="timezone" defaultValue={g.timezone}>
+                {timezones.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
               </Select>
             </Field>
-            <Field label="Phone country code" hint={`For WhatsApp links. Default +${GYM_DEFAULTS.phone_country_code}`}>
-              <Input name="phone_country_code" inputMode="numeric" defaultValue={g.phone_country_code} required />
+          </SettingsCard>
+          <SettingsCard
+            slug={slug}
+            section="upi" readOnly={locked.settings}
+            title="UPI payments"
+            description={
+              g.currency === "INR"
+                ? "Members pay this UPI ID from the app, then tap “I’ve paid”. You confirm each payment on the Payments page. No fees. Leave empty to turn off."
+                : "UPI is only available when the gym’s currency is INR."
+            }
+          >
+            <Field label="UPI ID">
+              <Input name="upi_id" defaultValue={g.upi_id ?? ""} placeholder="yourgym@okhdfcbank" autoCapitalize="none" />
             </Field>
-          </div>
-          <Field label="Timezone" hint={`Used for class times, expiry dates and daily counts. Default ${GYM_DEFAULTS.timezone}`}>
-            <Select name="timezone" defaultValue={g.timezone}>
-              {timezones.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
-            </Select>
-          </Field>
-        </SettingsCard>
+            <Field label="Name on the UPI account" hint="Shown to members so they know they’re paying the right account.">
+              <Input name="upi_payee_name" defaultValue={g.upi_payee_name ?? ""} />
+            </Field>
+          </SettingsCard>
+        </div>
 
         <SettingsCard
           slug={slug}
           section="hours" readOnly={locked.settings}
           title="Opening hours"
           description="Shown to members in the app with “Open now” or when you open next. Untick a session to close it that day."
-          className="lg:col-span-2"
         >
           <HoursEditor defaultValue={parseOpeningHours(g.opening_hours)} />
           <Field label="Note for members" hint="Optional, e.g. holiday timings or a ladies-only hour.">
@@ -104,174 +124,158 @@ export default async function SettingsPage({ params }: PageProps<"/admin/[slug]/
           </Field>
         </SettingsCard>
 
-        <SettingsCard slug={slug} section="memberships" readOnly={locked.mixed} title="Memberships & joining">
-          <Field label="Warn before expiry (days)" hint={`Members are flagged as “expiring soon” this many days before their plan ends. Default ${GYM_DEFAULTS.expiry_warning_days}`}>
-            <Input name="expiry_warning_days" type="number" min={1} max={60} defaultValue={g.expiry_warning_days} required />
-          </Field>
-          <Field
-            label="Renewal reminder message"
-            hint={`Sent from the dashboard’s WhatsApp “Remind” button. Placeholders: ${RENEWAL_MESSAGE_PLACEHOLDERS.join(" ")}`}
+        <div className="gap-6 lg:columns-2 [&>*]:mb-6 [&>*]:break-inside-avoid">
+          <SettingsCard slug={slug} section="memberships" readOnly={locked.mixed} title="Memberships & joining">
+            <Field label="Warn before expiry (days)" hint={`Members are flagged as “expiring soon” this many days before their plan ends. Default ${GYM_DEFAULTS.expiry_warning_days}`}>
+              <Input name="expiry_warning_days" type="number" min={1} max={60} defaultValue={g.expiry_warning_days} required />
+            </Field>
+            <Field
+              label="Renewal reminder message"
+              hint={`Sent from the dashboard’s WhatsApp “Remind” button. Placeholders: ${RENEWAL_MESSAGE_PLACEHOLDERS.join(" ")}`}
+            >
+              <RenewalMessageField defaultValue={g.renewal_message} fallback={GYM_DEFAULTS.renewal_message} />
+            </Field>
+            <Field label="Receipt prefix" hint="Shown before receipt numbers, e.g. DF- gives DF-12. Empty shows #12.">
+              <Input name="receipt_prefix" defaultValue={g.receipt_prefix} maxLength={10} />
+            </Field>
+            <fieldset>
+              <legend className="mb-1 text-sm font-medium">Payment methods at the front desk</legend>
+              <div className="flex flex-wrap gap-3">
+                {MANUAL_PAYMENT_METHODS.map((m) => (
+                  <label key={m} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      name="manual_payment_methods"
+                      value={m}
+                      defaultChecked={g.manual_payment_methods.includes(m)}
+                      className="size-4 accent-brand"
+                    />
+                    {PAYMENT_METHOD_LABELS[m]}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <Toggle
+              name="join_requires_approval"
+              label="Approve new members"
+              hint="People who open your join link wait until staff approve them on the Members page."
+              defaultChecked={g.join_requires_approval}
+            />
+          </SettingsCard>
+
+          <SettingsCard slug={slug} section="checkin" readOnly={locked.mixed} title="Check-in" description="Optional. Expired memberships are only flagged, never turned away.">
+            <Toggle name="checkin_enabled" label="Use check-in" defaultChecked={g.checkin_enabled} />
+            <Toggle
+              name="checkin_self_allowed"
+              label="Members can check themselves in"
+              hint="Off: only staff can check members in (QR scan or by name)."
+              defaultChecked={g.checkin_self_allowed}
+            />
+            <Toggle
+              name="checkin_only_when_open"
+              label="Only during opening hours"
+              hint={`Members can't check themselves in (button or poster) while the gym is closed, from ${CHECKIN_EARLY_MIN} minutes before opening. Staff can always check members in.`}
+              defaultChecked={g.checkin_only_when_open ?? true}
+            />
+            <Field label="Count repeat check-ins within (hours) as one visit" hint={`0 counts every check-in. Default ${GYM_DEFAULTS.checkin_dedupe_hours}`}>
+              <Input name="checkin_dedupe_hours" type="number" min={0} max={24} defaultValue={g.checkin_dedupe_hours} required />
+            </Field>
+          </SettingsCard>
+
+          <SettingsCard
+            slug={slug}
+            section="poster" readOnly={locked.mixed}
+            title="QR poster check-in"
+            description="Optional. Print a QR poster for the entrance; members scan it with the app when they arrive. No staff needed."
           >
-            <RenewalMessageField defaultValue={g.renewal_message} fallback={GYM_DEFAULTS.renewal_message} />
-          </Field>
-          <Field label="Receipt prefix" hint="Shown before receipt numbers, e.g. DF- gives DF-12. Empty shows #12.">
-            <Input name="receipt_prefix" defaultValue={g.receipt_prefix} maxLength={10} />
-          </Field>
-          <fieldset>
-            <legend className="mb-1 text-sm font-medium">Payment methods at the front desk</legend>
-            <div className="flex flex-wrap gap-3">
-              {MANUAL_PAYMENT_METHODS.map((m) => (
-                <label key={m} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    name="manual_payment_methods"
-                    value={m}
-                    defaultChecked={g.manual_payment_methods.includes(m)}
-                    className="size-4 accent-brand"
-                  />
-                  {PAYMENT_METHOD_LABELS[m]}
-                </label>
-              ))}
+            <Toggle
+              name="checkin_poster_enabled"
+              label="Members can check in by scanning the poster"
+              hint="Works alongside the other ways. Needs check-in turned on."
+              defaultChecked={g.checkin_poster_enabled ?? false}
+            />
+            <Toggle
+              name="checkin_location_required"
+              label="Only when they're at the gym (location check)"
+              hint="Stops check-ins from a photo of the poster. Members are asked for location access once."
+              defaultChecked={g.checkin_location_required ?? false}
+            />
+            <LocationField latitude={g.latitude ?? null} longitude={g.longitude ?? null} />
+            <Field label="Allowed distance (metres)" hint={`How far from the gym still counts. Default ${GYM_DEFAULTS.checkin_radius_m}`}>
+              <Input name="checkin_radius_m" type="number" min={50} max={2000} defaultValue={g.checkin_radius_m ?? GYM_DEFAULTS.checkin_radius_m} required />
+            </Field>
+            {g.checkin_poster_enabled && (
+              <Link href={`/admin/${slug}/checkin/poster`} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline">
+                <Printer className="size-4" /> Print the poster
+              </Link>
+            )}
+          </SettingsCard>
+
+          <SettingsCard slug={slug} section="classes" readOnly={locked.mixed} title="Classes" description="Optional. Group classes members book in the app.">
+            <Toggle name="classes_enabled" label="Run classes" defaultChecked={g.classes_enabled} />
+            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
+              <Field label="Booking opens (days ahead)" hint={`Default ${GYM_DEFAULTS.classes_booking_window_days}`}>
+                <Input name="classes_booking_window_days" type="number" min={1} max={60} defaultValue={g.classes_booking_window_days} required />
+              </Field>
+              <Field label="Cancel up to (hours before)" hint={`0 allows cancelling any time. Default ${GYM_DEFAULTS.classes_cancel_cutoff_hours}`}>
+                <Input name="classes_cancel_cutoff_hours" type="number" min={0} max={72} defaultValue={g.classes_cancel_cutoff_hours} required />
+              </Field>
             </div>
-          </fieldset>
-          <Toggle
-            name="join_requires_approval"
-            label="Approve new members"
-            hint="People who open your join link wait until staff approve them on the Members page."
-            defaultChecked={g.join_requires_approval}
-          />
-        </SettingsCard>
+            <Toggle
+              name="classes_require_membership"
+              label="Require an active membership to book"
+              hint="Off: anyone in the gym can book."
+              defaultChecked={g.classes_require_membership}
+            />
+          </SettingsCard>
 
-        <SettingsCard
-          slug={slug}
-          section="upi" readOnly={locked.settings}
-          title="UPI payments"
-          description={
-            g.currency === "INR"
-              ? "Members pay this UPI ID from the app, then tap “I’ve paid”. You confirm each payment on the Payments page. No fees. Leave empty to turn off."
-              : "UPI is only available when the gym’s currency is INR."
-          }
-        >
-          <Field label="UPI ID">
-            <Input name="upi_id" defaultValue={g.upi_id ?? ""} placeholder="yourgym@okhdfcbank" autoCapitalize="none" />
-          </Field>
-          <Field label="Name on the UPI account" hint="Shown to members so they know they’re paying the right account.">
-            <Input name="upi_payee_name" defaultValue={g.upi_payee_name ?? ""} />
-          </Field>
-        </SettingsCard>
+          <SettingsCard
+            slug={slug}
+            section="workouts" readOnly={locked.mixed}
+            title="Workouts & progress"
+            description="Optional. Trainers build and assign plans; members log workouts and measurements. Choose which built-in exercises to offer on the Workouts page."
+          >
+            <Toggle name="workouts_enabled" label="Use workouts & progress" defaultChecked={g.workouts_enabled} />
+          </SettingsCard>
 
-        <SettingsCard slug={slug} section="checkin" readOnly={locked.mixed} title="Check-in" description="Optional. Expired memberships are only flagged, never turned away.">
-          <Toggle name="checkin_enabled" label="Use check-in" defaultChecked={g.checkin_enabled} />
-          <Toggle
-            name="checkin_self_allowed"
-            label="Members can check themselves in"
-            hint="Off: only staff can check members in (QR scan or by name)."
-            defaultChecked={g.checkin_self_allowed}
-          />
-          <Toggle
-            name="checkin_only_when_open"
-            label="Only during opening hours"
-            hint={`Members can't check themselves in (button or poster) while the gym is closed, from ${CHECKIN_EARLY_MIN} minutes before opening. Staff can always check members in.`}
-            defaultChecked={g.checkin_only_when_open ?? true}
-          />
-          <Field label="Count repeat check-ins within (hours) as one visit" hint={`0 counts every check-in. Default ${GYM_DEFAULTS.checkin_dedupe_hours}`}>
-            <Input name="checkin_dedupe_hours" type="number" min={0} max={24} defaultValue={g.checkin_dedupe_hours} required />
-          </Field>
-        </SettingsCard>
-
-        <SettingsCard
-          slug={slug}
-          section="poster" readOnly={locked.mixed}
-          title="QR poster check-in"
-          description="Optional. Print a QR poster for the entrance; members scan it with the app when they arrive. No staff needed."
-        >
-          <Toggle
-            name="checkin_poster_enabled"
-            label="Members can check in by scanning the poster"
-            hint="Works alongside the other ways. Needs check-in turned on."
-            defaultChecked={g.checkin_poster_enabled ?? false}
-          />
-          <Toggle
-            name="checkin_location_required"
-            label="Only when they're at the gym (location check)"
-            hint="Stops check-ins from a photo of the poster. Members are asked for location access once."
-            defaultChecked={g.checkin_location_required ?? false}
-          />
-          <LocationField latitude={g.latitude ?? null} longitude={g.longitude ?? null} />
-          <Field label="Allowed distance (metres)" hint={`How far from the gym still counts. Default ${GYM_DEFAULTS.checkin_radius_m}`}>
-            <Input name="checkin_radius_m" type="number" min={50} max={2000} defaultValue={g.checkin_radius_m ?? GYM_DEFAULTS.checkin_radius_m} required />
-          </Field>
-          {g.checkin_poster_enabled && (
-            <Link href={`/admin/${slug}/checkin/poster`} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline">
-              <Printer className="size-4" /> Print the poster
-            </Link>
-          )}
-        </SettingsCard>
-
-        <SettingsCard slug={slug} section="classes" readOnly={locked.mixed} title="Classes" description="Optional. Group classes members book in the app.">
-          <Toggle name="classes_enabled" label="Run classes" defaultChecked={g.classes_enabled} />
-          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
-            <Field label="Booking opens (days ahead)" hint={`Default ${GYM_DEFAULTS.classes_booking_window_days}`}>
-              <Input name="classes_booking_window_days" type="number" min={1} max={60} defaultValue={g.classes_booking_window_days} required />
+          <SettingsCard
+            slug={slug}
+            section="pt" readOnly={locked.mixed}
+            title="Personal training"
+            description="Optional. Sell PT packages (a number of sessions, or unlimited for a period), assign a trainer, and track sessions used. Set up packages on the Personal training page."
+          >
+            <Toggle name="pt_enabled" label="Offer personal training" defaultChecked={g.pt_enabled} />
+            <Toggle
+              name="pt_show_in_app"
+              label="Show PT packages and prices in the app"
+              hint="Members always see their own PT sessions. Off: packages are only sold at the front desk."
+              defaultChecked={g.pt_show_in_app}
+            />
+            <Field label="Flag clients with this many sessions left" hint={`They’re marked “running low” so you can offer a renewal. Default ${GYM_DEFAULTS.pt_expiry_warning_sessions}`}>
+              <Input name="pt_expiry_warning_sessions" type="number" min={0} max={50} defaultValue={g.pt_expiry_warning_sessions} required />
             </Field>
-            <Field label="Cancel up to (hours before)" hint={`0 allows cancelling any time. Default ${GYM_DEFAULTS.classes_cancel_cutoff_hours}`}>
-              <Input name="classes_cancel_cutoff_hours" type="number" min={0} max={72} defaultValue={g.classes_cancel_cutoff_hours} required />
-            </Field>
-          </div>
-          <Toggle
-            name="classes_require_membership"
-            label="Require an active membership to book"
-            hint="Off: anyone in the gym can book."
-            defaultChecked={g.classes_require_membership}
-          />
-        </SettingsCard>
+          </SettingsCard>
 
-        <SettingsCard
-          slug={slug}
-          section="workouts" readOnly={locked.mixed}
-          title="Workouts & progress"
-          description="Optional. Trainers build and assign plans; members log workouts and measurements. Choose which built-in exercises to offer on the Workouts page."
-        >
-          <Toggle name="workouts_enabled" label="Use workouts & progress" defaultChecked={g.workouts_enabled} />
-        </SettingsCard>
-
-        <SettingsCard
-          slug={slug}
-          section="pt" readOnly={locked.mixed}
-          title="Personal training"
-          description="Optional. Sell PT packages (a number of sessions, or unlimited for a period), assign a trainer, and track sessions used. Set up packages on the Personal training page."
-        >
-          <Toggle name="pt_enabled" label="Offer personal training" defaultChecked={g.pt_enabled} />
-          <Toggle
-            name="pt_show_in_app"
-            label="Show PT packages and prices in the app"
-            hint="Members always see their own PT sessions. Off: packages are only sold at the front desk."
-            defaultChecked={g.pt_show_in_app}
-          />
-          <Field label="Flag clients with this many sessions left" hint={`They’re marked “running low” so you can offer a renewal. Default ${GYM_DEFAULTS.pt_expiry_warning_sessions}`}>
-            <Input name="pt_expiry_warning_sessions" type="number" min={0} max={50} defaultValue={g.pt_expiry_warning_sessions} required />
-          </Field>
-        </SettingsCard>
-
-        <SettingsCard
-          slug={slug}
-          section="nutrition" readOnly={locked.mixed}
-          title="Nutrition"
-          description="Optional. Members log what they eat against calorie and protein targets their trainer sets. Food logs are private: only the member, their trainer, and owners or admins see them."
-        >
-          <Toggle name="nutrition_enabled" label="Turn on nutrition tracking" hint="PT clients get a Food tab in the app." defaultChecked={g.nutrition_enabled ?? false} />
-          <Toggle
-            name="nutrition_all_members"
-            label="Open it to all members"
-            hint="Off: only members with an active PT package. Members without a trainer set their own targets."
-            defaultChecked={g.nutrition_all_members ?? false}
-          />
-          {g.nutrition_enabled && (
-            <Link href={`/admin/${slug}/foods`} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline">
-              <Apple className="size-4" /> Your gym&apos;s foods
-            </Link>
-          )}
-        </SettingsCard>
+          <SettingsCard
+            slug={slug}
+            section="nutrition" readOnly={locked.mixed}
+            title="Nutrition"
+            description="Optional. Members log what they eat against calorie and protein targets their trainer sets. Food logs are private: only the member, their trainer, and owners or admins see them."
+          >
+            <Toggle name="nutrition_enabled" label="Turn on nutrition tracking" hint="PT clients get a Food tab in the app." defaultChecked={g.nutrition_enabled ?? false} />
+            <Toggle
+              name="nutrition_all_members"
+              label="Open it to all members"
+              hint="Off: only members with an active PT package. Members without a trainer set their own targets."
+              defaultChecked={g.nutrition_all_members ?? false}
+            />
+            {g.nutrition_enabled && (
+              <Link href={`/admin/${slug}/foods`} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline">
+                <Apple className="size-4" /> Your gym&apos;s foods
+              </Link>
+            )}
+          </SettingsCard>
+        </div>
 
         {role === "owner" && <DeleteGymCard slug={slug} gymName={g.name} />}
       </div>

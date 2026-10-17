@@ -1,4 +1,4 @@
-import { addDays, groupPlanDays, todayIn } from '@gymos/shared';
+import { addDays, formatDate, groupPlanDays, todayIn } from '@gymos/shared';
 import { Redirect, useRouter } from 'expo-router';
 import { BookOpen, ChevronDown, ChevronRight, Clock, Dumbbell, Play, Scale, Trophy, Weight } from 'lucide-react-native';
 import { useState } from 'react';
@@ -100,6 +100,13 @@ export default function WorkoutsScreen() {
         {plan && (
           <Appear index={3} style={{ gap: 10 }}>
             <SectionHeader title={plan.name} action={next ? 'Other workout' : undefined} onAction={() => start()} />
+            {(plan.assignedBy || plan.assignedAt) && (
+              <Text variant="small" style={{ color: theme.textSecondary, marginTop: -6 }}>
+                {[plan.assignedBy && `From ${plan.assignedBy}`, plan.assignedAt && `since ${formatDate(todayIn(gym.timezone, new Date(plan.assignedAt)))}`]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </Text>
+            )}
             {plan.description && <Text variant="muted">{plan.description}</Text>}
             {days.map((day, i) => (
               <PlanDayRow

@@ -13,6 +13,9 @@ export function useMyPlans() {
     queryKey: ['my-plans', membership?.memberId],
     enabled: !!membership?.gym.workouts_enabled,
     queryFn: async () => {
+      // Who gave each plan and when, through a function: members can't read
+      // the trainer's profile directly.
+      const givers = supabase.rpc('my_plan_assignments', { p_gym_id: membership!.gym.id });
       const { data, error } = await supabase
         .from('plan_assignments')
         .select(
@@ -22,7 +25,12 @@ export function useMyPlans() {
         .eq('workout_plans.is_archived', false)
         .order('assigned_at', { ascending: false });
       if (error) throw error;
-      return data.map((a) => a.workout_plans);
+      const from = await givers;
+      if (from.error) throw from.error;
+      return data.map((a) => {
+        const g = from.data.find((x) => x.plan_id === a.workout_plans.id);
+        return { ...a.workout_plans, assignedBy: g?.assigned_by_name ?? null, assignedAt: g?.assigned_at ?? null };
+      });
     },
   });
 }

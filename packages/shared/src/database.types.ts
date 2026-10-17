@@ -1154,6 +1154,11 @@ isOneToOne: false
 "my_permissions":
 { Args: { "p_gym_id": string }; Returns: (string)[]
                            },
+"my_plan_assignments":
+{ Args: { "p_gym_id": string }; Returns: {
+              "assigned_at": string,"assigned_by_name": string,"plan_id": string
+            }[]
+                           },
 "my_pt_subscriptions":
 { Args: { "p_gym_id": string }; Returns: {
               "ends_on": string,"id": string,"package_name": string,"sessions": Json,"sessions_total": number,"starts_on": string,"status": string,"trainer_avatar": string,"trainer_name": string
